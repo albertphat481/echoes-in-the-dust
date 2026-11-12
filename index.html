@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#050811" />
+  <title>Echoes in the Dust — VANTALUMEN | NASA Space Apps Challenge</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,400&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <!-- VantaLumen Splash Preloader (Logo + Circular Loading Ring) -->
+  <div id="vantalumen-loader" role="status" aria-label="Loading VantaLumen">
+    <div class="loader-orbit-wrap">
+      <svg class="loader-ring-svg" viewBox="0 0 220 220">
+        <circle class="loader-ring-track" cx="110" cy="110" r="102" />
+        <circle class="loader-ring-orbit" cx="110" cy="110" r="102" />
+        <circle class="loader-ring-spinner" cx="110" cy="110" r="92" />
+      </svg>
+      <div class="loader-logo-plate">
+        <img src="assets/vantalumen_logo.png" alt="VantaLumen — Keeping Space Exploration Stories Alive" />
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Interactive Fullscreen Canvas (Zero Text During Gameplay) -->
+  <canvas id="game-canvas"></canvas>
+  <div class="vignette-overlay"></div>
+
+  <!-- Team VANTALUMEN Subtle Emblem (Icon-only during play; expands on hover, opens NASA Space Apps Dossier) -->
+  <div id="brand-emblem" title="VANTALUMEN • NASA Space Apps Dossier">
+    <div class="emblem-mark">
+      <img src="assets/vantalumen_logo.png" alt="VantaLumen" />
+    </div>
+    <span class="emblem-label">VANTALUMEN // NASA SPACE APPS</span>
+  </div>
+
+  <!-- Wordless Constellation Navigation (6 Minigames) -->
+  <nav id="constellation-nav" aria-label="Constellation Navigation"></nav>
+
+  <!-- Minimalist Corner Icon Controls -->
+  <div id="corner-controls">
+    <button id="btn-quiz-deck" class="icon-btn" title="Bộ Câu Hỏi Khám Phá Vũ Trụ VantaLumen (Phím tắt: Q)">
+      <svg viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="10"></circle>
+        <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+        <line x1="12" y1="17" x2="12.01" y2="17"></line>
+      </svg>
+    </button>
+    <button id="btn-instant-shard" class="icon-btn" title="Xem Thẻ Ký Ức của thiết bị hiện tại (Phím tắt: I)">
+      <svg viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="10"></circle>
+        <line x1="12" y1="16" x2="12" y2="12"></line>
+        <line x1="12" y1="8" x2="12.01" y2="8"></line>
+      </svg>
+    </button>
+    <button id="btn-gallery" class="icon-btn" title="Kho Lưu Trữ Mảnh Vỡ Ký Ức">
+      <svg viewBox="0 0 24 24">
+        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+      </svg>
+    </button>
+    <button id="btn-audio" class="icon-btn" title="Bật / Tắt Âm Thanh (Phím tắt: M)">
+      <svg viewBox="0 0 24 24">
+        <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+        <path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+        <path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>
+      </svg>
+    </button>
+  </div>
+
+  <!-- "Mảnh Vỡ Ký Ức" (Memory Shard Modal — Show First, Tell After) -->
+  <div id="memory-modal" role="dialog" aria-modal="true">
+    <div class="shard-card">
+      <div class="shard-header">
+        <span id="shard-number" class="shard-badge">MẢNH VỠ KÝ ỨC • 01 / 06</span>
+        <span id="shard-mission" class="shard-mission">NASA Discovery Program</span>
+      </div>
+      <div id="shard-visual" class="shard-visual"></div>
+      <h2 id="shard-title" class="shard-title">UNDER THE DUST</h2>
+      <div id="shard-subtitle" class="shard-subtitle">Trạm đổ bộ InSight</div>
+
+      <!-- Hardware Specs & Live Player Session Telemetry -->
+      <div id="shard-specs" class="shard-specs-grid"></div>
+
+      <p id="shard-story" class="shard-story"></p>
+
+      <!-- Embedded VantaLumen Illustrated Question ("Show First, Tell After" Verification) -->
+      <div id="shard-quiz-box" class="shard-quiz-section"></div>
+
+      <div class="shard-meta">
+        <span>Tư liệu khoa học &amp; phần cứng chính thức:</span>
+        <a id="shard-source-link" href="https://science.nasa.gov" target="_blank" rel="noopener noreferrer">NASA Official Mission Page ↗</a>
+      </div>
+      <div class="shard-actions">
+        <div class="shard-team-tag">PROJECT BY <strong>TEAM VANTALUMEN</strong> • NASA SPACE APPS</div>
+        <div class="btn-group">
+          <button id="btn-export-card" class="btn btn-ghost" title="Tải ảnh Thẻ Ký Ức Vantalumen (PNG)">Tải Thẻ PNG ↓</button>
+          <button id="btn-replay" class="btn btn-ghost">Chơi lại</button>
+          <button id="btn-next" class="btn btn-primary">Ký ức tiếp theo →</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Fullscreen VantaLumen 7-Question Illustrated Quiz Deck Modal -->
+  <div id="quiz-deck-modal" role="dialog" aria-modal="true">
+    <div class="deck-stage">
+      <div class="shard-header">
+        <span id="deck-counter-badge" class="shard-badge">VANTALUMEN SPACE QUIZ • 01 / 07</span>
+        <div id="deck-dots" class="deck-progress-dots"></div>
+        <button id="btn-close-quiz-deck" class="btn btn-ghost">Đóng ✕</button>
+      </div>
+
+      <div class="deck-banner-wrap">
+        <img id="deck-img" class="deck-banner-img" src="assets/quiz/q1_red_planet.jpg" alt="VantaLumen Space Quiz Card" />
+      </div>
+
+      <div id="deck-question-en" class="quiz-q-title" style="font-size: 18px;"></div>
+      <div id="deck-question-vi" class="quiz-q-sub" style="font-size: 13.5px; margin-bottom: 12px;"></div>
+
+      <div id="deck-options" class="quiz-options-grid"></div>
+      <div id="deck-feedback" class="quiz-feedback"></div>
+
+      <div class="shard-actions" style="margin-top: 16px;">
+        <div class="shard-team-tag"><strong>VANTALUMEN</strong> • KEEPING SPACE EXPLORATION STORIES ALIVE</div>
+        <div class="btn-group">
+          <button id="btn-prev-quiz" class="btn btn-ghost">← Câu trước</button>
+          <button id="btn-next-quiz" class="btn btn-primary">Câu tiếp theo →</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Constellation Archive Modal (All 6 Memory Shards) -->
+  <div id="gallery-modal" role="dialog" aria-modal="true">
+    <div class="gallery-container">
+      <div class="gallery-header">
+        <div>
+          <div class="vantalumen-pill">TEAM VANTALUMEN • ANTHOLOGY ARCHIVE</div>
+          <h2 class="gallery-title">Kho Lưu Trữ Mảnh Vỡ Ký Ức</h2>
+          <p class="gallery-subtitle">Sáu thiết bị vũ trụ bị bỏ lại nhưng chưa bao giờ bị lãng quên</p>
+        </div>
+        <div class="btn-group">
+          <button id="btn-open-quiz-from-gallery" class="btn btn-primary">Bộ 7 Câu Hỏi VantaLumen ★</button>
+          <button id="btn-open-dossier-from-gallery" class="btn btn-ghost">Hồ Sơ Dự Án</button>
+          <button id="btn-close-gallery" class="btn btn-ghost">Đóng ✕</button>
+        </div>
+      </div>
+      <div id="gallery-grid" class="gallery-grid"></div>
+    </div>
+  </div>
+
+  <!-- Team VANTALUMEN — NASA Space Apps Mission Dossier & Judge Controls -->
+  <div id="dossier-modal" role="dialog" aria-modal="true">
+    <div class="gallery-container">
+      <div class="gallery-header">
+        <div>
+          <div class="vantalumen-pill">NASA SPACE APPS CHALLENGE • OFFICIAL SUBMISSION</div>
+          <h2 class="gallery-title">VANTALUMEN — Echoes in the Dust</h2>
+          <p class="gallery-subtitle">Từ bóng tối sâu thẳm của bụi vũ trụ (`Vanta`) đến ánh sáng hổ phách của ký ức con người (`Lumen`)</p>
+        </div>
+        <button id="btn-close-dossier" class="btn btn-ghost">Quay lại trải nghiệm ✕</button>
+      </div>
+
+      <div class="dossier-grid">
+        <div class="dossier-card">
+          <h3>1. Triết lý "Show Trước, Tell Sau"</h3>
+          <p>
+            Đề bài yêu cầu truyền tải kiến thức về <strong>phần cứng vũ trụ và những khám phá khoa học</strong> cho học sinh theo cách cuốn hút nhất. Thay vì một bảo tàng chữ khô khan, <strong>Vantalumen</strong> đặt người chơi vào đúng thao tác vật lý của thiết bị trong 20–35 giây hoàn toàn không lời:
+          </p>
+          <ul>
+            <li>Không chữ, không thanh %, không Game Over lúc đang chơi.</li>
+            <li>Sau khi hoàng hôn buông xuống, thẻ <strong>Mảnh Vỡ Ký Ức</strong> cùng <strong>Thử thách Câu hỏi Minh họa VantaLumen</strong> mới mở ra để củng cố kiến thức khoa học NASA.</li>
+          </ul>
+        </div>
+
+        <div class="dossier-card">
+          <h3>2. Một Ngôn Ngữ Cảm Xúc &amp; Âm Thanh</h3>
+          <p>
+            Tên nhóm <strong>Vantalumen</strong> chính là bảng màu chủ đạo của toàn bộ vũ trụ:
+          </p>
+          <ul>
+            <li><strong>Vanta (Xám xanh lạnh &amp; Bụi)</strong>: Trạng thái bị thời gian lãng quên.</li>
+            <li><strong>Lumen (Vàng hổ phách ấm)</strong>: Trạng thái được đánh thức và nhớ đến.</li>
+            <li><strong>Web Audio Tổng Hợp 100%</strong>: Cả 6 game dùng chung một thang âm ngũ cung, một buồng vang không gian (Convolver Reverb) và <strong>motif 3 nốt đi lên</strong> khi khám phá thành công.</li>
+          </ul>
+        </div>
+
+        <div class="dossier-card">
+          <h3>3. Sáu Thiết Bị &amp; Bộ 7 Câu Hỏi VantaLumen</h3>
+          <ul>
+            <li><strong>01. InSight Lander</strong> + Câu hỏi <em>Red Planet (Mars)</em>.</li>
+            <li><strong>02. Apollo Retroreflectors</strong> + Câu hỏi <em>What is the Sun?</em></li>
+            <li><strong>03. Spirit Rover</strong> + Câu hỏi <em>Largest Volcano (Olympus Mons)</em>.</li>
+            <li><strong>04. Opportunity Rover</strong> + Câu hỏi <em>NASA's Famous Mars Rover</em>.</li>
+            <li><strong>05. Apollo 12 Seismometer</strong> + Câu hỏi <em>Earth's Magnetic Shield</em>.</li>
+            <li><strong>06. LRO Bootprints</strong> + Câu hỏi <em>Sun's Hottest Layer (Corona)</em> &amp; <em>Jupiter's Great Red Spot</em>.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="judge-bar">
+        <div class="judge-bar-text">
+          <h4>Chế độ Ban Giám Khảo &amp; Thuyết Trình (Judge / Pitch Mode)</h4>
+          <p>Phím số <code>1–6</code> để chuyển màn, phím <code>I</code> bật thẻ khoa học, phím <code>Q</code> mở Bộ 7 Câu Hỏi VantaLumen.</p>
+        </div>
+        <div class="btn-group">
+          <button id="btn-open-quiz-from-dossier" class="btn btn-ghost">Mở Bộ 7 Câu Hỏi VantaLumen</button>
+          <button id="btn-unlock-all" class="btn btn-primary">Mở khóa toàn bộ 6 Ký Ức ★</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="audio.js"></script>
+  <script src="shards.js"></script>
+  <script src="quizzes.js"></script>
+  <script src="games1to3.js"></script>
+  <script src="games4to6.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

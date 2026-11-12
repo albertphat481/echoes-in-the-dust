@@ -1,0 +1,695 @@
+/**
+ * Main Game Host, Pointer/Keyboard Dispatcher, Memory Shard Archive,
+ * VantaLumen 7-Question Illustrated Quiz Deck & NASA Space Apps Dossier.
+ */
+
+class EchoesApp {
+  constructor() {
+    this.canvas = document.getElementById('game-canvas');
+    this.ctx = this.canvas.getContext('2d');
+
+    this.gameClasses = [
+      window.UnderTheDustGame,
+      window.StillThereGame,
+      window.OneWheelLeftGame,
+      window.UnsentGame,
+      window.MoonStillRingsGame,
+      window.EternalFootprintGame
+    ];
+
+    this.currentIndex = 0;
+    this.currentGame = null;
+    this.paused = false;
+    this.currentDeckQuizIndex = 0;
+
+    // Load unlocked shards & solved quizzes from localStorage
+    try {
+      const saved = JSON.parse(localStorage.getItem('echoes_unlocked_shards') || '[]');
+      this.unlockedShards = new Set(saved);
+    } catch {
+      this.unlockedShards = new Set();
+    }
+
+    try {
+      const solved = JSON.parse(localStorage.getItem('vantalumen_solved_quizzes') || '[]');
+      this.solvedQuizzes = new Set(solved);
+    } catch {
+      this.solvedQuizzes = new Set();
+    }
+
+    this.lastPointer = { x: 0, y: 0, t: performance.now() };
+    this.lastFrameTime = performance.now();
+
+    this._setupCanvas();
+    this._setupInput();
+    this._setupUI();
+    this.mountGame(0);
+    this._runPreloader();
+
+    requestAnimationFrame(t => this._loop(t));
+  }
+
+  _runPreloader() {
+    const loader = document.getElementById('vantalumen-loader');
+    const ring = document.querySelector('.loader-ring-orbit');
+    if (!loader || !ring) return;
+
+    const circumference = 2 * Math.PI * 102; // r=102 -> ~640.88
+    ring.style.strokeDasharray = String(circumference);
+    ring.style.strokeDashoffset = String(circumference);
+
+    // Preload VantaLumen quiz artwork & logo in background
+    const urls = ['assets/vantalumen_logo.png', ...(window.VANTALUMEN_QUIZZES || []).map(q => q.image)];
+    let loaded = 0;
+    const total = urls.length;
+
+    const updateProgress = pct => {
+      ring.style.strokeDashoffset = String(circumference * (1 - pct));
+    };
+
+    let finished = false;
+    const finish = () => {
+      if (finished) return;
+      finished = true;
+      clearInterval(ramp);
+      updateProgress(1);
+      setTimeout(() => {
+        loader.classList.add('loaded');
+        setTimeout(() => loader.remove(), 800);
+      }, 320);
+    };
+
+    let minDelayDone = false;
+    let assetsDone = false;
+
+    setTimeout(() => {
+      minDelayDone = true;
+      if (assetsDone) finish();
+    }, 1350);
+
+    // Smooth visual ramp while assets resolve
+    let visualPct = 0.15;
+    updateProgress(visualPct);
+    const ramp = setInterval(() => {
+      visualPct = Math.min(0.92, visualPct + 0.08);
+      updateProgress(Math.max(visualPct, loaded / total));
+      if (assetsDone && minDelayDone) clearInterval(ramp);
+    }, 110);
+
+    Promise.all(
+      urls.map(
+        src =>
+          new Promise(res => {
+            const img = new Image();
+            img.onload = img.onerror = () => {
+              loaded++;
+              updateProgress(Math.max(visualPct, loaded / total));
+              res();
+            };
+            img.src = src;
+          })
+      )
+    ).then(() => {
+      assetsDone = true;
+      if (minDelayDone) finish();
+    });
+
+    // Safety fallback so preloader never hangs
+    setTimeout(() => {
+      finish();
+    }, 3500);
+  }
+
+  _setupCanvas() {
+    const resize = () => {
+      const dpr = Math.min(2, window.devicePixelRatio || 1);
+      this.canvas.width = window.innerWidth * dpr;
+      this.canvas.height = window.innerHeight * dpr;
+      this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      if (this.currentGame && this.currentGame.onResize) {
+        this.currentGame.onResize();
+      }
+    };
+    window.addEventListener('resize', resize);
+    resize();
+  }
+
+  _setupInput() {
+    const getXY = e => ({ x: e.clientX, y: e.clientY });
+
+    this.canvas.addEventListener('pointerdown', e => {
+      window.soundEngine.init();
+      if (this.paused || !this.currentGame) return;
+      this.canvas.setPointerCapture(e.pointerId);
+      const { x, y } = getXY(e);
+      this.lastPointer = { x, y, t: performance.now() };
+      this.currentGame.onPointerDown(x, y);
+    });
+
+    this.canvas.addEventListener('pointermove', e => {
+      if (this.paused || !this.currentGame) return;
+      const { x, y } = getXY(e);
+      const now = performance.now();
+      const dt = Math.max(4, now - this.lastPointer.t);
+      const vx = (x - this.lastPointer.x) / dt;
+      const vy = (y - this.lastPointer.y) / dt;
+      this.lastPointer = { x, y, t: now };
+      this.currentGame.onPointerMove(x, y, vx, vy);
+    });
+
+    const endPointer = e => {
+      if (this.paused || !this.currentGame) return;
+      const { x, y } = getXY(e);
+      this.currentGame.onPointerUp(x, y);
+    };
+
+    this.canvas.addEventListener('pointerup', endPointer);
+    this.canvas.addEventListener('pointercancel', endPointer);
+
+    // Keyboard Support: Spacebar for Hold, 1-6 for stages, I for Shard, Q for VantaLumen Quiz Deck, M for Mute
+    window.addEventListener('keydown', e => {
+      if (e.code === 'Space' && !e.repeat && !this.paused && this.currentGame) {
+        e.preventDefault();
+        window.soundEngine.init();
+        this.currentGame.onPointerDown(window.innerWidth * 0.5, window.innerHeight * 0.5);
+      } else if (e.key >= '1' && e.key <= '6') {
+        window.soundEngine.init();
+        this.hideModals();
+        this.mountGame(Number(e.key) - 1);
+      } else if (e.key === 'i' || e.key === 'I') {
+        window.soundEngine.init();
+        if (this.memoryModal.classList.contains('visible')) {
+          this.hideModals();
+        } else {
+          this.showMemoryShard(this.currentIndex);
+        }
+      } else if (e.key === 'q' || e.key === 'Q') {
+        window.soundEngine.init();
+        if (this.quizDeckModal.classList.contains('visible')) {
+          this.hideModals();
+        } else {
+          this.openQuizDeck(this.currentIndex);
+        }
+      } else if (e.key === 'm' || e.key === 'M') {
+        const btnAudio = document.getElementById('btn-audio');
+        const muted = window.soundEngine.toggleMute();
+        if (btnAudio) btnAudio.style.opacity = muted ? '0.45' : '1';
+      } else if (e.key === 'Escape') {
+        this.hideModals();
+      }
+    });
+
+    window.addEventListener('keyup', e => {
+      if (e.code === 'Space' && !this.paused && this.currentGame) {
+        e.preventDefault();
+        this.currentGame.onPointerUp(window.innerWidth * 0.5, window.innerHeight * 0.5);
+      }
+    });
+
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) {
+        window.soundEngine.setBrushWind(0);
+      } else {
+        this.lastFrameTime = performance.now();
+      }
+    });
+  }
+
+  _setupUI() {
+    this.navContainer = document.getElementById('constellation-nav');
+    this.memoryModal = document.getElementById('memory-modal');
+    this.galleryModal = document.getElementById('gallery-modal');
+    this.dossierModal = document.getElementById('dossier-modal');
+    this.quizDeckModal = document.getElementById('quiz-deck-modal');
+
+    // Build 6 wordless constellation dots
+    this.navStars = [];
+    window.MEMORY_SHARDS.forEach((shard, idx) => {
+      const dot = document.createElement('button');
+      dot.className = 'nav-star';
+      dot.setAttribute('aria-label', shard.title);
+      dot.addEventListener('click', () => {
+        window.soundEngine.init();
+        this.hideModals();
+        this.mountGame(idx);
+      });
+      this.navContainer.appendChild(dot);
+      this.navStars.push(dot);
+    });
+
+    // VANTALUMEN Emblem -> Open Mission Dossier
+    document.getElementById('brand-emblem').addEventListener('click', () => {
+      window.soundEngine.init();
+      this.openDossier();
+    });
+
+    // Top-Right Quiz Deck Button
+    document.getElementById('btn-quiz-deck').addEventListener('click', () => {
+      window.soundEngine.init();
+      this.openQuizDeck(this.currentIndex);
+    });
+
+    // Instant Shard Inspection Button
+    document.getElementById('btn-instant-shard').addEventListener('click', () => {
+      window.soundEngine.init();
+      this.showMemoryShard(this.currentIndex);
+    });
+
+    // Sound Mute Toggle
+    const btnAudio = document.getElementById('btn-audio');
+    btnAudio.addEventListener('click', () => {
+      const muted = window.soundEngine.toggleMute();
+      btnAudio.style.opacity = muted ? '0.45' : '1';
+    });
+
+    // Open Memory Shards Archive Gallery
+    document.getElementById('btn-gallery').addEventListener('click', () => {
+      window.soundEngine.init();
+      this.openGallery();
+    });
+
+    // Open Quiz Deck from Gallery or Dossier
+    document.getElementById('btn-open-quiz-from-gallery').addEventListener('click', () => {
+      this.galleryModal.classList.remove('visible');
+      this.openQuizDeck(0);
+    });
+    document.getElementById('btn-open-quiz-from-dossier').addEventListener('click', () => {
+      this.dossierModal.classList.remove('visible');
+      this.openQuizDeck(0);
+    });
+
+    // Open Dossier from inside Gallery
+    document.getElementById('btn-open-dossier-from-gallery').addEventListener('click', () => {
+      this.galleryModal.classList.remove('visible');
+      this.openDossier();
+    });
+
+    // Close Modals
+    document.getElementById('btn-close-gallery').addEventListener('click', () => this.hideModals());
+    document.getElementById('btn-close-dossier').addEventListener('click', () => this.hideModals());
+    document.getElementById('btn-close-quiz-deck').addEventListener('click', () => this.hideModals());
+
+    // Quiz Deck Prev / Next Navigation
+    document.getElementById('btn-prev-quiz').addEventListener('click', () => {
+      const len = window.VANTALUMEN_QUIZZES.length;
+      this.renderQuizDeckSlide((this.currentDeckQuizIndex - 1 + len) % len);
+    });
+    document.getElementById('btn-next-quiz').addEventListener('click', () => {
+      const len = window.VANTALUMEN_QUIZZES.length;
+      this.renderQuizDeckSlide((this.currentDeckQuizIndex + 1) % len);
+    });
+
+    // Judge Mode: Unlock all 6 Memory Shards immediately
+    document.getElementById('btn-unlock-all').addEventListener('click', () => {
+      window.MEMORY_SHARDS.forEach(s => this.unlockedShards.add(s.id));
+      try {
+        localStorage.setItem('echoes_unlocked_shards', JSON.stringify([...this.unlockedShards]));
+      } catch {}
+      this._refreshNavDots();
+      window.soundEngine.playSignatureMotif(2);
+      this.dossierModal.classList.remove('visible');
+      this.openGallery();
+    });
+
+    // Export Vantalumen Memory Shard as a PNG Souvenir Card
+    document.getElementById('btn-export-card').addEventListener('click', () => {
+      this.exportShardCardPNG(this.currentIndex);
+    });
+
+    // Replay current game from Shard Modal
+    document.getElementById('btn-replay').addEventListener('click', () => {
+      this.hideModals();
+      this.mountGame(this.currentIndex);
+    });
+
+    // Continue to next game in the anthology
+    document.getElementById('btn-next').addEventListener('click', () => {
+      this.hideModals();
+      const nextIdx = (this.currentIndex + 1) % this.gameClasses.length;
+      this.mountGame(nextIdx);
+    });
+
+    this._refreshNavDots();
+  }
+
+  _refreshNavDots() {
+    this.navStars.forEach((dot, idx) => {
+      dot.classList.toggle('active', idx === this.currentIndex);
+      const shardId = window.MEMORY_SHARDS[idx].id;
+      dot.classList.toggle('unlocked', this.unlockedShards.has(shardId));
+    });
+  }
+
+  mountGame(index) {
+    window.soundEngine.setBrushWind(0);
+    this.currentIndex = index;
+    const GameClass = this.gameClasses[index];
+    this.currentGame = new GameClass(this);
+    this.paused = false;
+    this._refreshNavDots();
+  }
+
+  completeCurrentGame() {
+    const shard = window.MEMORY_SHARDS[this.currentIndex];
+    this.unlockedShards.add(shard.id);
+    try {
+      localStorage.setItem('echoes_unlocked_shards', JSON.stringify([...this.unlockedShards]));
+    } catch {}
+    this._refreshNavDots();
+
+    setTimeout(() => {
+      this.showMemoryShard(this.currentIndex);
+    }, 650);
+  }
+
+  showMemoryShard(index) {
+    this.paused = true;
+    const shard = window.MEMORY_SHARDS[index];
+    document.getElementById('shard-number').textContent = `MẢNH VỠ KÝ ỨC • ${shard.number}`;
+    document.getElementById('shard-mission').textContent = shard.mission;
+    document.getElementById('shard-visual').innerHTML = shard.svgDiagram;
+    document.getElementById('shard-title').textContent = shard.title;
+    document.getElementById('shard-subtitle').textContent = shard.subtitle;
+    document.getElementById('shard-story').textContent = shard.story;
+
+    // Populate Hardware Telemetry & Live Player Metric
+    const specsContainer = document.getElementById('shard-specs');
+    specsContainer.innerHTML = '';
+
+    const specsToShow = (shard.specs || []).slice(0, 2);
+    specsToShow.forEach(sp => {
+      const div = document.createElement('div');
+      div.className = 'spec-box';
+      div.innerHTML = `
+        <div class="spec-label">${sp.label}</div>
+        <div class="spec-value">${sp.value}</div>
+      `;
+      specsContainer.appendChild(div);
+    });
+
+    const liveMetric =
+      this.currentIndex === index && this.currentGame && this.currentGame.getSessionMetric
+        ? this.currentGame.getSessionMetric()
+        : (shard.specs && shard.specs[2] ? shard.specs[2].value : 'Đã đồng bộ');
+
+    const liveDiv = document.createElement('div');
+    liveDiv.className = 'spec-box live-stat';
+    liveDiv.innerHTML = `
+      <div class="spec-label">${shard.defaultStatLabel || 'Dữ liệu lượt chơi'}</div>
+      <div class="spec-value">${liveMetric}</div>
+    `;
+    specsContainer.appendChild(liveDiv);
+
+    // Populate Embedded VantaLumen Illustrated Question for this Shard
+    this._renderEmbeddedShardQuiz(shard.id, index);
+
+    const link = document.getElementById('shard-source-link');
+    link.textContent = shard.sourceLabel + ' ↗';
+    link.href = shard.sourceUrl;
+
+    this.memoryModal.classList.add('visible');
+  }
+
+  _renderEmbeddedShardQuiz(shardId, shardIndex) {
+    const container = document.getElementById('shard-quiz-box');
+    const quiz =
+      window.VANTALUMEN_QUIZZES.find(q => q.linkedShardId === shardId) ||
+      window.VANTALUMEN_QUIZZES[shardIndex % window.VANTALUMEN_QUIZZES.length];
+
+    if (!quiz) {
+      container.style.display = 'none';
+      return;
+    }
+    container.style.display = 'block';
+
+    const isSolved = this.solvedQuizzes.has(quiz.id);
+    container.innerHTML = `
+      <div class="quiz-header-bar">
+        <span class="quiz-tag">THỬ THÁCH TRÍ NHỚ VANTALUMEN ${isSolved ? '• ✓ ĐÃ GIẢI MÃ' : ''}</span>
+        <button type="button" class="quiz-deck-link" id="btn-expand-quiz-deck">Mở trọn bộ 7 câu hỏi minh họa ↗</button>
+      </div>
+      <div class="quiz-card-layout">
+        <img src="${quiz.image}" alt="${quiz.questionEn}" class="quiz-art-thumb" id="shard-quiz-thumb" title="Bấm để phóng to thẻ câu hỏi VantaLumen" />
+        <div>
+          <div class="quiz-q-title">${quiz.questionEn}</div>
+          <div class="quiz-q-sub">${quiz.questionVi}</div>
+          <div class="quiz-options-grid" id="shard-quiz-opts"></div>
+        </div>
+      </div>
+      <div class="quiz-feedback ${isSolved ? 'visible' : ''}" id="shard-quiz-feedback">
+        ${isSolved ? `<strong>Chính xác (${quiz.correctKey})!</strong> ${quiz.explanation}` : ''}
+      </div>
+    `;
+
+    const optsEl = container.querySelector('#shard-quiz-opts');
+    const fbEl = container.querySelector('#shard-quiz-feedback');
+
+    quiz.options.forEach(opt => {
+      const btn = document.createElement('button');
+      btn.className = 'quiz-opt-btn';
+      if (isSolved && opt.key === quiz.correctKey) {
+        btn.classList.add('correct');
+      }
+      btn.innerHTML = `<span>${opt.label}</span><span class="opt-vi">${opt.vi}</span>`;
+      btn.addEventListener('click', () => {
+        if (opt.key === quiz.correctKey) {
+          btn.classList.add('correct');
+          this._markQuizSolved(quiz.id);
+          window.soundEngine.playSignatureMotif(3);
+          fbEl.innerHTML = `<strong>Chính xác (${quiz.correctKey})!</strong> ${quiz.explanation}`;
+          fbEl.classList.add('visible');
+        } else {
+          btn.classList.add('wrong');
+          window.soundEngine.playPentatonicNote(0, 0.16, 0.45, 0, 'sine');
+          fbEl.innerHTML = `Chưa chính xác — hãy thử chọn lại đáp án đúng nhé!`;
+          fbEl.classList.add('visible');
+        }
+      });
+      optsEl.appendChild(btn);
+    });
+
+    const openFullDeck = () => {
+      const qIdx = window.VANTALUMEN_QUIZZES.findIndex(q => q.id === quiz.id);
+      this.memoryModal.classList.remove('visible');
+      this.openQuizDeck(qIdx >= 0 ? qIdx : 0);
+    };
+
+    container.querySelector('#btn-expand-quiz-deck').addEventListener('click', openFullDeck);
+    container.querySelector('#shard-quiz-thumb').addEventListener('click', openFullDeck);
+  }
+
+  _markQuizSolved(quizId) {
+    this.solvedQuizzes.add(quizId);
+    try {
+      localStorage.setItem('vantalumen_solved_quizzes', JSON.stringify([...this.solvedQuizzes]));
+    } catch {}
+  }
+
+  openQuizDeck(startIndex = 0) {
+    this.paused = true;
+    this.memoryModal.classList.remove('visible');
+    this.galleryModal.classList.remove('visible');
+    this.dossierModal.classList.remove('visible');
+    this.renderQuizDeckSlide(startIndex);
+    this.quizDeckModal.classList.add('visible');
+  }
+
+  renderQuizDeckSlide(index) {
+    const quizzes = window.VANTALUMEN_QUIZZES;
+    this.currentDeckQuizIndex = ((index % quizzes.length) + quizzes.length) % quizzes.length;
+    const quiz = quizzes[this.currentDeckQuizIndex];
+    const isSolved = this.solvedQuizzes.has(quiz.id);
+
+    document.getElementById('deck-counter-badge').textContent =
+      `VANTALUMEN SPACE QUIZ • 0${this.currentDeckQuizIndex + 1} / 0${quizzes.length}`;
+    document.getElementById('deck-img').src = quiz.image;
+    document.getElementById('deck-question-en').textContent = quiz.questionEn;
+    document.getElementById('deck-question-vi').textContent = quiz.questionVi;
+
+    // Progress dots
+    const dotsEl = document.getElementById('deck-dots');
+    dotsEl.innerHTML = '';
+    quizzes.forEach((q, idx) => {
+      const d = document.createElement('button');
+      d.className = `deck-dot ${idx === this.currentDeckQuizIndex ? 'active' : ''} ${this.solvedQuizzes.has(q.id) ? 'solved' : ''}`;
+      d.addEventListener('click', () => this.renderQuizDeckSlide(idx));
+      dotsEl.appendChild(d);
+    });
+
+    // Options
+    const optsEl = document.getElementById('deck-options');
+    const fbEl = document.getElementById('deck-feedback');
+    optsEl.innerHTML = '';
+
+    if (isSolved) {
+      fbEl.innerHTML = `<strong>Chính xác (${quiz.correctKey})!</strong> ${quiz.explanation}`;
+      fbEl.classList.add('visible');
+    } else {
+      fbEl.innerHTML = '';
+      fbEl.classList.remove('visible');
+    }
+
+    quiz.options.forEach(opt => {
+      const btn = document.createElement('button');
+      btn.className = 'quiz-opt-btn';
+      if (isSolved && opt.key === quiz.correctKey) {
+        btn.classList.add('correct');
+      }
+      btn.innerHTML = `<span>${opt.label}</span><span class="opt-vi">${opt.vi}</span>`;
+      btn.addEventListener('click', () => {
+        if (opt.key === quiz.correctKey) {
+          btn.classList.add('correct');
+          this._markQuizSolved(quiz.id);
+          window.soundEngine.playSignatureMotif(4);
+          fbEl.innerHTML = `<strong>Chính xác (${quiz.correctKey})!</strong> ${quiz.explanation}`;
+          fbEl.classList.add('visible');
+          // Refresh progress dot
+          this.renderQuizDeckSlide(this.currentDeckQuizIndex);
+        } else {
+          btn.classList.add('wrong');
+          window.soundEngine.playPentatonicNote(0, 0.16, 0.45, 0, 'sine');
+          fbEl.innerHTML = `Chưa chính xác — hãy quan sát bức ảnh VantaLumen và chọn lại nhé!`;
+          fbEl.classList.add('visible');
+        }
+      });
+      optsEl.appendChild(btn);
+    });
+  }
+
+  openGallery() {
+    this.paused = true;
+    const grid = document.getElementById('gallery-grid');
+    grid.innerHTML = '';
+
+    window.MEMORY_SHARDS.forEach((shard, idx) => {
+      const isUnlocked = this.unlockedShards.has(shard.id);
+      const item = document.createElement('div');
+      item.className = `gallery-item ${isUnlocked ? 'unlocked' : ''}`;
+      item.innerHTML = `
+        <div class="gallery-item-num">${shard.number} ${isUnlocked ? '• ĐÃ MỞ KHÓA' : '• CHẤM ĐỂ KHÁM PHÁ'}</div>
+        <div class="gallery-item-title">${shard.title}</div>
+        <div class="gallery-item-desc">${shard.subtitle}</div>
+      `;
+      item.addEventListener('click', () => {
+        this.galleryModal.classList.remove('visible');
+        this.currentIndex = idx;
+        this._refreshNavDots();
+        this.showMemoryShard(idx);
+      });
+      grid.appendChild(item);
+    });
+
+    this.galleryModal.classList.add('visible');
+  }
+
+  openDossier() {
+    this.paused = true;
+    this.memoryModal.classList.remove('visible');
+    this.galleryModal.classList.remove('visible');
+    this.quizDeckModal.classList.remove('visible');
+    this.dossierModal.classList.add('visible');
+  }
+
+  hideModals() {
+    this.memoryModal.classList.remove('visible');
+    this.galleryModal.classList.remove('visible');
+    this.dossierModal.classList.remove('visible');
+    this.quizDeckModal.classList.remove('visible');
+    this.paused = false;
+  }
+
+  exportShardCardPNG(index) {
+    const shard = window.MEMORY_SHARDS[index];
+    const c = document.createElement('canvas');
+    c.width = 1080;
+    c.height = 620;
+    const ctx = c.getContext('2d');
+
+    const bg = ctx.createLinearGradient(0, 0, 1080, 620);
+    bg.addColorStop(0, '#070b16');
+    bg.addColorStop(1, '#121b36');
+    ctx.fillStyle = bg;
+    ctx.fillRect(0, 0, 1080, 620);
+
+    const glow = ctx.createRadialGradient(880, 140, 20, 880, 140, 360);
+    glow.addColorStop(0, 'rgba(245, 158, 11, 0.25)');
+    glow.addColorStop(1, 'rgba(245, 158, 11, 0)');
+    ctx.fillStyle = glow;
+    ctx.fillRect(0, 0, 1080, 620);
+
+    ctx.strokeStyle = 'rgba(245, 158, 11, 0.55)';
+    ctx.lineWidth = 3;
+    ctx.strokeRect(28, 28, 1024, 564);
+
+    ctx.fillStyle = '#fcd34d';
+    ctx.font = '600 18px "JetBrains Mono", monospace';
+    ctx.fillText(`TEAM VANTALUMEN // NASA SPACE APPS CHALLENGE • MẢNH VỠ KÝ ỨC ${shard.number}`, 64, 82);
+
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '16px "JetBrains Mono", monospace';
+    ctx.fillText(shard.mission, 64, 112);
+
+    ctx.fillStyle = '#fef3c7';
+    ctx.font = '600 42px Georgia, serif';
+    ctx.fillText(shard.title, 64, 175);
+
+    ctx.fillStyle = '#f59e0b';
+    ctx.font = '500 22px Inter, sans-serif';
+    ctx.fillText(shard.subtitle, 64, 212);
+
+    ctx.fillStyle = '#e2e8f0';
+    ctx.font = '21px Inter, sans-serif';
+    const words = shard.story.split(' ');
+    let line = '';
+    let y = 275;
+    for (const w of words) {
+      const test = line + w + ' ';
+      if (ctx.measureText(test).width > 940) {
+        ctx.fillText(line, 64, y);
+        line = w + ' ';
+        y += 34;
+      } else {
+        line = test;
+      }
+    }
+    if (line) ctx.fillText(line, 64, y);
+
+    const metric =
+      this.currentGame && this.currentGame.getSessionMetric
+        ? this.currentGame.getSessionMetric()
+        : 'Đã ghi nhận';
+    ctx.fillStyle = 'rgba(245, 158, 11, 0.14)';
+    ctx.fillRect(64, 470, 952, 74);
+    ctx.strokeStyle = '#f59e0b';
+    ctx.lineWidth = 1.5;
+    ctx.strokeRect(64, 470, 952, 74);
+
+    ctx.fillStyle = '#fcd34d';
+    ctx.font = '600 18px "JetBrains Mono", monospace';
+    ctx.fillText(`DỮ LIỆU CỦA BẠN: ${metric}`, 88, 504);
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '15px "JetBrains Mono", monospace';
+    ctx.fillText(`Nguồn tư liệu: ${shard.sourceUrl}`, 88, 529);
+
+    const link = document.createElement('a');
+    link.download = `Vantalumen-${shard.id}.png`;
+    link.href = c.toDataURL('image/png');
+    link.click();
+  }
+
+  _loop(now) {
+    const dt = Math.min(0.05, (now - this.lastFrameTime) / 1000);
+    this.lastFrameTime = now;
+
+    if (!this.paused && this.currentGame) {
+      this.currentGame.update(dt);
+      this.currentGame.render(this.ctx, window.innerWidth, window.innerHeight);
+    }
+
+    requestAnimationFrame(t => this._loop(t));
+  }
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+  window.echoesApp = new EchoesApp();
+});
