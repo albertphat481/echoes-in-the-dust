@@ -144,8 +144,44 @@ html, body {
   pointer-events: none;
   z-index: 2;
   background:
-    radial-gradient(circle at center, transparent 42%, rgba(3, 6, 14, 0.82) 100%),
+    radial-gradient(circle at center, transparent 40%, rgba(3, 6, 14, 0.85) 100%),
     repeating-linear-gradient(0deg, rgba(255,255,255,0.012) 0px, rgba(255,255,255,0.012) 1px, transparent 1px, transparent 2px);
+}
+
+/* Subtle Cinematic Letterbox Framing */
+.cinema-letterbox-top,
+.cinema-letterbox-bottom {
+  position: fixed;
+  left: 0;
+  right: 0;
+  height: 22px;
+  pointer-events: none;
+  z-index: 3;
+}
+
+.cinema-letterbox-top {
+  top: 0;
+  background: linear-gradient(180deg, rgba(3, 6, 14, 0.88) 0%, transparent 100%);
+}
+
+.cinema-letterbox-bottom {
+  bottom: 0;
+  background: linear-gradient(0deg, rgba(3, 6, 14, 0.88) 0%, transparent 100%);
+}
+
+/* Cinematic Cross-Fade Transition Curtain when switching constellations */
+#cinema-transition {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  pointer-events: none;
+  background: radial-gradient(circle at center, rgba(245, 158, 11, 0.14) 0%, #03060f 75%);
+  opacity: 0;
+  transition: opacity 0.36s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+#cinema-transition.active {
+  opacity: 1;
 }
 
 /* Subtle VANTALUMEN Watermark Emblem (Top-Left, no words during active play unless hovered) */

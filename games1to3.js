@@ -351,6 +351,7 @@ class UnderTheDustGame {
       const speed = Math.hypot(g.vx, g.vy);
       if (speed > 1.2) {
         this._eraseDustAt(g.x, g.y, 18, 0.85);
+        window.soundEngine.playSandTick();
       }
       if (g.life <= 0) {
         this.sandGrains.splice(i, 1);
@@ -422,17 +423,40 @@ class UnderTheDustGame {
     // 3. Draw dust mask on top
     ctx.drawImage(this.maskCanvas, 0, 0);
 
+    // 3b. Cinematic low-angle Martian Sunbeams (Volumetric God-rays)
+    const sunFade = Math.max(0, 1 - Math.max(0, (this.elapsed - 16) / 12));
+    if (sunFade > 0.02) {
+      ctx.save();
+      ctx.globalCompositeOperation = 'screen';
+      const rayGrad = ctx.createLinearGradient(0, 0, w * 0.78, h * 0.85);
+      rayGrad.addColorStop(0, `rgba(252, 211, 77, ${0.13 * sunFade})`);
+      rayGrad.addColorStop(0.5, `rgba(245, 158, 11, ${0.06 * sunFade})`);
+      rayGrad.addColorStop(1, 'rgba(245, 158, 11, 0)');
+      ctx.fillStyle = rayGrad;
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.lineTo(w * 0.45, 0);
+      ctx.lineTo(w, h * 0.88);
+      ctx.lineTo(w * 0.25, h);
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+    }
+
     // 4. Draw saltation sand grains (amber-gold coarse grains)
     for (const g of this.sandGrains) {
       ctx.fillStyle = '#fcd34d';
+      ctx.shadowColor = '#f59e0b';
+      ctx.shadowBlur = 6;
       ctx.beginPath();
       ctx.arc(g.x, g.y, 2.3, 0, Math.PI * 2);
       ctx.fill();
+      ctx.shadowBlur = 0;
     }
 
     // 5. Draw blowing dust motes
     for (const p of this.windParticles) {
-      ctx.fillStyle = `rgba(245, 158, 11, ${p.life * 0.55})`;
+      ctx.fillStyle = `rgba(245, 158, 11, ${p.life * 0.6})`;
       ctx.beginPath();
       ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
       ctx.fill();
@@ -441,16 +465,16 @@ class UnderTheDustGame {
     // 6. Subtle Heartbeat Ring around center hub (no % bars or text)
     ctx.save();
     ctx.beginPath();
-    ctx.arc(cx, cy, radius * (0.14 + (1 - this.heartPulseVisual) * 0.18), 0, Math.PI * 2);
-    ctx.strokeStyle = `rgba(252, 211, 77, ${this.heartPulseVisual * (0.3 + this.cleanRatio * 0.5)})`;
-    ctx.lineWidth = 2;
+    ctx.arc(cx, cy, radius * (0.14 + (1 - this.heartPulseVisual) * 0.24), 0, Math.PI * 2);
+    ctx.strokeStyle = `rgba(252, 211, 77, ${this.heartPulseVisual * (0.35 + this.cleanRatio * 0.55)})`;
+    ctx.lineWidth = 2.5;
     ctx.stroke();
     ctx.restore();
 
     // 7. Martian Dusk Lighting Overlay as time progresses
     const dusk = Math.max(0, (this.elapsed - 18) / 10);
     if (dusk > 0) {
-      ctx.fillStyle = `rgba(6, 9, 20, ${dusk * 0.58})`;
+      ctx.fillStyle = `rgba(6, 9, 20, ${dusk * 0.62})`;
       ctx.fillRect(0, 0, w, h);
     }
 
@@ -768,7 +792,7 @@ class StillThereGame {
       ctx.stroke();
     }
 
-    // 6. Active Laser Beams
+    // 6. Active Laser Beams & Traveling 2.5s Photon Round-Trip Pulses
     for (const b of this.beams) {
       ctx.strokeStyle = `rgba(252, 211, 77, ${b.life})`;
       ctx.lineWidth = 2.2;
@@ -779,6 +803,22 @@ class StillThereGame {
       ctx.lineTo(b.x1, b.y1);
       ctx.stroke();
       ctx.shadowBlur = 0;
+    }
+
+    for (const e of this.pendingEchoes) {
+      const progress = 1 - e.timer / 2.5; // 0..0.5 going up to Moon, 0.5..1 returning to Earth
+      const isOutbound = progress < 0.5;
+      const t = isOutbound ? progress * 2 : (1 - progress) * 2;
+      const px = w * 0.5 + (e.x - w * 0.5) * t;
+      const py = h * 0.92 + (e.y - h * 0.92) * t;
+      ctx.save();
+      ctx.fillStyle = isOutbound ? '#fef3c7' : (e.site ? '#fcd34d' : 'rgba(148,163,184,0.4)');
+      ctx.shadowColor = isOutbound ? '#f59e0b' : '#38bdf8';
+      ctx.shadowBlur = 14;
+      ctx.beginPath();
+      ctx.arc(px, py, isOutbound ? 3.5 : 4.2, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
     }
 
     // 7. Atmospheric drifting reticle & wave-crest charge rings
@@ -926,6 +966,10 @@ class OneWheelLeftGame {
 
     this.roverX += this.roverSpeed * dt;
 
+    if (this.roverSpeed > 18) {
+      window.soundEngine.playGravelCrunch();
+    }
+
     // Carve glowing white-blue silica trench behind the dragged wheel
     if (this.roverSpeed > 8) {
       const last = this.trenchPoints[this.trenchPoints.length - 1];
@@ -981,13 +1025,26 @@ class OneWheelLeftGame {
 
     const camX = this.roverX - w * 0.45;
 
-    // 2. Parallax Distant Ridges (Gusev Crater / Husband Hill)
+    // 2a. Far Parallax Mountain Silhouette (Gusev Rim)
+    ctx.fillStyle = '#1d1424';
+    ctx.beginPath();
+    ctx.moveTo(-w, h);
+    for (let sx = -w * 0.5; sx <= w * 1.5; sx += 50) {
+      const wx = sx + camX * 0.12;
+      const py = h * 0.5 + Math.sin(wx * 0.0014) * 52 + Math.cos(wx * 0.003) * 18;
+      ctx.lineTo(sx, py);
+    }
+    ctx.lineTo(w * 1.5, h);
+    ctx.closePath();
+    ctx.fill();
+
+    // 2b. Mid Parallax Ridges (Husband Hill)
     ctx.fillStyle = '#291a24';
     ctx.beginPath();
     ctx.moveTo(-w, h);
     for (let sx = -w * 0.5; sx <= w * 1.5; sx += 40) {
-      const wx = sx + camX * 0.25;
-      const py = h * 0.56 + Math.sin(wx * 0.002) * 45 + Math.cos(wx * 0.005) * 20;
+      const wx = sx + camX * 0.28;
+      const py = h * 0.58 + Math.sin(wx * 0.0022) * 38 + Math.cos(wx * 0.005) * 16;
       ctx.lineTo(sx, py);
     }
     ctx.lineTo(w * 1.5, h);
@@ -1028,8 +1085,8 @@ class OneWheelLeftGame {
       ctx.save();
       ctx.strokeStyle = '#a5f3fc';
       ctx.shadowColor = '#38bdf8';
-      ctx.shadowBlur = 16;
-      ctx.lineWidth = 5.5;
+      ctx.shadowBlur = 18;
+      ctx.lineWidth = 6;
       ctx.lineCap = 'round';
       ctx.beginPath();
       this.trenchPoints.forEach((pt, idx) => {
@@ -1053,6 +1110,12 @@ class OneWheelLeftGame {
     ctx.save();
     ctx.translate(rx + shakeOffset, ry + bogSink);
     ctx.rotate(slopeAngle);
+
+    // Dramatic long Martian sunset ground shadow under Spirit
+    ctx.fillStyle = 'rgba(10, 6, 12, 0.55)';
+    ctx.beginPath();
+    ctx.ellipse(-18, 4, 48, 7, 0, 0, Math.PI * 2);
+    ctx.fill();
 
     // Warm amber silhouette & rim light
     ctx.strokeStyle = '#fcd34d';

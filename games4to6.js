@@ -120,7 +120,8 @@ class UnsentGame {
     if (c.y < h * 0.32 || Math.hypot(c.x - ant.x, c.y - ant.y) < 110) {
       c.sent = true;
       this.sentCards.push(c);
-      window.soundEngine.playPentatonicNote(c.note, 0.25, 1.9, 0, 'triangle');
+      window.soundEngine.playTapeWhoosh();
+      window.soundEngine.playPentatonicNote(c.note, 0.25, 1.9, 0.08, 'triangle');
 
       const satProgress = Math.min(1, this.elapsed / this.satelliteDuration);
       const satX = w * (0.12 + satProgress * 0.76);
@@ -511,17 +512,17 @@ class MoonStillRingsGame {
     const iy = cy + Math.sin(angle) * r;
     const noteIdx = Math.floor(((angle + Math.PI) / (Math.PI * 2)) * 10) % 10;
 
-    // Trigger spent Apollo module impact & singing bowl resonance
-    window.soundEngine.playSingingBowl(noteIdx, this.isEarthMode);
-
-    const waveList = this.isEarthMode ? this.earthWaves : this.moonWaves;
-    waveList.push({
-      x: ix,
-      y: iy,
-      angle,
-      radius: 4,
-      energy: 1.0,
-      decay: this.isEarthMode ? 1.85 : 0.065 // Earth damps fast; Moon rings on and on!
+    // Spawn visible spent Apollo stage falling from orbit onto rim
+    const startX = ix + Math.cos(angle) * 110;
+    const startY = iy + Math.sin(angle) * 110;
+    this.fallingModules.push({
+      x0: startX,
+      y0: startY,
+      x1: ix,
+      y1: iy,
+      progress: 0,
+      noteIdx,
+      isEarth: this.isEarthMode
     });
   }
 
@@ -529,6 +530,24 @@ class MoonStillRingsGame {
     if (this.hasInteracted) {
       this.elapsed += dt;
       this.ghostAlpha = Math.max(0, this.ghostAlpha - dt * 2.5);
+    }
+
+    // Animate falling modules hitting the rim
+    for (let i = this.fallingModules.length - 1; i >= 0; i--) {
+      const m = this.fallingModules[i];
+      m.progress += dt * 4.5;
+      if (m.progress >= 1) {
+        this.fallingModules.splice(i, 1);
+        window.soundEngine.playSingingBowl(m.noteIdx, m.isEarth);
+        const waveList = m.isEarth ? this.earthWaves : this.moonWaves;
+        waveList.push({
+          x: m.x1,
+          y: m.y1,
+          radius: 4,
+          energy: 1.0,
+          decay: m.isEarth ? 1.85 : 0.065
+        });
+      }
     }
 
     // Update Lunar Waves (persist even when viewing Earth!)
@@ -572,6 +591,22 @@ class MoonStillRingsGame {
 
     const { cx, cy, r } = this._getBowlGeometry(w, h);
     const activeWaves = this.isEarthMode ? this.earthWaves : this.moonWaves;
+
+    // Render falling Apollo modules descending onto the surface
+    for (const m of this.fallingModules) {
+      const mx = m.x0 + (m.x1 - m.x0) * m.progress;
+      const my = m.y0 + (m.y1 - m.y0) * m.progress;
+      ctx.save();
+      ctx.strokeStyle = 'rgba(252, 211, 77, 0.7)';
+      ctx.lineWidth = 1.6;
+      ctx.beginPath();
+      ctx.moveTo(m.x0, m.y0);
+      ctx.lineTo(mx, my);
+      ctx.stroke();
+      ctx.fillStyle = '#fef3c7';
+      ctx.fillRect(mx - 4, my - 4, 8, 8);
+      ctx.restore();
+    }
 
     // 2. Cross-Section Singing Bowl (Moon = Ivory/Amber dry crust; Earth = Teal/Blue damped)
     ctx.save();

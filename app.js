@@ -359,13 +359,29 @@ class EchoesApp {
     });
   }
 
-  mountGame(index) {
+  mountGame(index, animate = true) {
     window.soundEngine.setBrushWind(0);
-    this.currentIndex = index;
-    const GameClass = this.gameClasses[index];
-    this.currentGame = new GameClass(this);
-    this.paused = false;
-    this._refreshNavDots();
+    const curtain = document.getElementById('cinema-transition');
+
+    const applyMount = () => {
+      this.currentIndex = index;
+      const GameClass = this.gameClasses[index];
+      this.currentGame = new GameClass(this);
+      this.paused = false;
+      this._refreshNavDots();
+    };
+
+    if (!animate || !curtain || !this.currentGame) {
+      applyMount();
+      return;
+    }
+
+    window.soundEngine.playUIChime(3 + (index % 5));
+    curtain.classList.add('active');
+    setTimeout(() => {
+      applyMount();
+      setTimeout(() => curtain.classList.remove('active'), 80);
+    }, 280);
   }
 
   completeCurrentGame() {
@@ -790,7 +806,34 @@ class EchoesApp {
 
     if (!this.paused && this.currentGame) {
       this.currentGame.update(dt);
-      this.currentGame.render(this.ctx, window.innerWidth, window.innerHeight);
+      const w = window.innerWidth;
+      const h = window.innerHeight;
+      this.currentGame.render(this.ctx, w, h);
+
+      // Subtle cinematic floating cosmic dust motes across all 6 scenes
+      if (!this._ambientMotes) {
+        this._ambientMotes = Array.from({ length: 24 }, (_, i) => ({
+          x: Math.random(),
+          y: Math.random(),
+          r: 0.9 + (i % 3) * 0.7,
+          vx: (Math.random() - 0.5) * 0.012,
+          vy: -0.005 - Math.random() * 0.01,
+          phase: Math.random() * Math.PI * 2
+        }));
+      }
+      const ctx = this.ctx;
+      const tSec = now * 0.001;
+      ctx.save();
+      for (const m of this._ambientMotes) {
+        m.x = (m.x + m.vx * dt + 1) % 1;
+        m.y = (m.y + m.vy * dt + 1) % 1;
+        const alpha = 0.12 + 0.16 * Math.sin(tSec * 1.4 + m.phase);
+        ctx.fillStyle = `rgba(252, 211, 77, ${alpha})`;
+        ctx.beginPath();
+        ctx.arc(m.x * w, m.y * h, m.r, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.restore();
     }
 
     requestAnimationFrame(t => this._loop(t));
