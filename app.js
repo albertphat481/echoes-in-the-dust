@@ -190,6 +190,13 @@ class EchoesApp {
         } else {
           this.openQuizDeck(this.currentIndex);
         }
+      } else if (e.key === 'h' || e.key === 'H') {
+        window.soundEngine.init();
+        if (this.guideModal.classList.contains('visible')) {
+          this.hideModals();
+        } else {
+          this.openGuide(this.currentIndex);
+        }
       } else if (e.key === 'm' || e.key === 'M') {
         const btnAudio = document.getElementById('btn-audio');
         const muted = window.soundEngine.toggleMute();
@@ -221,6 +228,7 @@ class EchoesApp {
     this.galleryModal = document.getElementById('gallery-modal');
     this.dossierModal = document.getElementById('dossier-modal');
     this.quizDeckModal = document.getElementById('quiz-deck-modal');
+    this.guideModal = document.getElementById('guide-modal');
 
     // Build 6 wordless constellation dots
     this.navStars = [];
@@ -241,6 +249,12 @@ class EchoesApp {
     document.getElementById('brand-emblem').addEventListener('click', () => {
       window.soundEngine.init();
       this.openDossier();
+    });
+
+    // Top-Right Guide Button (6 Separate Guides)
+    document.getElementById('btn-guide').addEventListener('click', () => {
+      window.soundEngine.init();
+      this.openGuide(this.currentIndex);
     });
 
     // Top-Right Quiz Deck Button
@@ -268,7 +282,7 @@ class EchoesApp {
       this.openGallery();
     });
 
-    // Open Quiz Deck from Gallery or Dossier
+    // Open Quiz Deck & Guide from Gallery or Dossier
     document.getElementById('btn-open-quiz-from-gallery').addEventListener('click', () => {
       this.galleryModal.classList.remove('visible');
       this.openQuizDeck(0);
@@ -276,6 +290,10 @@ class EchoesApp {
     document.getElementById('btn-open-quiz-from-dossier').addEventListener('click', () => {
       this.dossierModal.classList.remove('visible');
       this.openQuizDeck(0);
+    });
+    document.getElementById('btn-open-guide-from-dossier').addEventListener('click', () => {
+      this.dossierModal.classList.remove('visible');
+      this.openGuide(this.currentIndex);
     });
 
     // Open Dossier from inside Gallery
@@ -288,6 +306,7 @@ class EchoesApp {
     document.getElementById('btn-close-gallery').addEventListener('click', () => this.hideModals());
     document.getElementById('btn-close-dossier').addEventListener('click', () => this.hideModals());
     document.getElementById('btn-close-quiz-deck').addEventListener('click', () => this.hideModals());
+    document.getElementById('btn-close-guide').addEventListener('click', () => this.hideModals());
 
     // Quiz Deck Prev / Next Navigation
     document.getElementById('btn-prev-quiz').addEventListener('click', () => {
@@ -490,6 +509,7 @@ class EchoesApp {
     this.memoryModal.classList.remove('visible');
     this.galleryModal.classList.remove('visible');
     this.dossierModal.classList.remove('visible');
+    this.guideModal.classList.remove('visible');
     this.renderQuizDeckSlide(startIndex);
     this.quizDeckModal.classList.add('visible');
   }
@@ -582,11 +602,97 @@ class EchoesApp {
     this.galleryModal.classList.add('visible');
   }
 
+  openGuide(index = 0) {
+    this.paused = true;
+    this.memoryModal.classList.remove('visible');
+    this.galleryModal.classList.remove('visible');
+    this.dossierModal.classList.remove('visible');
+    this.quizDeckModal.classList.remove('visible');
+    this.renderGuide(index);
+    this.guideModal.classList.add('visible');
+  }
+
+  renderGuide(index) {
+    const guides = window.GAME_GUIDES || [];
+    const safeIdx = ((index % guides.length) + guides.length) % guides.length;
+    const guide = guides[safeIdx];
+    if (!guide) return;
+
+    const tabsEl = document.getElementById('guide-tabs');
+    tabsEl.innerHTML = '';
+    guides.forEach((g, idx) => {
+      const btn = document.createElement('button');
+      btn.className = `guide-tab-btn ${idx === safeIdx ? 'active' : ''}`;
+      const shortName = g.title.split('—')[0].trim();
+      btn.textContent = `0${idx + 1}. ${shortName}`;
+      btn.addEventListener('click', () => this.renderGuide(idx));
+      tabsEl.appendChild(btn);
+    });
+
+    const contentEl = document.getElementById('guide-content');
+    const controlsHtml = guide.controls
+      .map(
+        c => `
+        <div class="guide-control-card">
+          <div class="guide-control-icon">${c.svg}</div>
+          <div>
+            <div class="guide-control-gesture">${c.gesture}</div>
+            <div class="guide-control-action">${c.action}</div>
+          </div>
+        </div>
+      `
+      )
+      .join('');
+
+    const stepsHtml = guide.steps
+      .map(
+        (st, i) => `
+        <li>
+          <span class="guide-step-num">${i + 1}</span>
+          <span>${st}</span>
+        </li>
+      `
+      )
+      .join('');
+
+    contentEl.innerHTML = `
+      <div class="shard-header" style="margin-bottom: 8px;">
+        <span class="shard-badge">TRÒ CHƠI ${guide.number}</span>
+        <span class="shard-mission">${guide.hardware}</span>
+      </div>
+      <h3 class="shard-title" style="font-size: 24px;">${guide.title}</h3>
+      <div class="guide-goal-box"><strong>Mục tiêu:</strong> ${guide.goal}</div>
+      <div class="guide-controls-grid">${controlsHtml}</div>
+      <ul class="guide-steps-list">${stepsHtml}</ul>
+      <div class="guide-tip-box">💡 <strong>Mẹo VantaLumen:</strong> ${guide.tip}</div>
+      <div class="shard-actions">
+        <div class="shard-team-tag"><strong>TEAM VANTALUMEN</strong> • KHÔNG CÓ GAME OVER</div>
+        <div class="btn-group">
+          <button id="btn-guide-prev" class="btn btn-ghost">← Game trước</button>
+          <button id="btn-guide-next" class="btn btn-ghost">Game sau →</button>
+          <button id="btn-guide-play" class="btn btn-primary">Chơi màn 0${safeIdx + 1} ngay ▶</button>
+        </div>
+      </div>
+    `;
+
+    contentEl.querySelector('#btn-guide-prev').addEventListener('click', () => {
+      this.renderGuide((safeIdx - 1 + guides.length) % guides.length);
+    });
+    contentEl.querySelector('#btn-guide-next').addEventListener('click', () => {
+      this.renderGuide((safeIdx + 1) % guides.length);
+    });
+    contentEl.querySelector('#btn-guide-play').addEventListener('click', () => {
+      this.hideModals();
+      this.mountGame(safeIdx);
+    });
+  }
+
   openDossier() {
     this.paused = true;
     this.memoryModal.classList.remove('visible');
     this.galleryModal.classList.remove('visible');
     this.quizDeckModal.classList.remove('visible');
+    this.guideModal.classList.remove('visible');
     this.dossierModal.classList.add('visible');
   }
 
@@ -595,6 +701,7 @@ class EchoesApp {
     this.galleryModal.classList.remove('visible');
     this.dossierModal.classList.remove('visible');
     this.quizDeckModal.classList.remove('visible');
+    this.guideModal.classList.remove('visible');
     this.paused = false;
   }
 
