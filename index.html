@@ -45,32 +45,32 @@
 
   <!-- Minimalist Corner Icon Controls -->
   <div id="corner-controls">
-    <button id="btn-guide" class="icon-btn" title="Hướng Dẫn Cách Chơi 6 Game (Phím tắt: H)">
+    <button id="btn-guide" class="icon-btn" data-tooltip="Hướng Dẫn 6 Game (H)" aria-label="Hướng Dẫn Cách Chơi 6 Game">
       <svg viewBox="0 0 24 24">
         <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
         <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
       </svg>
     </button>
-    <button id="btn-quiz-deck" class="icon-btn" title="Bộ Câu Hỏi Khám Phá Vũ Trụ VantaLumen (Phím tắt: Q)">
+    <button id="btn-quiz-deck" class="icon-btn" data-tooltip="Câu Hỏi Vũ Trụ (Q)" aria-label="Bộ Câu Hỏi Khám Phá Vũ Trụ VantaLumen">
       <svg viewBox="0 0 24 24">
         <circle cx="12" cy="12" r="10"></circle>
         <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
         <line x1="12" y1="17" x2="12.01" y2="17"></line>
       </svg>
     </button>
-    <button id="btn-instant-shard" class="icon-btn" title="Xem Thẻ Ký Ức của thiết bị hiện tại (Phím tắt: I)">
+    <button id="btn-instant-shard" class="icon-btn" data-tooltip="Thẻ Ký Ức (I)" aria-label="Xem Thẻ Ký Ức của thiết bị hiện tại">
       <svg viewBox="0 0 24 24">
         <circle cx="12" cy="12" r="10"></circle>
         <line x1="12" y1="16" x2="12" y2="12"></line>
         <line x1="12" y1="8" x2="12.01" y2="8"></line>
       </svg>
     </button>
-    <button id="btn-gallery" class="icon-btn" title="Kho Lưu Trữ Mảnh Vỡ Ký Ức">
+    <button id="btn-gallery" class="icon-btn" data-tooltip="Kho Ký Ức" aria-label="Kho Lưu Trữ Mảnh Vỡ Ký Ức">
       <svg viewBox="0 0 24 24">
         <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
       </svg>
     </button>
-    <button id="btn-audio" class="icon-btn" title="Bật / Tắt Âm Thanh (Phím tắt: M)">
+    <button id="btn-audio" class="icon-btn" data-tooltip="Âm Thanh (M)" aria-label="Bật / Tắt Âm Thanh">
       <svg viewBox="0 0 24 24">
         <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
         <path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
@@ -86,22 +86,27 @@
         <span id="shard-number" class="shard-badge">MẢNH VỠ KÝ ỨC • 01 / 06</span>
         <span id="shard-mission" class="shard-mission">NASA Discovery Program</span>
       </div>
-      <div id="shard-visual" class="shard-visual"></div>
-      <h2 id="shard-title" class="shard-title">UNDER THE DUST</h2>
-      <div id="shard-subtitle" class="shard-subtitle">Trạm đổ bộ InSight</div>
 
-      <!-- Hardware Specs & Live Player Session Telemetry -->
-      <div id="shard-specs" class="shard-specs-grid"></div>
+      <div class="shard-body-grid">
+        <div class="shard-col-left">
+          <div id="shard-visual" class="shard-visual"></div>
+          <!-- Hardware Specs & Live Player Session Telemetry -->
+          <div id="shard-specs" class="shard-specs-grid"></div>
+          <div class="shard-meta">
+            <span>Tư liệu khoa học NASA:</span>
+            <a id="shard-source-link" href="https://science.nasa.gov" target="_blank" rel="noopener noreferrer">Official Mission Page ↗</a>
+          </div>
+        </div>
 
-      <p id="shard-story" class="shard-story"></p>
-
-      <!-- Embedded VantaLumen Illustrated Question ("Show First, Tell After" Verification) -->
-      <div id="shard-quiz-box" class="shard-quiz-section"></div>
-
-      <div class="shard-meta">
-        <span>Tư liệu khoa học &amp; phần cứng chính thức:</span>
-        <a id="shard-source-link" href="https://science.nasa.gov" target="_blank" rel="noopener noreferrer">NASA Official Mission Page ↗</a>
+        <div class="shard-col-right">
+          <h2 id="shard-title" class="shard-title">UNDER THE DUST</h2>
+          <div id="shard-subtitle" class="shard-subtitle">Trạm đổ bộ InSight</div>
+          <p id="shard-story" class="shard-story"></p>
+          <!-- Embedded VantaLumen Illustrated Question ("Show First, Tell After" Verification) -->
+          <div id="shard-quiz-box" class="shard-quiz-section"></div>
+        </div>
       </div>
+
       <div class="shard-actions">
         <div class="shard-team-tag">PROJECT BY <strong>TEAM VANTALUMEN</strong> • NASA SPACE APPS</div>
         <div class="btn-group">

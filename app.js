@@ -442,6 +442,9 @@ class EchoesApp {
     link.textContent = shard.sourceLabel + ' ↗';
     link.href = shard.sourceUrl;
 
+    const card = this.memoryModal.querySelector('.shard-card');
+    if (card) card.scrollTop = 0;
+    window.soundEngine.playUIChime(6);
     this.memoryModal.classList.add('visible');
   }
 
