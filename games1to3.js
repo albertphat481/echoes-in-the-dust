@@ -1090,6 +1090,8 @@ class OneWheelLeftGame {
     this.roverX = 120;
     this.roverSpeed = 0;
     this.isPushing = false;
+    this.keyForward = false;
+    this.keyBackward = false;
     this.continuousPushTime = 0;
     this.isBogged = false;
     this.shakeCount = 0;
@@ -1111,17 +1113,21 @@ class OneWheelLeftGame {
     );
   }
 
+  _tryShakeFree(reverse = false) {
+    this.shakeCount++;
+    window.soundEngine.playPentatonicNote(1 + (this.shakeCount % 3), 0.14, 0.4, 0, 'triangle');
+    if (this.shakeCount >= 2) {
+      this.isBogged = false;
+      this.continuousPushTime = 0;
+      this.roverSpeed = reverse ? -64 : 74;
+    }
+  }
+
   onPointerDown() {
     if (!this.hasInteracted) this.hasInteracted = true;
 
     if (this.isBogged) {
-      this.shakeCount++;
-      window.soundEngine.playPentatonicNote(1 + (this.shakeCount % 3), 0.14, 0.4, 0, 'triangle');
-      if (this.shakeCount >= 2) {
-        this.isBogged = false;
-        this.continuousPushTime = 0;
-        this.roverSpeed = 72;
-      }
+      this._tryShakeFree(false);
       return;
     }
 
@@ -1132,6 +1138,42 @@ class OneWheelLeftGame {
 
   onPointerUp() {
     this.isPushing = false;
+  }
+
+  _classifyRoverKey(e) {
+    const code = e.code;
+    const key = e.key ? e.key.toLowerCase() : '';
+    if (code === 'ArrowRight' || code === 'ArrowUp' || code === 'KeyD' || code === 'KeyW' || key === 'd' || key === 'w') {
+      return 'forward';
+    }
+    if (code === 'ArrowLeft' || code === 'ArrowDown' || code === 'KeyA' || code === 'KeyS' || key === 'a' || key === 's') {
+      return 'backward';
+    }
+    return null;
+  }
+
+  onKeyDown(e) {
+    const dir = this._classifyRoverKey(e);
+    if (!dir) return false;
+
+    if (!this.hasInteracted) this.hasInteracted = true;
+
+    if (this.isBogged) {
+      if (!e.repeat) this._tryShakeFree(dir === 'backward');
+      return true;
+    }
+
+    if (dir === 'forward') this.keyForward = true;
+    else this.keyBackward = true;
+    return true;
+  }
+
+  onKeyUp(e) {
+    const dir = this._classifyRoverKey(e);
+    if (!dir) return false;
+    if (dir === 'forward') this.keyForward = false;
+    else this.keyBackward = false;
+    return true;
   }
 
   update(dt) {
@@ -1145,14 +1187,31 @@ class OneWheelLeftGame {
       this.cameraZoomOut = Math.min(1, sunsetPhase);
     }
 
+    const pushingForward = this.isPushing || this.keyForward;
+    const pushingBackward = !pushingForward && this.keyBackward;
+
     if (!this.isBogged && sunsetPhase < 0.7) {
-      if (this.isPushing) {
+      if (pushingForward) {
         this.continuousPushTime += dt;
-        this.roverSpeed = Math.min(120, this.roverSpeed + dt * 150);
+        this.roverSpeed = Math.min(130, this.roverSpeed + dt * 165);
 
         if (this.continuousPushTime > 5.5) {
           this.isBogged = true;
           this.isPushing = false;
+          this.keyForward = false;
+          this.keyBackward = false;
+          this.shakeCount = 0;
+          this.roverSpeed = 0;
+        }
+      } else if (pushingBackward) {
+        this.continuousPushTime += dt * 0.7;
+        this.roverSpeed = Math.max(-95, this.roverSpeed - dt * 145);
+
+        if (this.continuousPushTime > 5.5) {
+          this.isBogged = true;
+          this.isPushing = false;
+          this.keyForward = false;
+          this.keyBackward = false;
           this.shakeCount = 0;
           this.roverSpeed = 0;
         }
@@ -1164,12 +1223,14 @@ class OneWheelLeftGame {
       this.roverSpeed *= Math.pow(0.08, dt);
     }
 
-    this.roverX += this.roverSpeed * dt;
-    if (this.roverSpeed > 18) window.soundEngine.playGravelCrunch();
+    this.roverX = Math.max(80, this.roverX + this.roverSpeed * dt);
+    if (this.roverX <= 80 && this.roverSpeed < 0) this.roverSpeed = 0;
 
-    if (this.roverSpeed > 8) {
+    if (Math.abs(this.roverSpeed) > 18) window.soundEngine.playGravelCrunch();
+
+    if (Math.abs(this.roverSpeed) > 8) {
       const last = this.trenchPoints[this.trenchPoints.length - 1];
-      if (!last || this.roverX - last.x > 10) {
+      if (!last || Math.abs(this.roverX - last.x) > 10) {
         this.trenchPoints.push({ x: this.roverX - 30, glow: 1.0 });
         this.silicaSparkles.push({
           x: this.roverX - 30,

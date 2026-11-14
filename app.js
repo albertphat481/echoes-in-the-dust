@@ -135,10 +135,20 @@ class EchoesApp {
   }
 
   _setupInput() {
+    // Attempt immediate Web Audio init (works when browser permits autoplay)
+    // and attach global capture unlockers so ANY first key/tap/click anywhere starts audio.
+    try { window.soundEngine.init(); } catch {}
+    const unlockAudio = () => {
+      try { window.soundEngine.unlock(); } catch {}
+    };
+    ['pointerdown', 'mousedown', 'touchstart', 'keydown', 'click'].forEach(evt => {
+      window.addEventListener(evt, unlockAudio, { capture: true, passive: true });
+    });
+
     const getXY = e => ({ x: e.clientX, y: e.clientY });
 
     this.canvas.addEventListener('pointerdown', e => {
-      window.soundEngine.init();
+      window.soundEngine.unlock();
       this.idleTime = 0;
       this._dismissIntroWhisper();
       if (this.paused || !this.currentGame) return;
@@ -169,50 +179,52 @@ class EchoesApp {
     this.canvas.addEventListener('pointerup', endPointer);
     this.canvas.addEventListener('pointercancel', endPointer);
 
-    // Keyboard Support: Spacebar for Hold, ArrowLeft/Right & 1-6 for stages, H/Q/I/J/M/Esc
+    // Keyboard Support: Active game keys (Arrow/WASD for Rover), Spacebar for Hold, ArrowLeft/Right & 1-6 for stages, H/Q/I/J/M/Esc
     window.addEventListener('keydown', e => {
       this.idleTime = 0;
+      window.soundEngine.unlock();
+
+      if (!this.paused && this.currentGame && typeof this.currentGame.onKeyDown === 'function') {
+        if (this.currentGame.onKeyDown(e)) {
+          e.preventDefault();
+          this._dismissIntroWhisper();
+          return;
+        }
+      }
+
       if (e.code === 'Space' && !e.repeat && !this.paused && this.currentGame) {
         e.preventDefault();
-        window.soundEngine.init();
         this._dismissIntroWhisper();
         this.currentGame.onPointerDown(window.innerWidth * 0.5, window.innerHeight * 0.5);
       } else if (e.key === 'ArrowRight' && !this.paused) {
-        window.soundEngine.init();
         this._dismissIntroWhisper();
         this.mountGame((this.currentIndex + 1) % this.gameClasses.length);
       } else if (e.key === 'ArrowLeft' && !this.paused) {
-        window.soundEngine.init();
         this._dismissIntroWhisper();
         this.mountGame((this.currentIndex - 1 + this.gameClasses.length) % this.gameClasses.length);
       } else if (e.key >= '1' && e.key <= '6') {
-        window.soundEngine.init();
         this._dismissIntroWhisper();
         this.hideModals();
         this.mountGame(Number(e.key) - 1);
       } else if (e.key === 'i' || e.key === 'I') {
-        window.soundEngine.init();
         if (this.memoryModal.classList.contains('visible')) {
           this.hideModals();
         } else {
           this.showMemoryShard(this.currentIndex);
         }
       } else if (e.key === 'q' || e.key === 'Q') {
-        window.soundEngine.init();
         if (this.quizDeckModal.classList.contains('visible')) {
           this.hideModals();
         } else {
           this.openQuizDeck(this.currentIndex);
         }
       } else if (e.key === 'h' || e.key === 'H') {
-        window.soundEngine.init();
         if (this.guideModal.classList.contains('visible')) {
           this.hideModals();
         } else {
           this.openGuide(this.currentIndex);
         }
       } else if (e.key === 'j' || e.key === 'J') {
-        window.soundEngine.init();
         if (this.dossierModal.classList.contains('visible')) {
           this.hideModals();
         } else {
@@ -228,6 +240,11 @@ class EchoesApp {
     });
 
     window.addEventListener('keyup', e => {
+      if (!this.paused && this.currentGame && typeof this.currentGame.onKeyUp === 'function') {
+        if (this.currentGame.onKeyUp(e)) {
+          e.preventDefault();
+        }
+      }
       if (e.code === 'Space' && !this.paused && this.currentGame) {
         e.preventDefault();
         this.currentGame.onPointerUp(window.innerWidth * 0.5, window.innerHeight * 0.5);

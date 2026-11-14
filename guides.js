@@ -71,25 +71,25 @@ window.GAME_GUIDES = [
     goal: 'Điều khiển rover Spirit đi lùi kéo lê chiếc bánh bị kẹt để cày lộ rãnh đất Silica phát sáng trước khi hoàng hôn buông xuống.',
     controls: [
       {
-        gesture: 'Nhấn giữ (hoặc giữ Space)',
-        action: 'Đẩy rover chạy lùi về phía trước, chiếc bánh hỏng phía sau sẽ cày rãnh xanh ngọc lấp lánh và ngân từng nốt nhạc.',
+        gesture: 'Phím mũi tên / WASD (hoặc giữ chuột / Space)',
+        action: 'Nhấn giữ D / W / Mũi tên phải-lên (hoặc chuột/Space) để tiến lên, A / S / Mũi tên trái-xuống để lùi lại; bánh xe hỏng sẽ cày lộ rãnh Silica xanh ngọc phát sáng.',
         svg: `<svg viewBox="0 0 48 48"><rect x="10" y="18" width="28" height="12" rx="6" fill="rgba(245,158,11,0.2)" stroke="#fcd34d" stroke-width="2"/><polygon points="22,20 30,24 22,28" fill="#fcd34d"/></svg>`
       },
       {
-        gesture: 'Thả tay / Thả Space',
+        gesture: 'Thả phím / Thả chuột',
         action: 'Cho động cơ nghỉ để tránh quá tải và không bị lún vào lớp cát mềm.',
         svg: `<svg viewBox="0 0 48 48"><circle cx="24" cy="24" r="14" stroke="#94a3b8" stroke-width="2" fill="none"/><rect x="18" y="18" width="4" height="12" fill="#94a3b8"/><rect x="26" y="18" width="4" height="12" fill="#94a3b8"/></svg>`
       },
       {
-        gesture: 'Chạm / Nhấp nhịp nhàng khi sa lầy',
-        action: 'Nếu giữ quá 4 giây làm bánh lún cát (xe rung lắc), hãy thả ra rồi nhấp đều 3 nhịp để lắc thoát khỏi cát!',
+        gesture: 'Nhấp / Nhấn nhịp nhàng khi sa lầy',
+        action: 'Nếu giữ quá lâu làm bánh lún cát (xe rung lắc), hãy thả ra rồi nhấp chuột hoặc nhấn phím mũi tên / WASD / Space 2 nhịp để lắc thoát khỏi cát!',
         svg: `<svg viewBox="0 0 48 48"><circle cx="14" cy="24" r="4" fill="#38bdf8"/><circle cx="24" cy="24" r="4" fill="#38bdf8"/><circle cx="34" cy="24" r="4" fill="#38bdf8"/></svg>`
       }
     ],
     steps: [
-      'Nhấn giữ chuột, chạm màn hình hoặc giữ phím Space để đẩy chú rover Spirit di chuyển.',
-      'Hãy giữ theo từng nhịp 2–3 giây rồi thả nghỉ một chút để xe chạy mượt và không bị lún cát.',
-      'Nếu xe lỡ bị lún cát và rung lên, đừng lo (không có Game Over!): chỉ cần nhấp đều 3 lần để lắc thoát ra và ngắm camera vút lên quỹ đạo lúc hoàng hôn.'
+      'Dùng phím mũi tên (←/→/↑/↓), WASD, Space hoặc nhấn giữ chuột/chạm màn hình để điều khiển rover Spirit di chuyển.',
+      'Hãy chạy theo từng nhịp 2–3 giây rồi thả nghỉ một chút để xe lướt mượt và không bị lún cát.',
+      'Nếu xe lỡ bị lún cát và rung lên, đừng lo (không có Game Over!): chỉ cần nhấp chuột hoặc nhấn phím 2 nhịp để lắc thoát ra và ngắm camera vút lên quỹ đạo lúc hoàng hôn.'
     ],
     tip: 'Mỗi đoạn rãnh đất Silica (>90% độ tinh khiết) mà bánh xe chết cày lộ ra sẽ ngân lên một nốt hộp nhạc ngũ cung.'
   },

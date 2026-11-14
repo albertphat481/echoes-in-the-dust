@@ -30,7 +30,9 @@ class SoundEngine {
   init() {
     if (this.ctx) {
       if (this.ctx.state === 'suspended') {
-        this.ctx.resume();
+        this.ctx.resume().then(() => this._onContextRunning()).catch(() => {});
+      } else {
+        this._onContextRunning();
       }
       this.unlocked = true;
       return;
@@ -73,7 +75,30 @@ class SoundEngine {
 
     this._initContinuousWind();
     this._initDeepSpaceDrone();
+
+    if (this.ctx.state === 'suspended') {
+      this.ctx.resume().then(() => this._onContextRunning()).catch(() => {});
+    } else {
+      this._onContextRunning();
+    }
     this.unlocked = true;
+  }
+
+  unlock() {
+    this.init();
+    if (this.ctx && this.ctx.state === 'suspended') {
+      this.ctx.resume().then(() => this._onContextRunning()).catch(() => {});
+    }
+  }
+
+  _onContextRunning() {
+    if (!this.ctx || !this.ambientPadGain) return;
+    const now = this.ctx.currentTime;
+    if (this.ambientPadGain.gain.value < 0.02) {
+      this.ambientPadGain.gain.cancelScheduledValues(now);
+      this.ambientPadGain.gain.setValueAtTime(Math.max(0.0001, this.ambientPadGain.gain.value), now);
+      this.ambientPadGain.gain.linearRampToValueAtTime(0.075, now + 1.8);
+    }
   }
 
   _createPinkNoiseBuffer(seconds) {
