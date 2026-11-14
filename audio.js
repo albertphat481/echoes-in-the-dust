@@ -145,7 +145,6 @@ class SoundEngine {
     panR.connect(this.reverbSend);
 
     this._initContinuousWind();
-    this._initDeepSpaceDrone();
 
     this._syncState();
     if (this.ctx.state === 'suspended') {
@@ -163,13 +162,7 @@ class SoundEngine {
   }
 
   _onContextRunning() {
-    if (!this.ctx || !this.ambientPadGain) return;
-    const now = this.ctx.currentTime;
-    if (this.ambientPadGain.gain.value < 0.02) {
-      this.ambientPadGain.gain.cancelScheduledValues(now);
-      this.ambientPadGain.gain.setValueAtTime(Math.max(0.0001, this.ambientPadGain.gain.value), now);
-      this.ambientPadGain.gain.linearRampToValueAtTime(0.068, now + 1.8);
-    }
+    // Keep idle state completely silent unless user interacts
   }
 
   _createWarmTapeCurve(drive = 1.4) {
