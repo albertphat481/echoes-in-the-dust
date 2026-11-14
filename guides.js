@@ -5,7 +5,7 @@
 window.GAME_GUIDES = [
   {
     id: 'under-the-dust',
-    number: '01 / 09',
+    number: '01 / 08',
     title: 'UNDER THE DUST — Nhịp Tim Dưới Lớp Bụi',
     hardware: 'Trạm đổ bộ NASA InSight & Pin mặt trời UltraFlex',
     goal: 'Quét sạch lớp bụi Sao Hỏa để khôi phục năng lượng và đánh thức nhịp tim địa chấn của InSight.',
@@ -29,7 +29,7 @@ window.GAME_GUIDES = [
   },
   {
     id: 'still-there',
-    number: '02 / 09',
+    number: '02 / 08',
     title: 'STILL THERE — Vẫn Còn Ở Đó',
     hardware: 'Gương phản xạ Laser Apollo 11, 14, 15 trên Mặt Trăng',
     goal: 'Bắn tia laser từ Trái Đất tới 3 gương phản xạ Apollo trên Mặt Trăng để ghép thành tam giác chòm sao.',
@@ -53,7 +53,7 @@ window.GAME_GUIDES = [
   },
   {
     id: 'one-wheel-left',
-    number: '03 / 09',
+    number: '03 / 08',
     title: 'ONE WHEEL LEFT — Một Bánh Còn Lại',
     hardware: 'Xe tự hành NASA Spirit (MER-A) tại Gusev Crater',
     goal: 'Lái rover Spirit tiến về Đỉnh Silica Hoàng Hôn (ánh sáng xanh ngọc bên phải) để cày lộ lớp đất quý.',
@@ -77,7 +77,7 @@ window.GAME_GUIDES = [
   },
   {
     id: 'unsent',
-    number: '04 / 09',
+    number: '04 / 08',
     title: 'UNSENT — Những Điều Chưa Kịp Gửi',
     hardware: 'Xe tự hành NASA Opportunity (MER-B) & Bộ nhớ RAM tạm thời',
     goal: 'Chọn 3 tấm ảnh Polaroid kỷ niệm để truyền lên vệ tinh MRO trước khi màn đêm Sao Hỏa buông xuống.',
@@ -101,7 +101,7 @@ window.GAME_GUIDES = [
   },
   {
     id: 'moon-still-rings',
-    number: '05 / 09',
+    number: '05 / 08',
     title: 'MOON STILL RINGS — Mặt Trăng Vẫn Ngân',
     hardware: 'Trạm Địa chấn Thụ động Apollo 12 (PSE)',
     goal: 'Kích hoạt 5 điểm cộng hưởng quanh vành Mặt Trăng và so sánh độ ngân địa chấn với Trái Đất.',
@@ -125,7 +125,7 @@ window.GAME_GUIDES = [
   },
   {
     id: 'eternal-footprint',
-    number: '06 / 09',
+    number: '06 / 08',
     title: 'ETERNAL FOOTPRINT — Dấu Chân Bất Tận',
     hardware: 'Dấu giày Apollo trên lớp đất Regolith & Tàu quỹ đạo LRO',
     goal: 'In 5 bước chân lên bụi Mặt Trăng và kéo thanh góc nắng để quan sát bóng đổ qua hàng triệu năm.',
@@ -149,7 +149,7 @@ window.GAME_GUIDES = [
   },
   {
     id: 'pale-blue-dot',
-    number: '07 / 09',
+    number: '07 / 08',
     title: 'PALE BLUE DOT — Chấm Xanh Mờ',
     hardware: 'Tàu thăm dò Voyager 1 & Camera Góc Hẹp (6,05 tỷ km)',
     goal: 'Chụp đủ 3 thiên thể (Sao Mộc, Sao Thổ và Chấm Xanh Mờ Trái Đất) từ rìa Hệ Mặt Trời.',
@@ -173,7 +173,7 @@ window.GAME_GUIDES = [
   },
   {
     id: 'grand-finale',
-    number: '08 / 09',
+    number: '08 / 08',
     title: 'GRAND FINALE — Cú Lao Cuối Cùng',
     hardware: 'Tàu quỹ đạo NASA Cassini & Ăng-ten High-Gain hướng Trái Đất',
     goal: 'Truyền 5 gói dữ liệu vành đai Sao Thổ về Trái Đất trước khi Cassini hòa vào bầu khí quyển.',
@@ -194,53 +194,5 @@ window.GAME_GUIDES = [
       'Đủ 5/5 gói tin, Cassini sẽ hoàn thành sứ mệnh bảo vệ đại dương ngầm trên mặt trăng Enceladus.'
     ],
     tip: 'Ngày 15/09/2017, Cassini giữ ăng-ten hướng về Trái Đất tới tận giây cuối cùng ở tốc độ 113.000 km/h.'
-  },
-  {
-    id: 'rise-zero-g',
-    number: '09 / 09 ★',
-    title: 'RISE — Vật Chỉ Thị Không Trọng Lực (Artemis II)',
-    hardware: 'Tàu Orion • NASA Artemis II (2026) • Thiết kế bởi Lucas Ye (8 tuổi)',
-    goal: 'Thu thập đủ 7 Ngôi Sao quanh cửa sổ tàu Orion cùng linh vật Rise.',
-    controls: [
-      {
-        gesture: 'Chạm hoặc Kéo thả Rise',
-        action: 'Chạm trực tiếp vào Rise để thu sao tự động hoặc kéo Rise bay trong môi trường 0-G.',
-        svg: `<svg viewBox="0 0 48 48"><circle cx="24" cy="24" r="14" stroke="#38bdf8" stroke-width="2" fill="rgba(56,189,248,0.15)"/><circle cx="19" cy="22" r="2.2" fill="#fcd34d"/><circle cx="29" cy="22" r="2.2" fill="#fcd34d"/><path d="M20 27 Q24 31 28 27" stroke="#fcd34d" stroke-width="2" fill="none"/></svg>`
-      },
-      {
-        gesture: 'Chạm vào 7 Ngôi Sao (★)',
-        action: 'Chạm thẳng vào 7 ngôi sao phát sáng quanh cửa sổ Orion để Rise bay tới thu thập.',
-        svg: `<svg viewBox="0 0 48 48"><circle cx="24" cy="24" r="15" stroke="#fcd34d" stroke-width="1.8" stroke-dasharray="4 3" fill="none"/><text x="24" y="29" text-anchor="middle" fill="#fef3c7" font-size="16">★</text></svg>`
-      }
-    ],
-    steps: [
-      'Chạm vào Rise hoặc 7 ngôi sao quanh cửa sổ tàu Orion để kích hoạt giai điệu 0-G.',
-      'Thu thập đủ 7/7 ngôi sao để mở khóa Thẻ Ký Ức & Infographic chính thức của Rise.'
-    ],
-    tip: '4 biểu tượng của Rise: Thân Mặt Trăng • Mũ Trái Đất • 7 Sao & 2 Tên Lửa • Dấu chân Apollo 11.'
-  },
-  {
-    id: 'spirit-rescue',
-    number: '10 / 10 ★',
-    title: 'SPIRIT RESCUE — Giải Cứu Rover Spirit (Fictional)',
-    hardware: 'Tàu SpaceX Starship & Xe tự hành NASA Spirit (MER-A)',
-    goal: 'Bay tàu SpaceX lên Sao Hỏa bế rover Spirit về Trái Đất để thay motor bánh xe và sạc đầy 100% pin.',
-    controls: [
-      {
-        gesture: 'Nhấn giữ (hoặc Space)',
-        action: 'Đốt động cơ Raptor phóng tàu SpaceX lên Sao Hỏa, bế Spirit vào khoang và bay về Trái Đất.',
-        svg: `<svg viewBox="0 0 48 48"><path d="M24 8 L30 22 L30 34 L18 34 L18 22 Z" stroke="#e2e8f0" stroke-width="2" fill="rgba(56,189,248,0.18)"/><path d="M20 34 L24 42 L28 34" stroke="#60a5fa" stroke-width="2" fill="none"/></svg>`
-      },
-      {
-        gesture: 'Chạm để sửa chữa tại Trái Đất',
-        action: 'Chạm tháo motor cũ ở bánh xe hỏng, chạm lắp motor titan mới, rồi nhấn giữ nút tia sét để sạc pin 100%.',
-        svg: `<svg viewBox="0 0 48 48"><circle cx="24" cy="24" r="14" stroke="#fcd34d" stroke-width="2" fill="none"/><path d="M26 14 L18 25 H25 L22 34 L30 23 H23 Z" fill="#38bdf8"/></svg>`
-      }
-    ],
-    steps: [
-      'Giai đoạn 1–3: Nhấn giữ để bay lên Sao Hỏa, bế Spirit lên tàu SpaceX rồi bay về Trái Đất.',
-      'Giai đoạn 4–5: Chạm tháo motor cũ, lắp motor mới và nhấn giữ biểu tượng sét để sạc đầy 100% pin Spirit.'
-    ],
-    tip: 'Ngoài đời thật, bánh trước bên phải của Spirit bị kẹt từ năm 2006 và kẹt cát hoàn toàn năm 2009 — màn chơi này là lời tri ân giả tưởng đưa Spirit về nhà!'
   }
 ];

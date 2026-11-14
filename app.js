@@ -16,9 +16,7 @@ class EchoesApp {
       window.MoonStillRingsGame,
       window.EternalFootprintGame,
       window.PaleBlueDotGame,
-      window.CassiniGrandFinaleGame,
-      window.RiseZeroGGame,
-      window.SpiritRescueGame
+      window.CassiniGrandFinaleGame
     ];
 
     this.currentIndex = 0;
@@ -236,16 +234,6 @@ class EchoesApp {
         this._dismissIntroWhisper();
         this.hideModals();
         this.mountGame(Number(e.key) - 1);
-      } else if (e.key === '9' || e.key === 'r' || e.key === 'R') {
-        this._dismissIntroWhisper();
-        this.hideModals();
-        const riseIdx = this.gameClasses.indexOf(window.RiseZeroGGame);
-        this.mountGame(riseIdx >= 0 ? riseIdx : 8);
-      } else if (e.key === '0' || e.key === 's' || e.key === 'S') {
-        this._dismissIntroWhisper();
-        this.hideModals();
-        const spiritIdx = this.gameClasses.indexOf(window.SpiritRescueGame);
-        this.mountGame(spiritIdx >= 0 ? spiritIdx : 9);
       } else if (e.key === 'i' || e.key === 'I') {
         if (this.memoryModal.classList.contains('visible')) {
           this.hideModals();
@@ -386,32 +374,7 @@ class EchoesApp {
       this.openDossier();
     });
 
-    // Two Circular Mascot Launchers (Bottom-Left: Rise & Spirit)
-    const btnRise = document.getElementById('btn-rise-mascot');
-    if (btnRise) {
-      btnRise.addEventListener('click', e => {
-        e.currentTarget.blur();
-        window.soundEngine.unlock();
-        this._dismissIntroWhisper();
-        this.hideModals();
-        const riseIdx = this.gameClasses.indexOf(window.RiseZeroGGame);
-        this.mountGame(riseIdx >= 0 ? riseIdx : 8);
-      });
-    }
-
-    const btnSpirit = document.getElementById('btn-spirit-mascot');
-    if (btnSpirit) {
-      btnSpirit.addEventListener('click', e => {
-        e.currentTarget.blur();
-        window.soundEngine.unlock();
-        this._dismissIntroWhisper();
-        this.hideModals();
-        const spiritIdx = this.gameClasses.indexOf(window.SpiritRescueGame);
-        this.mountGame(spiritIdx >= 0 ? spiritIdx : 9);
-      });
-    }
-
-    // Top-Right Guide Button (6 Separate Guides)
+    // Top-Right Guide Button
     document.getElementById('btn-guide').addEventListener('click', e => {
       e.currentTarget.blur();
       window.soundEngine.unlock();
@@ -648,16 +611,6 @@ class EchoesApp {
       const shardId = window.MEMORY_SHARDS[idx].id;
       dot.classList.toggle('unlocked', this.unlockedShards.has(shardId));
     });
-    const btnRise = document.getElementById('btn-rise-mascot');
-    if (btnRise) {
-      const riseIdx = this.gameClasses.indexOf(window.RiseZeroGGame);
-      btnRise.classList.toggle('active', this.currentIndex === riseIdx);
-    }
-    const btnSpirit = document.getElementById('btn-spirit-mascot');
-    if (btnSpirit) {
-      const spiritIdx = this.gameClasses.indexOf(window.SpiritRescueGame);
-      btnSpirit.classList.toggle('active', this.currentIndex === spiritIdx);
-    }
   }
 
   mountGame(index, animate = true) {
@@ -921,8 +874,8 @@ class EchoesApp {
     const shards = this.unlockedShards.size;
     const quizzes = this.solvedQuizzes.size;
     const total = shards + quizzes;
-    if (shards >= 10 && quizzes >= 10) return en ? 'VantaLumen Memory Keeper ★' : 'Người Giữ Ký Ức VantaLumen ★';
-    if (total >= 12) return en ? 'NASA Deep-Space Engineer' : 'Kỹ Sư Viễn Thám NASA';
+    if (shards >= 8 && quizzes >= 8) return en ? 'VantaLumen Memory Keeper ★' : 'Người Giữ Ký Ức VantaLumen ★';
+    if (total >= 10) return en ? 'NASA Deep-Space Engineer' : 'Kỹ Sư Viễn Thám NASA';
     if (total >= 5) return en ? 'Stardust Explorer' : 'Nhà Khám Phá Bụi Sao';
     return en ? 'First-Contact Listener' : 'Người Lắng Nghe Khởi Đầu';
   }
@@ -1615,16 +1568,16 @@ class EchoesApp {
 
     ctx.fillStyle = '#64748b';
     ctx.font = '500 12.5px "JetBrains Mono", monospace';
-    ctx.fillText('HỒ SƠ 10 SỨ MỆNH PHẦN CỨNG NASA, ARTEMIS II & SPACEX RESCUE', 88, 408);
+    ctx.fillText('HỒ SƠ 8 SỨ MỆNH PHẦN CỨNG NASA', 88, 408);
 
     const gridX = 88;
     const gridY = 426;
     const gapX = 18;
-    const gapY = 10;
+    const gapY = 14;
     const cardW = (stripW - gapX) / 2;
-    const cardH = 84;
+    const cardH = 104;
 
-    const coreShards = window.MEMORY_SHARDS.slice(0, 10);
+    const coreShards = window.MEMORY_SHARDS.slice(0, 8);
     coreShards.forEach((shard, idx) => {
       const col = idx % 2;
       const row = Math.floor(idx / 2);

@@ -132,37 +132,5 @@ window.VANTALUMEN_QUIZZES = [
     correctKey: 'A',
     explanation:
       'Khi sắp cạn nhiên liệu, NASA cho Cassini lao vào Sao Thổ ở tốc độ 113.000 km/h để tránh nguy cơ tàu va chạm và làm nhiễm bẩn đại dương ngầm có khả năng nuôi dưỡng sự sống trên mặt trăng Enceladus và Titan.'
-  },
-  {
-    id: 'q9-rise-artemis-ii',
-    linkedShardId: 'rise-zero-g', // Game 9: Rise — NASA Artemis II Zero-Gravity Indicator
-    image: 'assets/rise_infographic.jpg',
-    questionEn: 'Which 1968 photo inspired "Rise", the Artemis II Zero-G Indicator by 8-year-old Lucas Ye?',
-    questionVi: 'Bức ảnh năm 1968 nào truyền cảm hứng cho linh vật không trọng lực "Rise" (Artemis II) của Lucas Ye?',
-    options: [
-      { key: 'A', label: 'A) Earthrise (Apollo 8)', vi: 'Trái Đất Mọc (Apollo 8, 1968)' },
-      { key: 'B', label: 'B) The Blue Marble', vi: 'Viên Bi Xanh (Apollo 17)' },
-      { key: 'C', label: 'C) Pillars of Creation', vi: 'Cột Trụ Sáng Tạo (Hubble)' },
-      { key: 'D', label: 'D) First Moon Footprint', vi: 'Dấu Chân Mặt Trăng (1969)' }
-    ],
-    correctKey: 'A',
-    explanation:
-      'Rise lấy cảm hứng từ bức ảnh Earthrise (Apollo 8, 1968), kết hợp 4 biểu tượng: thân Mặt Trăng, mũ Trái Đất, vành mũ 7 ngôi sao & 2 tên lửa, cùng dấu chân Apollo 11 (1969) phía sau lưng.'
-  },
-  {
-    id: 'q10-spirit-rescue',
-    linkedShardId: 'spirit-rescue', // Game 10: Fictional SpaceX Starship Spirit Rescue
-    image: 'assets/quiz/q6_mars_rover.jpg',
-    questionEn: 'In real history, which component on Mars rover Spirit seized in 2006 before its mission ended?',
-    questionVi: 'Trong lịch sử thật, bộ phận nào của rover Spirit bị kẹt cứng năm 2006 trước khi kết thúc sứ mệnh?',
-    options: [
-      { key: 'A', label: 'A) Right-front wheel motor', vi: 'Motor bánh trước bên phải' },
-      { key: 'B', label: 'B) Parachute cord', vi: 'Dây dù hạ cánh' },
-      { key: 'C', label: 'C) Nuclear RTG core', vi: 'Lõi hạt nhân RTG' },
-      { key: 'D', label: 'D) Heat shield', vi: 'Khiên chắn nhiệt' }
-    ],
-    correctKey: 'A',
-    explanation:
-      'Motor bánh trước bên phải (Wheel #1) của Spirit bị kẹt từ năm 2006, buộc Spirit phải chạy lùi kéo lê bánh hỏng — nhưng lại vô tình cày lộ lớp đất giàu Silica (>90%) từng có suối nước nóng cổ đại!'
   }
 ];

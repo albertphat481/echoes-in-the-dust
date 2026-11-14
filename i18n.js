@@ -17,8 +17,6 @@
     'btn-gallery-tip': 'Memory Archive',
     'btn-lang-tip': 'Tiếng Việt (L)',
     'btn-audio-tip': 'Sound (M)',
-    'btn-rise-tip': 'RISE • Artemis II 0-G (R)',
-    'btn-spirit-tip': 'SPIRIT • Mars Rescue (S)',
     'btn-close': 'Close ✕',
     'tab-diagram': 'Hardware Blueprint',
     'tab-nasa-photo': 'Real NASA Photo (API)',
@@ -30,7 +28,7 @@
     'btn-next-quiz': 'Next Question →',
     'gal-pill': 'TEAM VANTALUMEN • ANTHOLOGY ARCHIVE',
     'gal-title': 'Memory Shard Archive',
-    'gal-sub': '10 space exploration stories — from Apollo, Voyager & Cassini to Artemis II & Spirit Rescue',
+    'gal-sub': '8 space exploration stories — from Apollo & Mars rovers to Voyager & Cassini',
     'btn-cert': 'Certificate PNG ↓',
     'btn-gal-quiz': 'VantaLumen Space Quiz ★',
     'btn-gal-dossier': 'Mission Dossier',
@@ -38,8 +36,8 @@
     'gal-lbl-quiz': 'VANTALUMEN COSMIC KNOWLEDGE',
     'gal-lbl-rank': 'MISSION RANK',
     'guide-pill': 'VANTALUMEN • HOW TO PLAY',
-    'guide-title': '10 Space Minigame Guides',
-    'guide-sub': 'Core goals & controls for each NASA & SpaceX mission',
+    'guide-title': '8 Space Minigame Guides',
+    'guide-sub': 'Core goals & controls for each NASA mission',
     'dossier-title': 'VANTALUMEN — Echoes in the Dust',
     'dossier-sub': 'From cosmic dust darkness (Vanta) to human memory light (Lumen)',
     'btn-close-dossier': 'Back to Experience ✕',
@@ -48,7 +46,7 @@
     'kpi-quiz': 'BILINGUAL QUIZ CARDS',
     'kpi-hud': 'CLUTTER DURING PLAY',
     'judge-title': 'Judge & Presentation Mode',
-    'judge-desc': 'Keys 1–8 / ‹ › switch stations · R Rise 0-G · S Spirit Rescue · L Language · H Guides · I Shards · Q Quiz'
+    'judge-desc': 'Keys 1–8 / ‹ › switch stations · L Language · H Guides · I Shards · Q Quiz'
   };
 
   const SHARDS_EN = {
@@ -154,32 +152,6 @@
         { label: 'Hardware', value: 'Cassini High-Gain Antenna' },
         { label: 'Entry Speed', value: '113,000 km/h (Sept 15, 2017)' },
         { label: 'Protected World', value: 'Enceladus Ocean' }
-      ]
-    },
-    'rise-zero-g': {
-      title: 'RISE — A Little Moon With a Big Dream',
-      subtitle: 'NASA Artemis II Zero-Gravity Indicator • Space Apps 2026',
-      mission: 'NASA Artemis II (Orion) • Designed by Lucas Ye (Age 8)',
-      defaultStatLabel: '7 Stars on Rise’s Cap Brim',
-      story:
-        'Official Zero-G Indicator aboard Orion for Artemis II (2026), designed by 8-year-old Lucas Ye from the iconic 1968 Apollo 8 Earthrise photo. Four symbols: Moon body, Earth cap, 7 stars & 2 rockets brim, and Apollo 11 footprint on the back.',
-      specs: [
-        { label: 'Young Designer', value: 'Lucas Ye (Age 8 • Artemis II)' },
-        { label: '4 Design Symbols', value: 'Earth Cap • 7 Stars • 2 Rockets • Footprint' },
-        { label: 'Timeline', value: '1968 Apollo 8 → 1969 Apollo 11 → 2026 Artemis II' }
-      ]
-    },
-    'spirit-rescue': {
-      title: 'SPIRIT RESCUE — Bringing Spirit Home (Fictional)',
-      subtitle: 'SpaceX Starship Mars Rescue • Wheel Motor & 100% Battery Overhaul',
-      mission: 'Fictional SpaceX Starship × NASA MER-A Spirit',
-      defaultStatLabel: 'Rescue & Overhaul Status',
-      story:
-        'A heartfelt fictional tribute: fly SpaceX Starship 225 million km to Gusev Crater, lift stranded rover Spirit into the cargo bay, return to Earth, replace its seized 2006 wheel motor, and super-charge its battery to 100%.',
-      specs: [
-        { label: 'Rescue Vehicle', value: 'SpaceX Starship (Raptor Methalox)' },
-        { label: 'Repair Work', value: 'Wheel #1 Motor + 100% Battery' },
-        { label: 'Mission Result', value: '225M km × 2 • Spirit Restored' }
       ]
     }
   };
@@ -296,34 +268,6 @@
         'Finish 5/5 uplinks to protect Enceladus’s icy ocean.'
       ],
       tip: 'On Sept 15, 2017, Cassini kept pointing at Earth until the end at 113,000 km/h.'
-    },
-    'rise-zero-g': {
-      title: 'RISE — Artemis II Zero-G Indicator',
-      hardware: 'Orion Spacecraft • NASA Artemis II (2026) • By Lucas Ye (Age 8)',
-      goal: 'Float in zero gravity with Rise and collect all 7 golden stars around the Orion window.',
-      controls: [
-        { gesture: 'Tap or Drag Rise', action: 'Nudge or fling Rise gently through the 0-G cupola.' },
-        { gesture: 'Tap any of the 7 Stars (★)', action: 'Guide Rise directly toward that star to collect its chime.' }
-      ],
-      steps: [
-        'Tap Rise or the 7 orbiting stars around the Orion Cupola window.',
-        'Collect all 7/7 stars to unlock Rise’s Memory Shard & official infographic.'
-      ],
-      tip: 'Rise’s 4 symbols: Moon body • Earth cap • 7 Stars & 2 Rockets • Apollo 11 footprint.'
-    },
-    'spirit-rescue': {
-      title: 'SPIRIT RESCUE — SpaceX Mars Rescue (Fictional)',
-      hardware: 'SpaceX Starship & NASA Spirit Rover (MER-A)',
-      goal: 'Fly Starship to Mars, lift Spirit aboard, fly back to Earth, replace its wheel motor & charge to 100%.',
-      controls: [
-        { gesture: 'Press & Hold (or Space)', action: 'Fire Raptor engines to Mars, lift Spirit into cargo bay, and fly back to Earth.' },
-        { gesture: 'Tap in Earth Repair Bay', action: 'Tap seized wheel to remove old motor, tap new motor to install, then hold lightning pad to charge 100%.' }
-      ],
-      steps: [
-        'Phases 1–3: Hold to fly to Mars, scoop Spirit into Starship, and return to Earth.',
-        'Phases 4–5: Swap the seized wheel motor for a new titanium one and charge battery to 100%.'
-      ],
-      tip: 'In real life, Spirit’s right-front wheel seized in 2006 — this mission brings Spirit home!'
     }
   };
 
@@ -335,9 +279,7 @@
     'q5-first-human-moon': 'Neil Armstrong stepped onto the Moon on July 20, 1969 (Apollo 11), leaving bootprints that can last millions of years.',
     'q4-hottest-planet': 'Venus is the hottest planet (~465 °C) due to its dense CO₂ runaway greenhouse atmosphere.',
     'q7-jupiter-red-spot': 'Jupiter’s Great Red Spot is a giant anticyclonic storm wider than Earth, imaged by Voyager, Galileo, Cassini, and Juno.',
-    'q8-cassini-saturn': 'NASA plunged Cassini into Saturn in 2017 so it could never crash into and contaminate icy ocean moons like Enceladus or Titan.',
-    'q9-rise-artemis-ii': 'Rise was inspired by Apollo 8’s 1968 Earthrise photo, combining a Moon body, Earth cap, 7 stars & 2 rockets, and Apollo 11’s footprint.',
-    'q10-spirit-rescue': 'Spirit’s right-front wheel motor seized in 2006, forcing it to drive backwards and accidentally plow open >90% pure silica soil!'
+    'q8-cassini-saturn': 'NASA plunged Cassini into Saturn in 2017 so it could never crash into and contaminate icy ocean moons like Enceladus or Titan.'
   };
 
   function applyDOM() {
@@ -365,8 +307,6 @@
     setTip('#btn-gallery', 'btn-gallery-tip');
     setTip('#btn-lang', 'btn-lang-tip');
     setTip('#btn-audio', 'btn-audio-tip');
-    setTip('#btn-rise-mascot', 'btn-rise-tip');
-    setTip('#btn-spirit-mascot', 'btn-spirit-tip');
 
     setText('#btn-close-shard', null, 'btn-close');
     setText('#tab-shard-diagram', null, 'tab-diagram');
