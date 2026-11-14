@@ -539,6 +539,17 @@ class UnderTheDustGame {
     // Wind-rippled Martian dust blanket
     ctx.drawImage(this.maskCanvas, 0, 0);
 
+    // GPU WebGL Atmospheric Martian Nebula & Lumen Shader Overlay
+    if (window.vantaNebulaGL) {
+      window.vantaNebulaGL.drawBackdrop(ctx, w, h, {
+        alpha: 0.52 + progress * 0.25,
+        lumen: 1.25,
+        cyan: 0.22,
+        stars: 0.28,
+        composite: 'screen'
+      });
+    }
+
     // Wordless Golden Orbital Power Arc around center hub (shows progress cleanly with ZERO text!)
     ctx.save();
     ctx.beginPath();

@@ -1126,6 +1126,23 @@ class EternalFootprintGame {
 
     const horizonY = h * 0.25;
 
+    if (window.vantaNebulaGL) {
+      window.vantaNebulaGL.drawBackdrop(ctx, w, h, {
+        alpha: 0.22,
+        lumen: 0.85,
+        cyan: 0.42,
+        stars: 0.4,
+        composite: 'screen'
+      });
+      window.vantaNebulaGL.drawBackdrop(ctx, w, horizonY + 14, {
+        alpha: 0.88,
+        lumen: 0.85,
+        cyan: 0.55,
+        stars: 0.95,
+        composite: 'screen'
+      });
+    }
+
     // Luminous Earthrise
     ctx.save();
     ctx.translate(w * 0.76, horizonY * 0.52);
