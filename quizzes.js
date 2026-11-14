@@ -118,7 +118,23 @@ window.VANTALUMEN_QUIZZES = [
       'Sao Mộc (Jupiter) có Vết Đỏ Lớn — một siêu bão xoáy nghịch khổng lồ lớn hơn cả Trái Đất đã tồn tại hàng trăm năm, được các tàu thăm dò Voyager, Galileo, Cassini và Juno của NASA ghi hình chi tiết.'
   },
   {
-    id: 'q8-rise-artemis-ii',
+    id: 'q8-cassini-saturn',
+    linkedShardId: 'grand-finale', // Game 8: Cassini Grand Finale at Saturn & Enceladus
+    image: 'https://images-assets.nasa.gov/image/PIA21889/PIA21889~medium.jpg',
+    questionEn: 'Why did NASA intentionally plunge the Cassini spacecraft into Saturn in 2017?',
+    questionVi: 'Vì sao năm 2017 NASA chủ động cho tàu Cassini lao vào bầu khí quyển Sao Thổ?',
+    options: [
+      { key: 'A', label: 'A) Protect icy moons (Enceladus)', vi: 'Bảo vệ mặt trăng băng (Enceladus)' },
+      { key: 'B', label: 'B) Land on a solid surface', vi: 'Đổ bộ lên bề mặt rắn' },
+      { key: 'C', label: 'C) Refuel with hydrogen', vi: 'Tiếp nhiên liệu khí hydro' },
+      { key: 'D', label: 'D) Return samples to Earth', vi: 'Đưa mẫu vật về Trái Đất' }
+    ],
+    correctKey: 'A',
+    explanation:
+      'Khi sắp cạn nhiên liệu, NASA cho Cassini lao vào Sao Thổ ở tốc độ 113.000 km/h để tránh nguy cơ tàu va chạm và làm nhiễm bẩn đại dương ngầm có khả năng nuôi dưỡng sự sống trên mặt trăng Enceladus và Titan.'
+  },
+  {
+    id: 'q9-rise-artemis-ii',
     linkedShardId: 'rise-zero-g', // Game 9: Rise — NASA Artemis II Zero-Gravity Indicator
     image: 'assets/rise_infographic.jpg',
     questionEn: 'Which 1968 photo inspired "Rise", the Artemis II Zero-G Indicator by 8-year-old Lucas Ye?',

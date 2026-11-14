@@ -456,10 +456,21 @@ class EchoesApp {
     });
 
     // Close Modals
+    const closeShardBtn = document.getElementById('btn-close-shard');
+    if (closeShardBtn) closeShardBtn.addEventListener('click', () => this.hideModals());
     document.getElementById('btn-close-gallery').addEventListener('click', () => this.hideModals());
     document.getElementById('btn-close-dossier').addEventListener('click', () => this.hideModals());
     document.getElementById('btn-close-quiz-deck').addEventListener('click', () => this.hideModals());
     document.getElementById('btn-close-guide').addEventListener('click', () => this.hideModals());
+
+    // Tap on dark backdrop outside modal card to close cleanly on tablets & phones
+    [this.memoryModal, this.galleryModal, this.dossierModal, this.quizDeckModal, this.guideModal].forEach(modal => {
+      if (modal) {
+        modal.addEventListener('click', e => {
+          if (e.target === modal) this.hideModals();
+        });
+      }
+    });
 
     // Fullscreen Image Lightbox for NASA Archive Photos & Rise Infographic
     const nasaImgEl = document.getElementById('shard-nasa-img');
@@ -644,6 +655,12 @@ class EchoesApp {
     }
     window.soundEngine.setBrushWind(0);
     window.soundEngine.playModalOpen();
+    if (this.currentGame && typeof this.currentGame.getSessionMetric === 'function') {
+      this.lastSessionMetric = {
+        index,
+        value: this.currentGame.getSessionMetric()
+      };
+    }
     if (this.currentGame && typeof this.currentGame.destroy === 'function') {
       this.currentGame.destroy();
     }
@@ -730,8 +747,8 @@ class EchoesApp {
     });
 
     const liveMetric =
-      this.currentIndex === index && this.currentGame && this.currentGame.getSessionMetric
-        ? this.currentGame.getSessionMetric()
+      this.lastSessionMetric && this.lastSessionMetric.index === index
+        ? this.lastSessionMetric.value
         : (shard.specs && shard.specs[2] ? shard.specs[2].value : 'Đã đồng bộ');
 
     const liveDiv = document.createElement('div');
@@ -771,7 +788,7 @@ class EchoesApp {
     container.innerHTML = `
       <div class="quiz-header-bar">
         <span class="quiz-tag">KIỂM CHỨNG TRI THỨC ${isSolved ? '• ✓ ĐÃ GIẢI MÃ' : ''}</span>
-        <button type="button" class="quiz-deck-link" id="btn-expand-quiz-deck">Bộ 8 câu hỏi ↗</button>
+        <button type="button" class="quiz-deck-link" id="btn-expand-quiz-deck">Bộ 9 câu hỏi ↗</button>
       </div>
       <div class="quiz-card-layout">
         <div>
@@ -835,8 +852,8 @@ class EchoesApp {
     const shards = this.unlockedShards.size;
     const quizzes = this.solvedQuizzes.size;
     const total = shards + quizzes;
-    if (shards >= 9 && quizzes >= 8) return 'Người Giữ Ký Ức VantaLumen ★';
-    if (total >= 11) return 'Kỹ Sư Viễn Thám NASA';
+    if (shards >= 9 && quizzes >= 9) return 'Người Giữ Ký Ức VantaLumen ★';
+    if (total >= 12) return 'Kỹ Sư Viễn Thám NASA';
     if (total >= 5) return 'Nhà Khám Phá Bụi Sao';
     return 'Người Lắng Nghe Khởi Đầu';
   }
@@ -1355,8 +1372,8 @@ class EchoesApp {
     ctx.strokeRect(84.5, tableY + 0.5, tableW - 1, tableH - 1);
 
     const metric =
-      this.currentGame && this.currentGame.getSessionMetric
-        ? this.currentGame.getSessionMetric()
+      this.lastSessionMetric && this.lastSessionMetric.index === index
+        ? this.lastSessionMetric.value
         : (shard.specs && shard.specs[2] ? shard.specs[2].value : 'Đã đồng bộ');
 
     const cols = [
@@ -1502,7 +1519,7 @@ class EchoesApp {
     }
     for (let q = 0; q < totalQuizzes; q++) {
       ctx.fillStyle = q < solvedCount ? '#38bdf8' : 'rgba(148, 163, 184, 0.16)';
-      ctx.fillRect(1172 + q * 38, stripY + 98, 32, 4);
+      ctx.fillRect(1172 + q * 34, stripY + 98, 28, 4);
     }
 
     ctx.fillStyle = '#64748b';
