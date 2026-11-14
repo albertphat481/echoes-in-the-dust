@@ -200,7 +200,7 @@
     float fbm3(vec3 p) {
       float v = 0.0;
       float a = 0.5;
-      for (int i = 0; i < 6; i++) {
+      for (int i = 0; i < 4; i++) {
         v += a * noise3(p);
         p = p * 2.05 + vec3(13.1, 7.7, 5.3);
         a *= 0.5;
@@ -211,7 +211,7 @@
     float ridged3(vec3 p) {
       float v = 0.0;
       float a = 0.5;
-      for (int i = 0; i < 5; i++) {
+      for (int i = 0; i < 4; i++) {
         float n = 1.0 - abs(noise3(p) * 2.0 - 1.0);
         v += a * n * n;
         p = p * 2.12 + vec3(4.3, 9.1, 2.7);
@@ -245,21 +245,21 @@
       return fract(sin(p) * 43758.5453123);
     }
 
-    // Smooth circular 3D Voronoi impact craters (no jagged ridges!)
+    // Fast 2x2x2 circular 3D Voronoi impact craters (3.4x faster, smooth circular rims)
     float craterLayer(vec3 p, float scale) {
       vec3 sp = p * scale;
-      vec3 ip = floor(sp);
-      vec3 fp = fract(sp);
+      vec3 ip = floor(sp - 0.5);
+      vec3 fp = sp - ip;
       float best = 0.0;
-      for (int x = -1; x <= 1; x++) {
-        for (int y = -1; y <= 1; y++) {
-          for (int z = -1; z <= 1; z++) {
+      for (int x = 0; x <= 1; x++) {
+        for (int y = 0; y <= 1; y++) {
+          for (int z = 0; z <= 1; z++) {
             vec3 cell = vec3(float(x), float(y), float(z));
             vec3 rnd = hash33(ip + cell);
-            if (rnd.x > 0.42) {
-              vec3 center = cell + 0.5 + (rnd - 0.5) * 0.48;
+            if (rnd.x > 0.35) {
+              vec3 center = cell + 0.35 + rnd * 0.3;
               float d = length(fp - center);
-              float rad = 0.22 + rnd.y * 0.24;
+              float rad = 0.24 + rnd.y * 0.22;
               float bowl = smoothstep(rad, rad * 0.15, d);
               float rim = smoothstep(rad * 1.28, rad * 0.92, d) * smoothstep(rad * 0.52, rad * 0.92, d);
               best += rim * 0.34 - bowl * 0.48;
@@ -512,7 +512,7 @@
                 this.canvas.getContext('webgl', { alpha: false, antialias: false, depth: false });
       this.ready = false;
       this.mouse = { x: 0.5, y: 0.5, tx: 0.5, ty: 0.5 };
-      this.renderScale = Math.min(1.5, Math.max(1.0, window.devicePixelRatio || 1));
+      this.renderScale = 0.85;
 
       if (this.gl) {
         this._initGL();
@@ -551,7 +551,7 @@
 
     _resize() {
       if (!this.gl) return;
-      this.renderScale = Math.min(1.5, Math.max(1.0, window.devicePixelRatio || 1));
+      this.renderScale = 0.85;
       const w = Math.max(512, Math.floor(window.innerWidth * this.renderScale));
       const h = Math.max(512, Math.floor(window.innerHeight * this.renderScale));
       if (this.canvas.width !== w || this.canvas.height !== h) {
@@ -601,6 +601,7 @@
       this.gl = this.canvas.getContext('webgl2', { alpha: true, premultipliedAlpha: true, antialias: true, depth: false }) ||
                 this.canvas.getContext('webgl', { alpha: true, premultipliedAlpha: true, antialias: true, depth: false });
       this.ready = false;
+      this._cache = {};
 
       if (this.gl) {
         this._initGL();
@@ -646,30 +647,56 @@
         alpha = 1.0
       } = opts;
 
-      const dpr = Math.min(2, window.devicePixelRatio || 1);
-      const targetSize = Math.min(1280, Math.max(256, Math.ceil(radius * 2.64 * dpr)));
-      if (Math.abs(this.canvas.width - targetSize) > 64) {
-        this.canvas.width = targetSize;
-        this.canvas.height = targetSize;
-        this.gl.viewport(0, 0, targetSize, targetSize);
-      }
+      const dpr = Math.min(1.5, window.devicePixelRatio || 1);
+      const targetSize = Math.min(896, Math.max(192, Math.ceil((radius * 2.64 * dpr) / 64) * 64));
+      const cacheKey = `${type}_${targetSize}`;
+      let entry = this._cache[cacheKey];
+      const nowSec = performance.now() * 0.001;
+      const cloudDelta = type === 'earth' ? Math.abs(nowSec - (entry ? entry.time : 0)) : 0;
 
-      const typeId = type === 'mars' ? 1 : (type === 'moon' ? 2 : 0);
-      const gl = this.gl;
-      gl.useProgram(this.program);
-      gl.clearColor(0, 0, 0, 0);
-      gl.clear(gl.COLOR_BUFFER_BIT);
-      gl.uniform1i(this.locs.uType, typeId);
-      gl.uniform1f(this.locs.uTime, performance.now() * 0.001);
-      gl.uniform1f(this.locs.uSpin, spin);
-      gl.uniform1f(this.locs.uTilt, tilt);
-      gl.uniform3f(this.locs.uSunDir, sunDir[0], sunDir[1], sunDir[2]);
-      gl.drawArrays(gl.TRIANGLES, 0, 6);
+      if (
+        !entry ||
+        Math.abs(spin - entry.spin) > 0.003 ||
+        Math.abs(tilt - entry.tilt) > 0.003 ||
+        cloudDelta > 0.12
+      ) {
+        if (this.canvas.width !== targetSize || this.canvas.height !== targetSize) {
+          this.canvas.width = targetSize;
+          this.canvas.height = targetSize;
+          this.gl.viewport(0, 0, targetSize, targetSize);
+        }
+
+        const typeId = type === 'mars' ? 1 : (type === 'moon' ? 2 : 0);
+        const gl = this.gl;
+        gl.useProgram(this.program);
+        gl.clearColor(0, 0, 0, 0);
+        gl.clear(gl.COLOR_BUFFER_BIT);
+        gl.uniform1i(this.locs.uType, typeId);
+        gl.uniform1f(this.locs.uTime, nowSec);
+        gl.uniform1f(this.locs.uSpin, spin);
+        gl.uniform1f(this.locs.uTilt, tilt);
+        gl.uniform3f(this.locs.uSunDir, sunDir[0], sunDir[1], sunDir[2]);
+        gl.drawArrays(gl.TRIANGLES, 0, 6);
+
+        if (!entry) {
+          const c = document.createElement('canvas');
+          c.width = targetSize;
+          c.height = targetSize;
+          entry = { canvas: c, ctx: c.getContext('2d'), spin, tilt, time: nowSec };
+          this._cache[cacheKey] = entry;
+        } else {
+          entry.ctx.clearRect(0, 0, targetSize, targetSize);
+          entry.spin = spin;
+          entry.tilt = tilt;
+          entry.time = nowSec;
+        }
+        entry.ctx.drawImage(this.canvas, 0, 0);
+      }
 
       const drawSpan = radius * 2.64;
       ctx.save();
       ctx.globalAlpha = alpha;
-      ctx.drawImage(this.canvas, cx - drawSpan * 0.5, cy - drawSpan * 0.5, drawSpan, drawSpan);
+      ctx.drawImage(entry.canvas, cx - drawSpan * 0.5, cy - drawSpan * 0.5, drawSpan, drawSpan);
       ctx.restore();
       return true;
     }

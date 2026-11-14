@@ -1006,10 +1006,12 @@ class EternalFootprintGame {
 
     const cx = w * 0.5;
     const cy = h * 0.54;
+    const minMoonY = h * 0.25 + 26;
+    const footY = Math.max(y, minMoonY);
     this.stepToggle *= -1;
     this.playerPrints.push({
       x: x - cx,
-      y: y - cy,
+      y: footY - cy,
       rot: -0.25 + this.stepToggle * 0.08,
       seed: this.playerSeed
     });
@@ -1143,26 +1145,32 @@ class EternalFootprintGame {
       });
     }
 
-    // Luminous Earthrise
-    ctx.save();
-    ctx.translate(w * 0.76, horizonY * 0.52);
-    const earthHalo = ctx.createRadialGradient(0, 0, 14, 0, 0, 34);
-    earthHalo.addColorStop(0, 'rgba(56, 189, 248, 0.4)');
-    earthHalo.addColorStop(1, 'rgba(56, 189, 248, 0)');
-    ctx.fillStyle = earthHalo;
-    ctx.beginPath();
-    ctx.arc(0, 0, 34, 0, Math.PI * 2);
-    ctx.fill();
+    // Luminous 3D RTX Earthrise
+    if (!(window.vantaPlanetGL && window.vantaPlanetGL.drawPlanet(ctx, 'earth', w * 0.76, horizonY * 0.52, 22, {
+      spin: this.elapsed * 0.04 + 2.35,
+      tilt: 0.12,
+      sunDir: [-0.45, 0.52, 0.72]
+    }))) {
+      ctx.save();
+      ctx.translate(w * 0.76, horizonY * 0.52);
+      const earthHalo = ctx.createRadialGradient(0, 0, 14, 0, 0, 34);
+      earthHalo.addColorStop(0, 'rgba(56, 189, 248, 0.4)');
+      earthHalo.addColorStop(1, 'rgba(56, 189, 248, 0)');
+      ctx.fillStyle = earthHalo;
+      ctx.beginPath();
+      ctx.arc(0, 0, 34, 0, Math.PI * 2);
+      ctx.fill();
 
-    const earthGrad = ctx.createRadialGradient(-4, -4, 2, 0, 0, 18);
-    earthGrad.addColorStop(0, '#e0f2fe');
-    earthGrad.addColorStop(0.5, '#2563eb');
-    earthGrad.addColorStop(1, '#020617');
-    ctx.fillStyle = earthGrad;
-    ctx.beginPath();
-    ctx.arc(0, 0, 18, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.restore();
+      const earthGrad = ctx.createRadialGradient(-4, -4, 2, 0, 0, 18);
+      earthGrad.addColorStop(0, '#e0f2fe');
+      earthGrad.addColorStop(0.5, '#2563eb');
+      earthGrad.addColorStop(1, '#020617');
+      ctx.fillStyle = earthGrad;
+      ctx.beginPath();
+      ctx.arc(0, 0, 18, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
 
     // Lunar Regolith Horizon with Micro-Grain
     const noonBrightness = 1 - Math.abs(this.sunAngle - 0.5) * 1.1;
@@ -1218,12 +1226,20 @@ class EternalFootprintGame {
       window.VantaGfx.drawApolloLMDescent(ctx, w * 0.25, horizonY - 4, sunDir, 1.05);
     }
 
-    // Footprints Field Camera Zoom
+    // Footprints Field Camera Zoom (strictly clipped to Moon regolith surface)
     const cx = w * 0.5;
     const cy = h * 0.54;
     const zoom = 1 - this.cameraZoomOut * 0.62;
 
     ctx.save();
+    ctx.beginPath();
+    ctx.moveTo(0, horizonY + 8);
+    ctx.quadraticCurveTo(w * 0.5, horizonY - 12, w, horizonY + 8);
+    ctx.lineTo(w, h);
+    ctx.lineTo(0, h);
+    ctx.closePath();
+    ctx.clip();
+
     ctx.translate(cx, cy);
     ctx.scale(zoom, zoom);
 
