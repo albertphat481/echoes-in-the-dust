@@ -17,7 +17,7 @@ window.MEMORY_SHARDS = [
     ],
     defaultStatLabel: 'Độ sạch năng lượng đạt được',
     story:
-      'InSight đã áp tai lên bề mặt Sao Hỏa và lắng nghe được 1.319 trận rung chấn ("marsquakes"), lần đầu tiên đo được kích thước lõi lỏng của hành tinh đỏ. Khi bụi phủ dày hai cánh pin mặt trời vào năm 2021, các kỹ sư NASA JPL đã dùng cánh tay robot xúc cát rải xuống cạnh tấm pin lúc gió thổi — để hạt cát to nảy lên (hiện tượng saltation) và cuốn theo lớp bụi mịn, giúp InSight sống thêm hơn một năm trước khi gửi bức ảnh cuối cùng.',
+      'InSight đã ghi nhận 1.319 trận động đất Sao Hỏa ("marsquakes"), lần đầu đo được kích thước lõi lỏng của Hành tinh Đỏ. Năm 2021, kỹ sư NASA dùng cánh tay robot rải cát xuống cạnh tấm pin lúc gió thổi để hạt cát nảy lên cuốn theo lớp bụi mịn (hiện tượng saltation), giúp trạm hoạt động thêm hơn 1 năm.',
     sourceLabel: 'NASA JPL — InSight Mars Lander & SEIS Instrument',
     sourceUrl: 'https://science.nasa.gov/mission/insight/',
     svgDiagram: `
@@ -72,7 +72,7 @@ window.MEMORY_SHARDS = [
     ],
     defaultStatLabel: 'Mạng lưới Kỹ sư Vũ trụ Toàn cầu',
     story:
-      'Không cần pin, không cần điện hay máy phát sóng, các mảng gương phản xạ góc (Corner-Cube Prisms) do phi hành gia Apollo 11, 14 và 15 để lại vẫn phản chiếu chính xác các xung laser bắn lên từ Trái Đất suốt hơn 55 năm qua. Phép đo thời gian ánh sáng đi về (~2,56 giây) chứng minh Mặt Trăng có lõi lỏng và đang rời xa Trái Đất 3,8 cm mỗi năm. Chỉ cần nhân loại còn ngước lên gọi, chúng sẽ luôn hồi đáp.',
+      'Không cần nguồn điện, các mảng gương phản xạ góc (LRRR) của Apollo 11, 14 và 15 vẫn phản chiếu xung laser từ Trái Đất suốt hơn 55 năm qua. Phép đo thời gian ánh sáng khứ hồi (~2,56 giây) chứng minh Mặt Trăng có lõi lỏng và đang lùi xa Trái Đất 3,8 cm/năm.',
     sourceLabel: 'NASA Science — Lunar Laser Ranging Retroreflectors',
     sourceUrl: 'https://science.nasa.gov/moon/lunar-highlights/',
     svgDiagram: `
@@ -126,7 +126,7 @@ window.MEMORY_SHARDS = [
     ],
     defaultStatLabel: 'Chiều dài rãnh Silica đã mở lộ',
     story:
-      'Tháng 3/2006, bánh trước bên phải của rover Spirit ngừng hoạt động, buộc các kỹ sư NASA phải điều khiển nó đi lùi qua vùng Gusev Crater và kéo lê chiếc bánh hỏng phía sau. Chính rãnh cày sâu của chiếc bánh chết ấy đã phơi lộ lớp đất sáng trắng chứa hơn 90% silica tinh khiết — bằng chứng về suối nước nóng hoặc miệng phun hơi nước cổ đại từng có điều kiện lý tưởng cho sự sống vi sinh.',
+      'Năm 2006, bánh trước bên phải của rover Spirit bị kẹt, buộc NASA phải lái xe đi lùi và kéo lê chiếc bánh hỏng qua Gusev Crater. Chính rãnh cày này đã vô tình phơi lộ lớp đất chứa hơn 90% Opaline Silica — bằng chứng trực tiếp về suối nước nóng cổ đại từng thuận lợi cho sự sống vi sinh.',
     sourceLabel: 'NASA JPL — Spirit Rover (MER-A) Silica Discovery',
     sourceUrl: 'https://science.nasa.gov/mission/mer-spirit/',
     svgDiagram: `
@@ -179,7 +179,7 @@ window.MEMORY_SHARDS = [
     ],
     defaultStatLabel: 'Gói ký ức đã truyền về Trái Đất',
     story:
-      'Được thiết kế chỉ cho 90 ngày nhưng hoạt động gần 15 năm, bộ nhớ flash 256 MB của Opportunity bị hao mòn vào năm 2015. Mỗi chiều trước khi Mặt Trời lặn và nguồn điện tắt, nó phải lưu ảnh trong bộ nhớ RAM tạm thời: chỉ những bức ảnh kịp gửi lên tàu quỹ đạo trung chuyển mới về được Trái Đất, những ký ức còn lại sẽ mất đi khi đêm xuống. Ngày 10/6/2018, giữa cơn bão bụi che khuất Mặt Trời, Opportunity gửi về khung hình cuối cùng trước khi yên nghỉ tại Perseverance Valley.',
+      'Hoạt động gần 15 năm (gấp 55 lần thiết kế), bộ nhớ Flash của Opportunity bị mòn nên phải lưu ảnh vào RAM tạm thời mỗi chiều: chỉ những bức ảnh kịp truyền lên vệ tinh trước khi tắt điện ban đêm mới về được Trái Đất. Ngày 10/06/2018, giữa bão bụi toàn cầu, Opportunity gửi về bức ảnh cuối cùng trước khi yên nghỉ.',
     sourceLabel: 'NASA JPL — Opportunity Rover (MER-B) Mission',
     sourceUrl: 'https://science.nasa.gov/mission/mer-opportunity/',
     svgDiagram: `
@@ -229,7 +229,7 @@ window.MEMORY_SHARDS = [
     ],
     defaultStatLabel: 'Cộng hưởng địa chấn đã kích hoạt',
     story:
-      'Tháng 11/1969, sau khi phi hành đoàn Apollo 12 ghép nối lại với tàu chỉ huy, NASA đã chủ động cho tầng tàu đổ bộ đã hoàn thành nhiệm vụ lao xuống Mặt Trăng để tạo chấn động nhân tạo có kiểm soát. Máy đo địa chấn ghi nhận Mặt Trăng rung ngân gần một giờ đồng hồ — lâu hơn rất nhiều so với Trái Đất vì lớp vỏ Mặt Trăng khô, lạnh và không có nước làm tắt sóng. (Lưu ý khoa học: sóng địa chấn không phải âm thanh trong không khí; âm nhạc bạn nghe là sonification — chuyển hóa dao động địa chấn thành tần số âm thanh).',
+      'Năm 1969, NASA chủ động cho tầng tàu đổ bộ Apollo 12 lao xuống Mặt Trăng để đo địa chấn. Khác với Trái Đất có nước và đá ẩm làm tắt sóng nhanh, lớp vỏ Mặt Trăng khô, lạnh và rạn nứt khiến sóng địa chấn ngân vang suốt hơn 55 phút như một chiếc chuông khổng lồ.',
     sourceLabel: 'NASA — Moonquakes & Apollo Passive Seismic Network',
     sourceUrl: 'https://science.nasa.gov/moon/moonquakes/',
     svgDiagram: `
@@ -275,7 +275,7 @@ window.MEMORY_SHARDS = [
     ],
     defaultStatLabel: 'Mã vân đế giày định danh của bạn',
     story:
-      'Vì Mặt Trăng không có khí quyển, gió hay mưa, những hạt bụi khi bước chân văng lên theo quỹ đạo parabol thuần túy và những vết giày Apollo từ năm 1969 vẫn hiện rõ trong ảnh chụp từ tàu quỹ đạo LRO ngày nay. Chúng sẽ tồn tại hàng triệu năm — dù không bất diệt tuyệt đối vì mưa vi thiên thạch siêu nhỏ vẫn chầm chậm san phẳng lớp đất bề mặt. Chúng ta không bất tử vì dấu vết không phai, mà vì luôn có thế hệ tiếp theo quay lại nhìn.',
+      'Vì Mặt Trăng không có khí quyển, gió hay mưa, những dấu giày Apollo từ năm 1969 vẫn hiện rõ qua ống kính tàu quỹ đạo LRO ngày nay. Chúng sẽ lưu lại từ 1 đến 10 triệu năm trước khi mưa vi thiên thạch siêu nhỏ chầm chậm san phẳng lớp bụi bề mặt.',
     sourceLabel: 'NASA Lunar Reconnaissance Orbiter (LRO)',
     sourceUrl: 'https://science.nasa.gov/mission/lro/',
     svgDiagram: `
@@ -321,7 +321,7 @@ window.MEMORY_SHARDS = [
     ],
     defaultStatLabel: 'Bức chân dung gia đình đã chụp',
     story:
-      'Ngày 14/02/1990, sau khi hoàn tất hành trình ngang qua Sao Mộc và Sao Thổ, theo đề xuất của nhà thiên văn Carl Sagan, NASA đã ra lệnh cho Voyager 1 xoay ngược camera nhìn lại quê hương lần cuối ở khoảng cách 6,05 tỷ km trước khi tắt vĩnh viễn hệ thống máy ảnh để tiết kiệm điện năng tiến vào không gian liên sao. Trong 60 khung hình "Family Portrait", Trái Đất chỉ hiện ra như một chấm xanh nhỏ bé 0,12 pixel lọt thỏm giữa một tia sáng Mặt Trời tán xạ — nhắc nhở nhân loại về mái nhà mong manh duy nhất của mình.',
+      'Ngày 14/02/1990, ở khoảng cách 6,05 tỷ km, Voyager 1 xoay ngược camera chụp bộ ảnh Hệ Mặt Trời lần cuối trước khi tắt máy ảnh vĩnh viễn để tiết kiệm điện. Giữa khoảng không mênh mông, Trái Đất chỉ là một "Chấm Xanh Mờ" rộng 0,12 pixel lơ lửng trong tia nắng tán xạ.',
     sourceLabel: 'NASA JPL — Voyager 1 Pale Blue Dot & Golden Record',
     sourceUrl: 'https://science.nasa.gov/mission/voyager/',
     svgDiagram: `
@@ -368,7 +368,7 @@ window.MEMORY_SHARDS = [
     ],
     defaultStatLabel: 'Gói dữ liệu cuối kịp truyền về',
     story:
-      'Sau 13 năm khám phá Sao Thổ, phát hiện các mạch nước ngầm ấm áp trên mặt trăng Enceladus và hồ mê-tan trên Titan, nhiên liệu của Cassini dần cạn kiệt vào năm 2017. Để đảm bảo con tàu không bao giờ vô tình va chạm và làm nhiễm vi sinh vật Trái Đất lên Enceladus hay Titan, NASA cho Cassini lặn 22 vòng qua khe hở giữa Sao Thổ và vành đai rồi lao thẳng vào khí quyển hành tinh khí khổng lồ ngày 15/09/2017. Cho tới giây cuối cùng, các động cơ đẩy vẫn cố giữ ăng-ten của Cassini hướng thẳng về Trái Đất để gửi những số liệu khí quyển quý giá nhất.',
+      'Khi cạn nhiên liệu năm 2017, NASA cho tàu Cassini lao vào khí quyển Sao Thổ ở vận tốc 113.000 km/h để tránh làm ô nhiễm đại dương ngầm trên vệ tinh Enceladus. Tới tận giây bốc cháy cuối cùng, Cassini vẫn giữ ăng-ten khóa chặt về hướng Trái Đất để truyền dữ liệu.',
     sourceLabel: 'NASA Science — Cassini Grand Finale at Saturn',
     sourceUrl: 'https://science.nasa.gov/mission/cassini/',
     svgDiagram: `
@@ -412,7 +412,7 @@ window.MEMORY_SHARDS = [
     ],
     defaultStatLabel: 'Chòm 7 ngôi sao trên vành mũ Rise',
     story:
-      'Được sáng tạo bởi cậu bé 8 tuổi Lucas Ye trong cuộc thi thiết kế linh vật của NASA và trở thành Vật Chỉ Thị Trạng Thái Không Trọng Lực (Zero-Gravity Indicator) trên tàu Orion trong sứ mệnh Artemis II năm 2026, Rise ("A Little Moon With a Big Dream") lấy cảm hứng từ bức ảnh lịch sử Earthrise (Trái Đất Mọc) do tàu Apollo 8 ghi lại năm 1968. Từng chi tiết trên Rise đều mang ý nghĩa biểu tượng sâu sắc: (1) Thân tròn màu kem ngà tượng trưng cho Mặt Trăng; (2) Chiếc mũ Trái Đất với đại dương xanh biếc và lục địa xanh lá nhắc nhở nhân loại trân trọng mái nhà chung mong manh; (3) Vành mũ đen gắn 7 ngôi sao và 2 hình tên lửa tôn vinh bầu trời vũ trụ bao la cùng khát vọng khám phá không ngừng; (4) Dấu chân phi hành gia màu xám phía sau lưng kết nối trực tiếp với những bước chân lịch sử đầu tiên của sứ mệnh Apollo 11 năm 1969. Từ Apollo đến Artemis — ước mơ nhỏ có thể mở ra những khám phá vĩ đại!',
+      'Linh vật chỉ thị không trọng lực (Zero-G Indicator) trên tàu Orion (Artemis II • 2026), do cậu bé 8 tuổi Lucas Ye thiết kế từ cảm hứng bức ảnh Earthrise (Apollo 8, 1968). Bốn biểu tượng cốt lõi của Rise: (1) Thân Mặt Trăng màu kem; (2) Mũ Trái Đất xanh; (3) Vành mũ gắn 7 ngôi sao & 2 tên lửa; (4) Dấu giày Apollo 11 (1969) phía sau lưng.',
     sourceLabel: 'NASA Artemis II — Zero-Gravity Indicator "Rise"',
     sourceUrl: 'https://www.nasa.gov/mission/artemis-ii/',
     svgDiagram: `

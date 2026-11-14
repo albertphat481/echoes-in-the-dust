@@ -216,26 +216,25 @@ window.GAME_GUIDES = [
   {
     id: 'rise-zero-g',
     number: '09 / 09 ★',
-    title: 'RISE — Giấc Mơ Lớn Từ Mặt Trăng Nhỏ (Artemis II)',
-    hardware: 'Vật Chỉ Thị Không Trọng Lực Rise (Tàu Orion • NASA Artemis II & Space Apps 2026)',
-    goal: 'Tương tác với linh vật plushie Rise (do cậu bé 8 tuổi Lucas Ye thiết kế) và thu thập đủ 7 Ngôi Sao trên vành mũ trước khung cảnh Trái Đất Mọc (Earthrise).',
+    title: 'RISE — Vật Chỉ Thị Không Trọng Lực (Artemis II)',
+    hardware: 'Tàu Orion • NASA Artemis II (2026) • Thiết kế bởi Lucas Ye (8 tuổi)',
+    goal: 'Thu thập đủ 7 Ngôi Sao quanh cửa sổ tàu Orion cùng linh vật Rise.',
     controls: [
       {
-        gesture: 'Chạm / Xoa đầu hoặc Kéo thả Rise',
-        action: 'Chạm trực tiếp vào Rise để phát giai điệu hộp nhạc, ngắm chiếc mũ Trái Đất & 2 tên lửa và đẩy nhẹ Rise bay trong môi trường 0-G.',
+        gesture: 'Chạm hoặc Kéo thả Rise',
+        action: 'Chạm trực tiếp vào Rise để thu sao tự động hoặc kéo Rise bay trong môi trường 0-G.',
         svg: `<svg viewBox="0 0 48 48"><circle cx="24" cy="24" r="14" stroke="#38bdf8" stroke-width="2" fill="rgba(56,189,248,0.15)"/><circle cx="19" cy="22" r="2.2" fill="#fcd34d"/><circle cx="29" cy="22" r="2.2" fill="#fcd34d"/><path d="M20 27 Q24 31 28 27" stroke="#fcd34d" stroke-width="2" fill="none"/></svg>`
       },
       {
-        gesture: 'Thu thập 7 Ngôi Sao (★ 01 → ★ 07)',
-        action: 'Chạm vào 7 ngôi sao quanh cửa sổ tàu Orion (hoặc lái Rise bằng chuột / phím mũi tên / Space) để thắp sáng đủ 7 ngôi sao trên vành mũ của Rise.',
+        gesture: 'Chạm vào 7 Ngôi Sao (★)',
+        action: 'Chạm thẳng vào 7 ngôi sao phát sáng quanh cửa sổ Orion để Rise bay tới thu thập.',
         svg: `<svg viewBox="0 0 48 48"><circle cx="24" cy="24" r="15" stroke="#fcd34d" stroke-width="1.8" stroke-dasharray="4 3" fill="none"/><text x="24" y="29" text-anchor="middle" fill="#fef3c7" font-size="16">★</text></svg>`
       }
     ],
     steps: [
-      'Chạm vào plushie Rise đang lơ lửng trước cửa sổ tàu Orion (ngắm Trái Đất mọc phía trên đường chân trời Mặt Trăng — Earthrise).',
-      'Kéo thả Rise hoặc chạm vào 7 Ngôi Sao (Earthrise 1968, Apollo 11, Lucas Ye, Earth Cap, 7 Stars, Orion, Artemis II) để Rise bay tới thu thập.',
-      'Khi thắp sáng đủ 7/7 ngôi sao, bạn sẽ mở khóa Hồ sơ & Infographic chính thức của Rise: "A Little Moon With a Big Dream"!'
+      'Chạm vào Rise hoặc 7 ngôi sao quanh cửa sổ tàu Orion để kích hoạt giai điệu 0-G.',
+      'Thu thập đủ 7/7 ngôi sao để mở khóa Thẻ Ký Ức & Infographic chính thức của Rise.'
     ],
-    tip: 'Rise được thiết kế bởi cậu bé 8 tuổi Lucas Ye — mang thân Mặt Trăng màu kem, mũ Trái Đất, 7 ngôi sao, 2 tên lửa và dấu giày Apollo 11 phía sau lưng!'
+    tip: '4 biểu tượng của Rise: Thân Mặt Trăng • Mũ Trái Đất • 7 Sao & 2 Tên Lửa • Dấu chân Apollo 11.'
   }
 ];

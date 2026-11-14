@@ -121,8 +121,8 @@ window.VANTALUMEN_QUIZZES = [
     id: 'q8-rise-artemis-ii',
     linkedShardId: 'rise-zero-g', // Game 9: Rise — NASA Artemis II Zero-Gravity Indicator
     image: 'assets/rise_infographic.jpg',
-    questionEn: 'Which iconic 1968 photograph inspired "Rise", the NASA Artemis II Zero-Gravity Indicator designed by 8-year-old Lucas Ye?',
-    questionVi: 'Bức ảnh lịch sử năm 1968 nào đã truyền cảm hứng cho "Rise" — vật chỉ thị không trọng lực trên tàu Orion (Artemis II) do cậu bé 8 tuổi Lucas Ye thiết kế?',
+    questionEn: 'Which 1968 photo inspired "Rise", the Artemis II Zero-G Indicator by 8-year-old Lucas Ye?',
+    questionVi: 'Bức ảnh năm 1968 nào truyền cảm hứng cho linh vật không trọng lực "Rise" (Artemis II) của Lucas Ye?',
     options: [
       { key: 'A', label: 'A) Earthrise (Apollo 8)', vi: 'Trái Đất Mọc (Apollo 8, 1968)' },
       { key: 'B', label: 'B) The Blue Marble', vi: 'Viên Bi Xanh (Apollo 17)' },
@@ -131,6 +131,6 @@ window.VANTALUMEN_QUIZZES = [
     ],
     correctKey: 'A',
     explanation:
-      'Rise ("A Little Moon With a Big Dream") do cậu bé 8 tuổi Lucas Ye sáng tạo lấy cảm hứng từ bức ảnh Earthrise (Trái Đất Mọc) của sứ mệnh Apollo 8 năm 1968: thân tròn màu kem tượng trưng cho Mặt Trăng, chiếc mũ là Trái Đất với đại dương & lục địa, vành mũ có 7 ngôi sao & 2 tên lửa, và phía sau lưng mang dấu chân lịch sử của Apollo 11 (1969) để đồng hành cùng phi hành đoàn Artemis II trên tàu Orion!'
+      'Rise lấy cảm hứng từ bức ảnh Earthrise (Apollo 8, 1968), kết hợp 4 biểu tượng: thân Mặt Trăng, mũ Trái Đất, vành mũ 7 ngôi sao & 2 tên lửa, cùng dấu chân Apollo 11 (1969) phía sau lưng.'
   }
 ];
