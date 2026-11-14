@@ -899,17 +899,19 @@ class RiseZeroGGame {
     };
     this.pointer = { x: w * 0.5, y: h * 0.48, active: false };
 
-    // Initialize Rise Plushie Video (assets/rise_plushie.mp4)
-    this.video = document.createElement('video');
-    this.video.src = 'assets/rise_plushie.mp4';
-    this.video.loop = true;
-    this.video.playsInline = true;
-    this.video.preload = 'auto';
-    this.video.muted = !!(window.soundEngine && window.soundEngine.muted);
-    this.video.volume = 0.85;
+    // Dual-deck seamless crossfade video engine (assets/rise_plushie.mp4)
+    // Uses two synchronized <video> decks so when Deck A nears its end, Deck B starts at 0.0s
+    // and smoothly crossfades over 1.35 seconds — completely hiding the loop seam!
+    this.crossfadeWindow = 1.35;
+    this.videoA = this._createVideoDeck(false);
+    this.videoB = this._createVideoDeck(true);
+    this.primaryVideo = this.videoA;
+    this.secondaryVideo = this.videoB;
+    this.crossfading = false;
+    this.crossfadeAlpha = 0;
     this._startVideoPlayback(false);
 
-    // 6 Orbital Music-Box Star Notes floating inside the Cupola
+    // 7 Orbital Music-Box Star Notes floating inside the Cupola
     this.starNotes = [];
     this._initStarNotes(w, h);
 
@@ -917,30 +919,118 @@ class RiseZeroGGame {
     this.ripples = [];
   }
 
-  _startVideoPlayback(fromUserGesture = false) {
-    if (!this.video) return;
+  _createVideoDeck(forceMuted = false) {
+    const v = document.createElement('video');
+    v.src = 'assets/rise_plushie.mp4';
+    v.loop = false;
+    v.playsInline = true;
+    v.preload = 'auto';
+    v.muted = forceMuted || !!(window.soundEngine && window.soundEngine.muted);
+    v.volume = forceMuted ? 0 : 0.85;
+    return v;
+  }
+
+  _playDeckSafe(v, allowAudio = false) {
+    if (!v) return;
     try {
       const isMuted = !!(window.soundEngine && window.soundEngine.muted);
-      if (fromUserGesture && !isMuted) {
-        this.video.muted = false;
-        this.video.volume = 0.85;
-      }
-      const p = this.video.play();
+      v.muted = !allowAudio || isMuted;
+      const p = v.play();
       if (p && typeof p.catch === 'function') {
         p.catch(() => {
-          this.video.muted = true;
-          this.video.play().catch(() => {});
+          v.muted = true;
+          v.play().catch(() => {});
         });
       }
     } catch {}
   }
 
-  destroy() {
-    if (this.video) {
-      try {
-        this.video.pause();
-      } catch {}
+  _startVideoPlayback(fromUserGesture = false) {
+    if (!this.primaryVideo) return;
+    if (fromUserGesture) this._userAudioUnlocked = true;
+    this._playDeckSafe(this.primaryVideo, !!this._userAudioUnlocked);
+    if (this.crossfading && this.secondaryVideo) {
+      this._playDeckSafe(this.secondaryVideo, !!this._userAudioUnlocked);
     }
+  }
+
+  /**
+   * Seamless loop controller. Shortly before the primary deck reaches its end,
+   * the secondary deck starts from 0s underneath and is blended in (video + audio)
+   * across `crossfadeWindow` seconds; then the decks swap roles. Because the blend
+   * is driven by the primary deck's real playback clock, it stays in sync even
+   * when frames are dropped.
+   */
+  _updateSeamlessVideoLoop() {
+    const a = this.primaryVideo;
+    const b = this.secondaryVideo;
+    if (!a || !b) return;
+
+    const isMuted = !!(window.soundEngine && window.soundEngine.muted);
+    const audioOn = !!this._userAudioUnlocked && !isMuted;
+    const baseVol = 0.85;
+    const dur = a.duration;
+
+    // Primary deck hit the end without a blend (e.g. tab was hidden): restart quietly
+    if (a.ended && !this.crossfading) {
+      try { a.currentTime = 0; } catch {}
+      this._playDeckSafe(a, !!this._userAudioUnlocked);
+    }
+
+    if (!isFinite(dur) || dur <= 0 || (a.paused && !this.crossfading)) {
+      a.muted = !audioOn;
+      a.volume = baseVol;
+      return;
+    }
+
+    // Keep the window sane for very short clips
+    const win = Math.min(this.crossfadeWindow, dur * 0.3);
+    const remaining = dur - a.currentTime;
+
+    if (!this.crossfading && remaining <= win) {
+      this.crossfading = true;
+      this.crossfadeAlpha = 0;
+      try { b.currentTime = 0; } catch {}
+      b.volume = 0;
+      this._playDeckSafe(b, !!this._userAudioUnlocked);
+    }
+
+    if (this.crossfading) {
+      this.crossfadeAlpha = a.ended ? 1 : Math.max(0, Math.min(1, 1 - remaining / win));
+      const t = 0.5 - 0.5 * Math.cos(this.crossfadeAlpha * Math.PI);
+
+      // Equal-power audio crossfade so loudness never dips at the seam
+      a.muted = !audioOn;
+      b.muted = !audioOn;
+      a.volume = baseVol * Math.cos(t * Math.PI * 0.5);
+      b.volume = baseVol * Math.sin(t * Math.PI * 0.5);
+
+      // Only swap once the incoming deck actually has a frame to show
+      if (this.crossfadeAlpha >= 1 && b.readyState >= 2) {
+        try { a.pause(); } catch {}
+        try { a.currentTime = 0; } catch {}
+        a.volume = 0;
+        a.muted = true;
+        b.volume = baseVol;
+        this.primaryVideo = b;
+        this.secondaryVideo = a;
+        this.crossfading = false;
+        this.crossfadeAlpha = 0;
+      }
+    } else {
+      a.muted = !audioOn;
+      a.volume = baseVol;
+    }
+  }
+
+  destroy() {
+    [this.videoA, this.videoB].forEach(v => {
+      if (v) {
+        try {
+          v.pause();
+        } catch {}
+      }
+    });
   }
 
   _initStarNotes(w, h) {
@@ -1158,12 +1248,8 @@ class RiseZeroGGame {
     this.elapsed += dt;
     this.joyPulse = Math.max(0, this.joyPulse - dt * 2.2);
 
-    // Sync video mute state with global soundEngine
-    if (this.video && window.soundEngine) {
-      if (window.soundEngine.muted && !this.video.muted) {
-        this.video.muted = true;
-      }
-    }
+    // Seamless Dual-Deck Video Loop & Audio Crossfade Controller
+    this._updateSeamlessVideoLoop();
 
     const w = window.innerWidth;
     const h = window.innerHeight;
@@ -1582,15 +1668,31 @@ class RiseZeroGGame {
     ctx.roundRect(-boxW * 0.5, -boxH * 0.52, boxW, boxH, cornerR);
     ctx.clip();
 
-    if (this.video && this.video.readyState >= 2 && this.video.videoWidth > 0) {
-      const vw = this.video.videoWidth;
-      const vh = this.video.videoHeight;
-      // Central region (x: 18%..82%, y: 0%..100%) preserves 100% of the Earth Cap, rocket motifs & 7 stars on the brim while excluding the watermark at x~90%
-      const sx = vw * 0.19;
-      const sy = 0;
-      const sw = vw * 0.62;
-      const sh = vh;
-      ctx.drawImage(this.video, sx, sy, sw, sh, -boxW * 0.52, -boxH * 0.54, boxW * 1.04, boxH * 1.04);
+    if (this.primaryVideo && this.primaryVideo.readyState >= 2 && this.primaryVideo.videoWidth > 0) {
+      const drawDeckFrame = (v, alpha) => {
+        if (!v || v.readyState < 2 || v.videoWidth <= 0 || alpha <= 0.001) return;
+        const vw = v.videoWidth;
+        const vh = v.videoHeight;
+        // Central region (x: 19%..81%, y: 0%..100%) preserves 100% of the Earth Cap, rocket motifs & 7 stars on the brim while excluding the watermark at x~90%
+        const sx = vw * 0.19;
+        const sy = 0;
+        const sw = vw * 0.62;
+        const sh = vh;
+        ctx.save();
+        ctx.globalAlpha = alpha;
+        ctx.drawImage(v, sx, sy, sw, sh, -boxW * 0.52, -boxH * 0.54, boxW * 1.04, boxH * 1.04);
+        ctx.restore();
+      };
+
+      if (this.crossfading && this.secondaryVideo && this.secondaryVideo.readyState >= 2) {
+        // Cosine smoothstep blend so there is never a hard cut or brightness dip
+        const t = Math.max(0, Math.min(1, this.crossfadeAlpha));
+        const smoothT = 0.5 - 0.5 * Math.cos(t * Math.PI);
+        drawDeckFrame(this.primaryVideo, 1);
+        drawDeckFrame(this.secondaryVideo, smoothT);
+      } else {
+        drawDeckFrame(this.primaryVideo, 1);
+      }
     } else {
       this._drawFallbackPlushieFace(ctx, pr);
     }
