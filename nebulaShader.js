@@ -284,13 +284,15 @@
         float craters = craterLayer(sp, 3.6) * 0.22;
         return base * 0.75 + canyon + craters;
       } else {
-        // Moon: Maria basins + multi-scale circular impact craters + fine regolith
+        // Moon: Maria basins + 4-scale impact craters + highland ridges + fine regolith
         float maria = fbm3(sp * 1.85);
-        float cLarge = craterLayer(sp, 2.8) * 0.30;
-        float cMed = craterLayer(sp + vec3(4.1, 2.3, 1.7), 6.8) * 0.16;
+        float cLarge = craterLayer(sp, 2.8) * 0.28;
+        float cMed = craterLayer(sp + vec3(4.1, 2.3, 1.7), 6.8) * 0.15;
         float cMicro = craterLayer(sp + vec3(9.1, 3.7, 6.2), 14.5) * 0.075;
-        float regolith = (fbm3(sp * 18.0) - 0.5) * 0.055;
-        return maria * 0.56 + cLarge + cMed + cMicro + regolith;
+        float cFine = craterLayer(sp + vec3(3.3, 8.1, 1.9), 26.0) * 0.045;
+        float ridges = ridged3(sp * 8.5) * 0.065;
+        float regolith = (fbm3(sp * 38.0) - 0.5) * 0.045;
+        return maria * 0.52 + cLarge + cMed + cMicro + cFine + ridges + regolith;
       }
     }
 
@@ -312,14 +314,14 @@
         vec3 haloCol = vec3(0.0);
         float haloAlpha = 0.0;
         if (uType == 0) {
-          haloCol = vec3(0.22, 0.62, 1.0);
-          haloAlpha = exp(-limbDist * 13.5) * 0.68 * sunSide;
+          haloCol = vec3(0.14, 0.48, 0.98);
+          haloAlpha = exp(-limbDist * 14.0) * 0.62 * sunSide;
         } else if (uType == 1) {
           haloCol = vec3(0.92, 0.45, 0.22);
           haloAlpha = exp(-limbDist * 18.0) * 0.30 * sunSide;
         } else {
           haloCol = vec3(0.75, 0.80, 0.90);
-          haloAlpha = exp(-limbDist * 26.0) * 0.09 * sunSide;
+          haloAlpha = exp(-limbDist * 26.0) * 0.08 * sunSide;
         }
         gl_FragColor = vec4(haloCol * haloAlpha, haloAlpha);
         return;
@@ -334,7 +336,7 @@
       float aaEdge = smoothstep(1.0, 0.992, r);
 
       // High-precision finite-difference 3D bump mapping
-      float eps = (uType == 2) ? 0.0055 : 0.009;
+      float eps = (uType == 2) ? 0.0038 : 0.0085;
       float h0 = surfaceHeight(sp, uType);
       float hx = surfaceHeight(normalize(sp + vec3(eps, 0.0, 0.0)), uType);
       float hy = surfaceHeight(normalize(sp + vec3(0.0, eps, 0.0)), uType);
@@ -356,50 +358,52 @@
 
       if (uType == 0) {
         // === EARTH ===
-        float landMask = smoothstep(0.495, 0.525, h0);
+        float landMask = smoothstep(0.475, 0.508, h0);
         float lat = abs(sp.y);
-        float polarIce = smoothstep(0.84, 0.96, lat + (h0 - 0.5) * 0.14);
+        float polarIce = smoothstep(0.86, 0.97, lat + (h0 - 0.5) * 0.12);
 
-        // Deep vibrant ocean bathymetry
-        vec3 deepOcean = vec3(0.014, 0.075, 0.24);
-        vec3 shallowOcean = vec3(0.03, 0.25, 0.52);
-        vec3 oceanCol = mix(deepOcean, shallowOcean, smoothstep(0.32, 0.495, h0));
+        // Deep rich Blue Marble ocean bathymetry
+        vec3 deepOcean = vec3(0.005, 0.028, 0.15);
+        vec3 shallowOcean = vec3(0.012, 0.11, 0.32);
+        vec3 oceanCol = mix(deepOcean, shallowOcean, smoothstep(0.30, 0.475, h0));
 
-        // Realistic continents
+        // Lush green continents + subtle arid/alpine zones
         float arid = fbm3(sp * 3.8 + vec3(9.2, 1.4, 3.7));
-        vec3 forest = vec3(0.06, 0.22, 0.085);
-        vec3 desert = vec3(0.46, 0.36, 0.22);
-        vec3 alpine = vec3(0.38, 0.37, 0.35);
-        vec3 landCol = mix(forest, desert, smoothstep(0.45, 0.68, arid) * (1.0 - lat * 0.5));
-        landCol = mix(landCol, alpine, smoothstep(0.65, 0.82, h0));
+        vec3 deepForest = vec3(0.025, 0.19, 0.048);
+        vec3 lushGreen = vec3(0.075, 0.32, 0.085);
+        vec3 desert = vec3(0.38, 0.31, 0.18);
+        vec3 alpine = vec3(0.32, 0.33, 0.30);
+        vec3 greenLand = mix(deepForest, lushGreen, smoothstep(0.48, 0.68, h0));
+        vec3 landCol = mix(greenLand, desert, smoothstep(0.56, 0.78, arid) * (1.0 - lat * 0.5));
+        landCol = mix(landCol, alpine, smoothstep(0.68, 0.85, h0));
 
         vec3 albedo = mix(oceanCol, landCol, landMask);
-        albedo = mix(albedo, vec3(0.92, 0.95, 0.98), polarIce);
+        albedo = mix(albedo, vec3(0.90, 0.94, 0.98), polarIce);
 
         // Ocean specular sun glint
         vec3 H = normalize(sunDir + viewDir);
-        float spec = pow(max(0.0, dot(B, H)), 64.0) * (1.0 - landMask) * (1.0 - polarIce);
+        float spec = pow(max(0.0, dot(B, H)), 72.0) * (1.0 - landMask) * (1.0 - polarIce);
 
-        // Wispy 3D cloud deck (keeps oceans and continents clearly visible)
+        // Wispy 3D cloud deck (keeps deep blue oceans & green continents vivid)
         vec3 cloudP = rotY(N, uSpin * 1.15 + uTime * 0.012);
-        float clouds = smoothstep(0.56, 0.84, fbm3(cloudP * 3.1 + vec2(fbm3(cloudP * 1.8), 0.0).xyy)) * 0.72;
-        float cloudShadow = smoothstep(0.58, 0.86, fbm3((cloudP - rotY(sunDir, uSpin) * 0.02) * 3.1)) * 0.72;
+        float clouds = smoothstep(0.59, 0.86, fbm3(cloudP * 3.1 + vec2(fbm3(cloudP * 1.8), 0.0).xyy)) * 0.48;
+        float cloudShadow = smoothstep(0.60, 0.88, fbm3((cloudP - rotY(sunDir, uSpin) * 0.02) * 3.1)) * 0.48;
 
-        vec3 litSurface = albedo * (diffuse * (1.0 - cloudShadow * 0.35) * 1.25 + 0.02);
-        litSurface += vec3(1.0, 0.96, 0.88) * spec * 0.75 * (1.0 - clouds * 0.85);
-        litSurface = mix(litSurface, vec3(0.96, 0.98, 1.0) * (max(0.0, NdotL_geom) * 1.15 + 0.03), clouds);
+        vec3 litSurface = albedo * (diffuse * (1.0 - cloudShadow * 0.35) * 1.24 + 0.02);
+        litSurface += vec3(1.0, 0.96, 0.88) * spec * 0.55 * (1.0 - clouds * 0.85);
+        litSurface = mix(litSurface, vec3(0.95, 0.97, 1.0) * (max(0.0, NdotL_geom) * 1.12 + 0.03), clouds);
 
         // Night-side city lights on land
         float nightMask = smoothstep(0.05, -0.22, NdotL_geom);
         float cityNoise = pow(noise3(sp * 28.0), 4.2) * smoothstep(0.48, 0.62, fbm3(sp * 7.5));
-        float coastal = smoothstep(0.58, 0.50, h0) * landMask * (1.0 - polarIce);
+        float coastal = smoothstep(0.58, 0.48, h0) * landMask * (1.0 - polarIce);
         litSurface += vec3(1.0, 0.72, 0.32) * cityNoise * coastal * nightMask * 0.95 * (1.0 - clouds * 0.7);
 
-        // Rayleigh rim scattering + warm terminator band
+        // Deeper blue Rayleigh rim scattering + warm terminator band
         float sunLimb = clamp(NdotL_geom * 0.7 + 0.45, 0.0, 1.0);
-        vec3 rayleigh = vec3(0.24, 0.62, 1.0) * fresnel * sunLimb * 0.92;
+        vec3 rayleigh = vec3(0.10, 0.40, 0.95) * fresnel * sunLimb * 0.62;
         float terminator = exp(-pow(NdotL_geom * 6.0, 2.0));
-        vec3 sunset = vec3(0.95, 0.38, 0.14) * terminator * fresnel * 0.35;
+        vec3 sunset = vec3(0.95, 0.38, 0.14) * terminator * fresnel * 0.32;
         col = litSurface + rayleigh + sunset;
 
       } else if (uType == 1) {
@@ -424,19 +428,23 @@
 
       } else {
         // === MOON ===
-        float mariaMask = smoothstep(0.40, 0.58, fbm3(sp * 1.9));
-        float regolithSpeck = fbm3(sp * 26.0);
-        vec3 maria = vec3(0.11, 0.12, 0.14);
-        vec3 highlands = vec3(0.44, 0.45, 0.48);
-        vec3 ejecta = vec3(0.68, 0.69, 0.72);
+        float mariaMask = smoothstep(0.39, 0.58, fbm3(sp * 1.9));
+        float mareMottle = fbm3(sp * 9.5);
+        float regolithSpeck = fbm3(sp * 42.0);
+        float rays = pow(max(0.0, ridged3(sp * 4.5 + vec3(1.2, 3.4, 0.7))), 3.5) * 0.32;
+        vec3 maria = vec3(0.085, 0.095, 0.115) * (0.85 + mareMottle * 0.35);
+        vec3 highlands = vec3(0.42, 0.43, 0.46);
+        vec3 ejecta = vec3(0.75, 0.76, 0.79);
 
         vec3 albedo = mix(maria, highlands, mariaMask);
-        albedo = mix(albedo, ejecta, smoothstep(0.64, 0.86, h0));
-        albedo *= 0.86 + regolithSpeck * 0.28;
+        albedo = mix(albedo, ejecta, clamp(smoothstep(0.62, 0.85, h0) + rays, 0.0, 1.0));
+        albedo *= 0.82 + regolithSpeck * 0.34;
+        // Ambient occlusion darkening inside deep crater bowls
+        albedo *= 0.78 + 0.22 * smoothstep(0.28, 0.54, h0);
 
         // Sharp lunar opposition surge / harsh shadow contrast
-        float lunarDiff = pow(max(0.0, dot(B, sunDir)), 0.94) * smoothstep(-0.02, 0.05, NdotL_geom);
-        col = albedo * (lunarDiff * 1.30 + 0.012);
+        float lunarDiff = pow(max(0.0, dot(B, sunDir)), 0.95) * smoothstep(-0.02, 0.05, NdotL_geom);
+        col = albedo * (lunarDiff * 1.32 + 0.012);
       }
 
       col = acesFilm(col);
