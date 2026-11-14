@@ -1011,8 +1011,8 @@ class StillThereGame {
     const earthCx = w * 0.5;
     const earthCy = h * 0.885 + earthR;
     const usedRTXEarthHorizon = window.vantaPlanetGL && window.vantaPlanetGL.drawPlanet(ctx, 'earth', earthCx, earthCy, earthR, {
-      spin: this.elapsed * 0.025 + 1.15,
-      tilt: 0.22,
+      spin: this.elapsed * 0.02 + 2.35,
+      tilt: -0.05,
       sunDir: [-0.45, 0.52, 0.72]
     });
 

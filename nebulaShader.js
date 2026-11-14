@@ -236,26 +236,59 @@
       return clamp((x * (2.51 * x + 0.03)) / (x * (2.43 * x + 0.59) + 0.14), 0.0, 1.0);
     }
 
-    // Terrain height function for analytical/finite-difference normal mapping
+    vec3 hash33(vec3 p) {
+      p = vec3(
+        dot(p, vec3(127.1, 311.7, 74.7)),
+        dot(p, vec3(269.5, 183.3, 246.1)),
+        dot(p, vec3(113.5, 271.9, 124.6))
+      );
+      return fract(sin(p) * 43758.5453123);
+    }
+
+    // Smooth circular 3D Voronoi impact craters (no jagged ridges!)
+    float craterLayer(vec3 p, float scale) {
+      vec3 sp = p * scale;
+      vec3 ip = floor(sp);
+      vec3 fp = fract(sp);
+      float best = 0.0;
+      for (int x = -1; x <= 1; x++) {
+        for (int y = -1; y <= 1; y++) {
+          for (int z = -1; z <= 1; z++) {
+            vec3 cell = vec3(float(x), float(y), float(z));
+            vec3 rnd = hash33(ip + cell);
+            if (rnd.x > 0.42) {
+              vec3 center = cell + 0.5 + (rnd - 0.5) * 0.48;
+              float d = length(fp - center);
+              float rad = 0.22 + rnd.y * 0.24;
+              float bowl = smoothstep(rad, rad * 0.15, d);
+              float rim = smoothstep(rad * 1.28, rad * 0.92, d) * smoothstep(rad * 0.52, rad * 0.92, d);
+              best += rim * 0.34 - bowl * 0.48;
+            }
+          }
+        }
+      }
+      return best;
+    }
+
+    // Terrain height function for smooth 3D normal mapping
     float surfaceHeight(vec3 sp, int type) {
       if (type == 0) {
-        // Earth: continents + mountain ridges
+        // Earth: continents + mountain chains
         float cont = fbm3(sp * 2.15);
-        float ridge = ridged3(sp * 5.2) * smoothstep(0.49, 0.72, cont);
-        return cont + ridge * 0.28;
+        float ridge = ridged3(sp * 4.8) * smoothstep(0.50, 0.74, cont);
+        return cont + ridge * 0.22;
       } else if (type == 1) {
-        // Mars: canyons + volcanic plateaus + impact craters
-        float base = fbm3(sp * 2.4);
-        float canyon = ridged3(sp * 4.5);
-        float craters = smoothstep(0.62, 0.88, noise3(sp * 11.5)) * 0.18;
-        return base * 0.65 + canyon * 0.35 - craters;
+        // Mars: canyons + volcanic plateaus + circular craters
+        float base = fbm3(sp * 2.3);
+        float canyon = ridged3(sp * 4.0) * 0.24;
+        float craters = craterLayer(sp, 3.6) * 0.22;
+        return base * 0.75 + canyon + craters;
       } else {
-        // Moon: Maria basins + multi-scale craters
-        float maria = fbm3(sp * 1.9);
-        float c1 = abs(noise3(sp * 7.5) - 0.5) * 2.0;
-        float c2 = abs(noise3(sp * 17.0) - 0.5) * 2.0;
-        float craterRim = smoothstep(0.18, 0.36, c1) * 0.35 + smoothstep(0.15, 0.32, c2) * 0.18;
-        return maria * 0.55 + craterRim;
+        // Moon: Maria basins + multi-scale circular impact craters
+        float maria = fbm3(sp * 1.85);
+        float cLarge = craterLayer(sp, 2.8) * 0.34;
+        float cMed = craterLayer(sp + vec3(4.1, 2.3, 1.7), 6.2) * 0.18;
+        return maria * 0.58 + cLarge + cMed;
       }
     }
 
@@ -277,14 +310,14 @@
         vec3 haloCol = vec3(0.0);
         float haloAlpha = 0.0;
         if (uType == 0) {
-          haloCol = vec3(0.22, 0.58, 1.0);
-          haloAlpha = exp(-limbDist * 13.5) * 0.62 * sunSide;
+          haloCol = vec3(0.22, 0.62, 1.0);
+          haloAlpha = exp(-limbDist * 13.5) * 0.68 * sunSide;
         } else if (uType == 1) {
           haloCol = vec3(0.92, 0.45, 0.22);
-          haloAlpha = exp(-limbDist * 18.0) * 0.32 * sunSide;
+          haloAlpha = exp(-limbDist * 18.0) * 0.30 * sunSide;
         } else {
           haloCol = vec3(0.75, 0.80, 0.90);
-          haloAlpha = exp(-limbDist * 26.0) * 0.10 * sunSide;
+          haloAlpha = exp(-limbDist * 26.0) * 0.09 * sunSide;
         }
         gl_FragColor = vec4(haloCol * haloAlpha, haloAlpha);
         return;
@@ -296,28 +329,24 @@
       vec3 sp = rotY(rotX(N, uTilt), uSpin);
 
       // Subpixel anti-aliased limb mask
-      float aaEdge = smoothstep(1.0, 0.986, r);
+      float aaEdge = smoothstep(1.0, 0.988, r);
 
-      // Finite-difference 3D bump mapping
-      float eps = 0.012;
+      // Smooth finite-difference 3D bump mapping
+      float eps = 0.016;
       float h0 = surfaceHeight(sp, uType);
       float hx = surfaceHeight(normalize(sp + vec3(eps, 0.0, 0.0)), uType);
       float hy = surfaceHeight(normalize(sp + vec3(0.0, eps, 0.0)), uType);
       float hz = surfaceHeight(normalize(sp + vec3(0.0, 0.0, eps)), uType);
       vec3 grad = vec3(hx - h0, hy - h0, hz - h0) / eps;
-      // Project gradient onto tangent plane
       grad -= sp * dot(grad, sp);
       vec3 worldGrad = rotX(rotY(grad, -uSpin), -uTilt);
 
-      float bumpStrength = (uType == 0) ? 0.16 : ((uType == 1) ? 0.36 : 0.44);
+      float bumpStrength = (uType == 0) ? 0.09 : ((uType == 1) ? 0.14 : 0.18);
       vec3 B = normalize(N - worldGrad * bumpStrength);
 
       float NdotL_geom = dot(N, sunDir);
-      float NdotL = max(0.0, dot(B, sunDir));
-      // Soft terminator wrap for atmosphere-bearing worlds
       float wrap = (uType == 2) ? 0.0 : 0.06;
       float diffuse = clamp((dot(B, sunDir) + wrap) / (1.0 + wrap), 0.0, 1.0);
-      // Horizon self-shadowing near terminator
       diffuse *= smoothstep(-0.08, 0.14, NdotL_geom);
 
       float fresnel = pow(1.0 - max(0.0, dot(N, viewDir)), 3.6);
@@ -327,36 +356,36 @@
         // === EARTH ===
         float landMask = smoothstep(0.495, 0.525, h0);
         float lat = abs(sp.y);
-        float polarIce = smoothstep(0.74, 0.88, lat + (h0 - 0.5) * 0.25);
+        float polarIce = smoothstep(0.84, 0.96, lat + (h0 - 0.5) * 0.14);
 
-        // Deep ocean bathymetry
-        vec3 deepOcean = vec3(0.012, 0.055, 0.165);
-        vec3 shallowOcean = vec3(0.025, 0.175, 0.365);
+        // Deep vibrant ocean bathymetry
+        vec3 deepOcean = vec3(0.014, 0.075, 0.24);
+        vec3 shallowOcean = vec3(0.03, 0.25, 0.52);
         vec3 oceanCol = mix(deepOcean, shallowOcean, smoothstep(0.32, 0.495, h0));
 
-        // Realistic continents: lush lowland, arid interior, alpine peaks
+        // Realistic continents
         float arid = fbm3(sp * 3.8 + vec3(9.2, 1.4, 3.7));
-        vec3 forest = vec3(0.055, 0.175, 0.072);
-        vec3 desert = vec3(0.44, 0.34, 0.21);
-        vec3 alpine = vec3(0.36, 0.35, 0.33);
-        vec3 landCol = mix(forest, desert, smoothstep(0.44, 0.68, arid) * (1.0 - lat * 0.5));
-        landCol = mix(landCol, alpine, smoothstep(0.64, 0.82, h0));
+        vec3 forest = vec3(0.06, 0.22, 0.085);
+        vec3 desert = vec3(0.46, 0.36, 0.22);
+        vec3 alpine = vec3(0.38, 0.37, 0.35);
+        vec3 landCol = mix(forest, desert, smoothstep(0.45, 0.68, arid) * (1.0 - lat * 0.5));
+        landCol = mix(landCol, alpine, smoothstep(0.65, 0.82, h0));
 
         vec3 albedo = mix(oceanCol, landCol, landMask);
         albedo = mix(albedo, vec3(0.92, 0.95, 0.98), polarIce);
 
-        // Ocean GGX-like specular sun glint
+        // Ocean specular sun glint
         vec3 H = normalize(sunDir + viewDir);
-        float spec = pow(max(0.0, dot(B, H)), 72.0) * (1.0 - landMask) * (1.0 - polarIce);
+        float spec = pow(max(0.0, dot(B, H)), 64.0) * (1.0 - landMask) * (1.0 - polarIce);
 
-        // Dynamic 3D cloud deck + shadow offset
-        vec3 cloudP = rotY(N, uSpin * 1.18 + uTime * 0.015);
-        float clouds = smoothstep(0.50, 0.78, fbm3(cloudP * 3.4 + vec2(fbm3(cloudP * 2.0), 0.0).xyy));
-        float cloudShadow = smoothstep(0.52, 0.80, fbm3((cloudP - rotY(sunDir, uSpin) * 0.025) * 3.4));
+        // Wispy 3D cloud deck (keeps oceans and continents clearly visible)
+        vec3 cloudP = rotY(N, uSpin * 1.15 + uTime * 0.012);
+        float clouds = smoothstep(0.56, 0.84, fbm3(cloudP * 3.1 + vec2(fbm3(cloudP * 1.8), 0.0).xyy)) * 0.72;
+        float cloudShadow = smoothstep(0.58, 0.86, fbm3((cloudP - rotY(sunDir, uSpin) * 0.02) * 3.1)) * 0.72;
 
-        vec3 litSurface = albedo * (diffuse * (1.0 - cloudShadow * 0.42) * 1.25 + 0.018);
-        litSurface += vec3(1.0, 0.96, 0.88) * spec * 0.85 * (1.0 - clouds * 0.85);
-        litSurface = mix(litSurface, vec3(0.96, 0.98, 1.0) * (max(0.0, NdotL_geom) * 1.15 + 0.03), clouds * 0.88);
+        vec3 litSurface = albedo * (diffuse * (1.0 - cloudShadow * 0.35) * 1.25 + 0.02);
+        litSurface += vec3(1.0, 0.96, 0.88) * spec * 0.75 * (1.0 - clouds * 0.85);
+        litSurface = mix(litSurface, vec3(0.96, 0.98, 1.0) * (max(0.0, NdotL_geom) * 1.15 + 0.03), clouds);
 
         // Night-side city lights on land
         float nightMask = smoothstep(0.05, -0.22, NdotL_geom);
@@ -618,7 +647,7 @@
       } = opts;
 
       const dpr = Math.min(2, window.devicePixelRatio || 1);
-      const targetSize = Math.min(768, Math.max(256, Math.ceil(radius * 2.64 * dpr)));
+      const targetSize = Math.min(1280, Math.max(256, Math.ceil(radius * 2.64 * dpr)));
       if (Math.abs(this.canvas.width - targetSize) > 64) {
         this.canvas.width = targetSize;
         this.canvas.height = targetSize;
