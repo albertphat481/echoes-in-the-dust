@@ -264,6 +264,8 @@ class EchoesApp {
         } else {
           this.openGuide(this.currentIndex);
         }
+      } else if (e.key === 'l' || e.key === 'L') {
+        this.toggleLanguage();
       } else if (e.key === 'j' || e.key === 'J') {
         if (this.dossierModal.classList.contains('visible')) {
           this.hideModals();
@@ -430,6 +432,18 @@ class EchoesApp {
       this.showMemoryShard(this.currentIndex);
     });
 
+    // Language Switcher (Globe Button: VI <-> EN)
+    const btnLang = document.getElementById('btn-lang');
+    if (btnLang) {
+      btnLang.addEventListener('click', () => {
+        btnLang.blur();
+        window.soundEngine.unlock();
+        window.soundEngine.playUITick();
+        this.toggleLanguage();
+      });
+    }
+    if (window.VantaI18n) window.VantaI18n.applyDOM();
+
     // Sound Mute Toggle (if audio was awaiting browser gesture, first click wakes audio cleanly)
     const btnAudio = document.getElementById('btn-audio');
     let audioWasLockedOnPress = false;
@@ -589,6 +603,21 @@ class EchoesApp {
     this._syncAudioButton();
   }
 
+  toggleLanguage() {
+    if (!window.VantaI18n) return;
+    window.VantaI18n.toggle();
+    this._syncAudioButton();
+    if (this.memoryModal.classList.contains('visible')) {
+      this.showMemoryShard(this.currentIndex);
+    } else if (this.galleryModal.classList.contains('visible')) {
+      this.openGallery();
+    } else if (this.guideModal.classList.contains('visible')) {
+      this.renderGuide(this.currentIndex);
+    } else if (this.quizDeckModal.classList.contains('visible')) {
+      this.renderQuizDeckCard();
+    }
+  }
+
   _syncAudioButton() {
     const btnAudio = document.getElementById('btn-audio');
     if (!btnAudio) return;
@@ -697,8 +726,10 @@ class EchoesApp {
       this.currentGame.destroy();
     }
     this.paused = true;
-    const shard = window.MEMORY_SHARDS[index];
-    document.getElementById('shard-number').textContent = `MẢNH VỠ KÝ ỨC • ${shard.number}`;
+    const rawShard = window.MEMORY_SHARDS[index];
+    const shard = window.VantaI18n ? window.VantaI18n.getShard(rawShard) : rawShard;
+    const en = window.VantaI18n && window.VantaI18n.isEn();
+    document.getElementById('shard-number').textContent = `${en ? 'MEMORY SHARD' : 'MẢNH VỠ KÝ ỨC'} • ${shard.number}`;
     document.getElementById('shard-mission').textContent = shard.mission;
     document.getElementById('shard-visual').innerHTML = shard.svgDiagram;
     document.getElementById('shard-title').textContent = shard.title;
@@ -849,7 +880,9 @@ class EchoesApp {
           btn.classList.add('correct');
           this._markQuizSolved(quiz.id);
           window.soundEngine.playSuccessBloom();
-          fbEl.innerHTML = `<strong>Chính xác (${quiz.correctKey})!</strong> ${quiz.explanation}`;
+          const expl = window.VantaI18n ? window.VantaI18n.getQuizExplanation(quiz) : quiz.explanation;
+      const okLbl = window.VantaI18n && window.VantaI18n.isEn() ? 'Correct' : 'Chính xác';
+      fbEl.innerHTML = `<strong>${okLbl} (${quiz.correctKey})!</strong> ${expl}`;
           fbEl.classList.add('visible');
         } else {
           btn.classList.add('wrong');
@@ -929,7 +962,9 @@ class EchoesApp {
     optsEl.innerHTML = '';
 
     if (isSolved) {
-      fbEl.innerHTML = `<strong>Chính xác (${quiz.correctKey})!</strong> ${quiz.explanation}`;
+      const expl = window.VantaI18n ? window.VantaI18n.getQuizExplanation(quiz) : quiz.explanation;
+      const okLbl = window.VantaI18n && window.VantaI18n.isEn() ? 'Correct' : 'Chính xác';
+      fbEl.innerHTML = `<strong>${okLbl} (${quiz.correctKey})!</strong> ${expl}`;
       fbEl.classList.add('visible');
     } else {
       fbEl.innerHTML = '';
@@ -948,7 +983,9 @@ class EchoesApp {
           btn.classList.add('correct');
           this._markQuizSolved(quiz.id);
           window.soundEngine.playSuccessBloom();
-          fbEl.innerHTML = `<strong>Chính xác (${quiz.correctKey})!</strong> ${quiz.explanation}`;
+          const expl = window.VantaI18n ? window.VantaI18n.getQuizExplanation(quiz) : quiz.explanation;
+      const okLbl = window.VantaI18n && window.VantaI18n.isEn() ? 'Correct' : 'Chính xác';
+      fbEl.innerHTML = `<strong>${okLbl} (${quiz.correctKey})!</strong> ${expl}`;
           fbEl.classList.add('visible');
           // Refresh progress dot & score badge
           this.renderQuizDeckSlide(this.currentDeckQuizIndex);
@@ -985,7 +1022,9 @@ class EchoesApp {
     const grid = document.getElementById('gallery-grid');
     grid.innerHTML = '';
 
-    window.MEMORY_SHARDS.forEach((shard, idx) => {
+    window.MEMORY_SHARDS.forEach((rawShard, idx) => {
+      const shard = window.VantaI18n ? window.VantaI18n.getShard(rawShard) : rawShard;
+      const en = window.VantaI18n && window.VantaI18n.isEn();
       const isUnlocked = this.unlockedShards.has(shard.id);
       const linkedQuiz = (window.VANTALUMEN_QUIZZES || []).find(q => q.linkedShardId === shard.id);
       const quizSolved = linkedQuiz ? this.solvedQuizzes.has(linkedQuiz.id) : false;
@@ -994,15 +1033,15 @@ class EchoesApp {
       item.className = `gallery-item ${isUnlocked ? 'unlocked' : ''}`;
       item.innerHTML = `
         <div class="gallery-item-top">
-          <div class="gallery-item-num">${shard.number} ${isUnlocked ? '• ĐÃ ĐÁNH THỨC' : '• CHƯA KHÁM PHÁ'}</div>
-          <span class="gallery-quiz-chip ${quizSolved ? 'solved' : ''}">${quizSolved ? '✓ Đã giải mã' : 'Chưa giải mã'}</span>
+          <div class="gallery-item-num">${shard.number} ${isUnlocked ? (en ? '• AWAKENED' : '• ĐÃ ĐÁNH THỨC') : (en ? '• LOCKED' : '• CHƯA KHÁM PHÁ')}</div>
+          <span class="gallery-quiz-chip ${quizSolved ? 'solved' : ''}">${quizSolved ? (en ? '✓ Decoded' : '✓ Đã giải mã') : (en ? 'Undecoded' : 'Chưa giải mã')}</span>
         </div>
         <div class="gallery-item-preview">${shard.svgDiagram || ''}</div>
         <div class="gallery-item-title">${shard.title}</div>
         <div class="gallery-item-desc">${shard.subtitle}</div>
         <div class="gallery-item-actions">
-          <button type="button" class="btn-mini play">Chơi màn ▶</button>
-          <button type="button" class="btn-mini view">Thẻ Ký Ức</button>
+          <button type="button" class="btn-mini play">${en ? 'Play ▶' : 'Chơi màn ▶'}</button>
+          <button type="button" class="btn-mini view">${en ? 'Memory Shard' : 'Thẻ Ký Ức'}</button>
         </div>
       `;
 
@@ -1044,7 +1083,7 @@ class EchoesApp {
   renderGuide(index) {
     const guides = window.GAME_GUIDES || [];
     const safeIdx = ((index % guides.length) + guides.length) % guides.length;
-    const guide = guides[safeIdx];
+    const guide = window.VantaI18n ? window.VantaI18n.getGuide(guides[safeIdx]) : guides[safeIdx];
     if (!guide) return;
 
     const tabsEl = document.getElementById('guide-tabs');

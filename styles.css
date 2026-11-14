@@ -566,6 +566,12 @@ html, body {
   transform: translateY(-1px);
 }
 
+#btn-lang.active-lang-en {
+  border-color: rgba(56, 189, 248, 0.65);
+  color: #7dd3fc;
+  box-shadow: 0 0 16px rgba(56, 189, 248, 0.25);
+}
+
 .icon-btn[data-tooltip]::after {
   content: attr(data-tooltip);
   position: absolute;

@@ -622,13 +622,14 @@ class SpiritRescueGame {
     this._drawPlanetOrb(ctx, L.marsPos.x, L.marsPos.y, orbR * 0.86, true);
 
     // Labels
+    const en = window.VantaI18n && window.VantaI18n.isEn();
     ctx.save();
     ctx.font = '600 11px "JetBrains Mono", monospace';
     ctx.textAlign = 'center';
     ctx.fillStyle = '#bae6fd';
-    ctx.fillText('TRÁI ĐẤT', L.earthPos.x, L.earthPos.y + orbR + 20);
+    ctx.fillText(en ? 'EARTH' : 'TRÁI ĐẤT', L.earthPos.x, L.earthPos.y + orbR + 20);
     ctx.fillStyle = '#fed7aa';
-    ctx.fillText('SAO HỎA', L.marsPos.x, L.marsPos.y + orbR * 0.86 + 20);
+    ctx.fillText(en ? 'MARS' : 'SAO HỎA', L.marsPos.x, L.marsPos.y + orbR * 0.86 + 20);
     ctx.restore();
 
     // Starship along arc
@@ -834,10 +835,11 @@ class SpiritRescueGame {
     ctx.roundRect(bx + 3, by + 3, fillW, barH - 6, 8);
     ctx.fill();
 
+    const en = window.VantaI18n && window.VantaI18n.isEn();
     ctx.font = '600 12px "JetBrains Mono", monospace';
     ctx.fillStyle = '#f8fafc';
     ctx.textAlign = 'center';
-    ctx.fillText(`PIN SPIRIT: ${Math.round(this.battery)}%`, w * 0.5, by - 10);
+    ctx.fillText(`${en ? 'SPIRIT BATTERY' : 'PIN SPIRIT'}: ${Math.round(this.battery)}%`, w * 0.5, by - 10);
     ctx.restore();
 
     // Glowing Super-Charge Pad button
@@ -866,8 +868,11 @@ class SpiritRescueGame {
   }
 
   _renderPhaseStepper(ctx, w, h) {
+    const en = window.VantaI18n && window.VantaI18n.isEn();
     const phases = ['to_mars', 'pickup', 'to_earth', 'replace_motor', 'charge_battery'];
-    const labels = ['1. Bay Sao Hỏa', '2. Bế Spirit', '3. Bay Về', '4. Thay Motor', '5. Sạc Pin'];
+    const labels = en
+      ? ['1. To Mars', '2. Lift Spirit', '3. To Earth', '4. Swap Motor', '5. Charge']
+      : ['1. Bay Sao Hỏa', '2. Bế Spirit', '3. Bay Về', '4. Thay Motor', '5. Sạc Pin'];
     const activeIdx = phases.indexOf(this.phase);
     const y = h * 0.11;
     const stepW = Math.min(82, (w - 40) / 5);
@@ -892,21 +897,24 @@ class SpiritRescueGame {
   }
 
   _renderPromptPill(ctx, w, h) {
+    const en = window.VantaI18n && window.VantaI18n.isEn();
     let text = '';
     if (this.ending) {
-      text = '★ SPIRIT ĐÃ HỒI SINH 100% TRÊN TRÁI ĐẤT!';
+      text = en ? '★ SPIRIT 100% RESTORED BACK ON EARTH!' : '★ SPIRIT ĐÃ HỒI SINH 100% TRÊN TRÁI ĐẤT!';
     } else if (this.phase === 'to_mars') {
-      text = 'NHẤN GIỮ (HOẶC SPACE) ĐỂ PHÓNG TÀU SPACEX LÊN SAO HỎA';
+      text = en ? 'HOLD (OR SPACE) TO LAUNCH SPACEX STARSHIP TO MARS' : 'NHẤN GIỮ (HOẶC SPACE) ĐỂ PHÓNG TÀU SPACEX LÊN SAO HỎA';
     } else if (this.phase === 'pickup') {
-      text = this.spiritPickedUp ? 'ĐÃ ĐƯA SPIRIT VÀO KHOANG TÀU!' : 'NHẤN GIỮ ĐỂ BẾ ROVER SPIRIT LÊN TÀU SPACEX';
+      text = this.spiritPickedUp
+        ? (en ? 'SPIRIT SECURED IN CARGO BAY!' : 'ĐÃ ĐƯA SPIRIT VÀO KHOANG TÀU!')
+        : (en ? 'HOLD TO LIFT SPIRIT INTO SPACEX STARSHIP' : 'NHẤN GIỮ ĐỂ BẾ ROVER SPIRIT LÊN TÀU SPACEX');
     } else if (this.phase === 'to_earth') {
-      text = 'NHẤN GIỮ ĐỂ LÁI TÀU SPACEX ĐƯA SPIRIT VỀ TRÁI ĐẤT';
+      text = en ? 'HOLD TO FLY SPACEX STARSHIP BACK TO EARTH' : 'NHẤN GIỮ ĐỂ LÁI TÀU SPACEX ĐƯA SPIRIT VỀ TRÁI ĐẤT';
     } else if (this.phase === 'replace_motor') {
-      if (this.motorStep === 'remove_old') text = 'CHẠM VÀO BÁNH XE HỎNG ĐỂ THÁO MOTOR CŨ';
-      else if (this.motorStep === 'install_new') text = 'CHẠM VÀO MOTOR MỚI ĐỂ LẮP VÀO BÁNH XE SPIRIT';
-      else text = 'ĐÃ THAY MOTOR MỚI • 6 BÁNH XE HOẠT ĐỘNG TRƠN TRU!';
+      if (this.motorStep === 'remove_old') text = en ? 'TAP SEIZED WHEEL TO REMOVE OLD MOTOR' : 'CHẠM VÀO BÁNH XE HỎNG ĐỂ THÁO MOTOR CŨ';
+      else if (this.motorStep === 'install_new') text = en ? 'TAP NEW MOTOR TO INSTALL INTO SPIRIT' : 'CHẠM VÀO MOTOR MỚI ĐỂ LẮP VÀO BÁNH XE SPIRIT';
+      else text = en ? 'NEW MOTOR INSTALLED • ALL 6 WHEELS READY!' : 'ĐÃ THAY MOTOR MỚI • 6 BÁNH XE HOẠT ĐỘNG TRƠN TRU!';
     } else if (this.phase === 'charge_battery') {
-      text = 'NHẤN GIỮ / CHẠM LIÊN TỤC BIỂU TƯỢNG SÉT ĐỂ SẠC PIN SPIRIT (100%)';
+      text = en ? 'HOLD / TAP LIGHTNING PAD TO CHARGE SPIRIT (100%)' : 'NHẤN GIỮ / CHẠM LIÊN TỤC BIỂU TƯỢNG SÉT ĐỂ SẠC PIN SPIRIT (100%)';
     }
 
     ctx.save();
