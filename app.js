@@ -500,9 +500,17 @@ class EchoesApp {
     document.getElementById('btn-close-dossier').addEventListener('click', () => this.hideModals());
     document.getElementById('btn-close-quiz-deck').addEventListener('click', () => this.hideModals());
     document.getElementById('btn-close-guide').addEventListener('click', () => this.hideModals());
+    const closeCertBtn = document.getElementById('btn-close-cert-modal');
+    if (closeCertBtn) closeCertBtn.addEventListener('click', () => this.hideModals());
+    const dlCertBtn = document.getElementById('btn-download-cert-modal');
+    if (dlCertBtn) dlCertBtn.addEventListener('click', () => this.exportCertificatePNG());
+    const certGalBtn = document.getElementById('btn-cert-open-gallery');
+    if (certGalBtn) certGalBtn.addEventListener('click', () => { this.hideModals(); this.openGallery(); });
+    const certShardBtn = document.getElementById('btn-cert-view-shard');
+    if (certShardBtn) certShardBtn.addEventListener('click', () => { this.hideModals(); this.showMemoryShard(this.currentIndex); });
 
     // Tap on dark backdrop outside modal card to close cleanly on tablets & phones
-    [this.memoryModal, this.galleryModal, this.dossierModal, this.quizDeckModal, this.guideModal].forEach(modal => {
+    [this.memoryModal, this.galleryModal, this.dossierModal, this.quizDeckModal, this.guideModal, document.getElementById('certificate-modal')].forEach(modal => {
       if (modal) {
         modal.addEventListener('click', e => {
           if (e.target === modal) this.hideModals();
@@ -693,6 +701,7 @@ class EchoesApp {
 
   completeCurrentGame() {
     const shard = window.MEMORY_SHARDS[this.currentIndex];
+    const wasAll = this.unlockedShards.size >= window.MEMORY_SHARDS.length;
     this.unlockedShards.add(shard.id);
     try {
       localStorage.setItem('echoes_unlocked_shards', JSON.stringify([...this.unlockedShards]));
@@ -702,9 +711,14 @@ class EchoesApp {
 
     if (this._completeTimer) clearTimeout(this._completeTimer);
     const targetIdx = this.currentIndex;
+    const nowAll = this.unlockedShards.size >= window.MEMORY_SHARDS.length;
     this._completeTimer = setTimeout(() => {
       this._completeTimer = null;
-      this.showMemoryShard(targetIdx);
+      if (nowAll && (!wasAll || targetIdx === this.gameClasses.length - 1)) {
+        this.showCertificateModal();
+      } else {
+        this.showMemoryShard(targetIdx);
+      }
     }, 650);
   }
 
@@ -1194,12 +1208,14 @@ class EchoesApp {
       this.closeLightbox();
       return;
     }
+    const certModal = document.getElementById('certificate-modal');
     const anyVisible =
       this.memoryModal.classList.contains('visible') ||
       this.galleryModal.classList.contains('visible') ||
       this.dossierModal.classList.contains('visible') ||
       this.quizDeckModal.classList.contains('visible') ||
-      this.guideModal.classList.contains('visible');
+      this.guideModal.classList.contains('visible') ||
+      (certModal && certModal.classList.contains('visible'));
     if (anyVisible) {
       window.soundEngine.playModalClose();
     }
@@ -1208,6 +1224,7 @@ class EchoesApp {
     this.dossierModal.classList.remove('visible');
     this.quizDeckModal.classList.remove('visible');
     this.guideModal.classList.remove('visible');
+    if (certModal) certModal.classList.remove('visible');
     this.paused = false;
     if (this.currentGame && !this.currentGame.completed && typeof this.currentGame._startVideoPlayback === 'function') {
       this.currentGame._startVideoPlayback(false);
@@ -1504,8 +1521,7 @@ class EchoesApp {
     link.click();
   }
 
-  async exportCertificatePNG() {
-    window.soundEngine.playSuccessBloom();
+  async _renderCertificateCanvas() {
     if (document.fonts && document.fonts.ready) {
       try { await document.fonts.ready; } catch {}
     }
@@ -1535,7 +1551,7 @@ class EchoesApp {
     ctx.textAlign = 'right';
     ctx.fillStyle = '#fcd34d';
     ctx.font = '600 13px "JetBrains Mono", monospace';
-    ctx.fillText('DOC-ID // VL-9M-2026', w - 88, 98);
+    ctx.fillText('DOC-ID // VL-8M-2026', w - 88, 98);
     ctx.fillStyle = '#64748b';
     ctx.font = '400 12px "JetBrains Mono", monospace';
     ctx.fillText('TELEMETRY VERIFIED • JPL / APOLLO / ARTEMIS II', w - 88, 120);
@@ -1691,6 +1707,34 @@ class EchoesApp {
     ctx.fillText(`NASA OPEN DATA ARCHIVE  •  ${dateStr}`, w - 88, 924);
     ctx.restore();
 
+    return c;
+  }
+
+  async showCertificateModal() {
+    if (this._completeTimer) {
+      clearTimeout(this._completeTimer);
+      this._completeTimer = null;
+    }
+    window.soundEngine.setBrushWind(0);
+    window.soundEngine.playSignatureMotif(4);
+    if (this.currentGame && typeof this.currentGame.destroy === 'function') {
+      this.currentGame.destroy();
+    }
+    this.hideModals();
+    this.paused = true;
+
+    const modal = document.getElementById('certificate-modal');
+    const img = document.getElementById('cert-preview-img');
+    if (img) {
+      const c = await this._renderCertificateCanvas();
+      img.src = c.toDataURL('image/png');
+    }
+    if (modal) modal.classList.add('visible');
+  }
+
+  async exportCertificatePNG() {
+    window.soundEngine.playSuccessBloom();
+    const c = await this._renderCertificateCanvas();
     const link = document.createElement('a');
     link.download = 'Vantalumen-SpaceApps-Certificate.png';
     link.href = c.toDataURL('image/png');

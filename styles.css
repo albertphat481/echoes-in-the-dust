@@ -1007,12 +1007,12 @@ html, body {
     inset 0 1px 0 rgba(255, 255, 255, 0.6);
 }
 
-/* Gallery & Vantalumen Mission Dossier Modal */
-#gallery-modal, #dossier-modal {
+/* Gallery, Certificate & Vantalumen Mission Dossier Modal */
+#gallery-modal, #dossier-modal, #certificate-modal {
   position: fixed;
   inset: 0;
-  z-index: 35;
-  background: rgba(3, 6, 14, 0.76);
+  z-index: 38;
+  background: rgba(3, 6, 14, 0.78);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
   display: flex;
@@ -1026,9 +1026,24 @@ html, body {
   transition: opacity 0.4s ease;
 }
 
-#gallery-modal.visible, #dossier-modal.visible {
+#gallery-modal.visible, #dossier-modal.visible, #certificate-modal.visible {
   opacity: 1;
   pointer-events: auto;
+}
+
+.cert-preview-wrap {
+  width: 100%;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid rgba(252, 211, 77, 0.35);
+  box-shadow: 0 20px 56px rgba(0, 0, 0, 0.65), 0 0 36px rgba(251, 191, 36, 0.12);
+  background: #050a14;
+}
+
+.cert-preview-wrap img {
+  display: block;
+  width: 100%;
+  height: auto;
 }
 
 .gallery-container {

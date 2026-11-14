@@ -269,6 +269,33 @@
     </div>
   </div>
 
+  <!-- Mission Completion Certificate Modal (auto-opens when all 8 games are completed) -->
+  <div id="certificate-modal" role="dialog" aria-modal="true">
+    <div class="gallery-container" style="max-width: 920px;">
+      <div class="gallery-header">
+        <div>
+          <div class="vantalumen-pill">★ MISSION ACCOMPLISHED • 8 / 8 TRẠM HOÀN THÀNH</div>
+          <h2 id="cert-modal-title" class="gallery-title">Chứng Nhận Hoàn Thành Sứ Mệnh VantaLumen</h2>
+          <p id="cert-modal-subtitle" class="gallery-subtitle">Chúc mừng bạn đã đánh thức toàn bộ 8 mảnh vỡ ký ức thám hiểm vũ trụ NASA!</p>
+        </div>
+        <button id="btn-close-cert-modal" class="btn btn-ghost">Đóng ✕</button>
+      </div>
+
+      <div class="cert-preview-wrap">
+        <img id="cert-preview-img" alt="VantaLumen Mission Completion Certificate" />
+      </div>
+
+      <div class="shard-actions" style="margin-top: 16px;">
+        <div class="shard-team-tag"><strong>TEAM VANTALUMEN</strong> • NASA SPACE APPS CHALLENGE 2026</div>
+        <div class="btn-group">
+          <button id="btn-cert-view-shard" class="btn btn-ghost">Xem Mảnh Vỡ Cuối</button>
+          <button id="btn-cert-open-gallery" class="btn btn-ghost">Kho Lưu Trữ</button>
+          <button id="btn-download-cert-modal" class="btn btn-primary">Tải Chứng Nhận PNG ↓</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- 9 Separate Gameplay Guides Modal -->
   <div id="guide-modal" role="dialog" aria-modal="true">
     <div class="gallery-container" style="max-width: 820px;">
