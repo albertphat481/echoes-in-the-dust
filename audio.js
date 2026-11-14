@@ -15,6 +15,7 @@ class SoundEngine {
     this.delaySend = null;
     this.muted = false;
     this.unlocked = false;
+    this.onStateChange = null;
 
     // Shared Pentatonic Frequencies (C4, D4, F4, G4, A4, C5, D5, F5, G5, A5)
     this.pentatonic = [
@@ -31,14 +32,29 @@ class SoundEngine {
     this._lastSandTime = 0;
   }
 
+  needsGesture() {
+    return !this.ctx || this.ctx.state !== 'running';
+  }
+
+  _syncState() {
+    if (!this.ctx) return;
+    const isRunning = this.ctx.state === 'running';
+    this.unlocked = isRunning;
+    if (isRunning) {
+      this._onContextRunning();
+    }
+    if (typeof this.onStateChange === 'function') {
+      this.onStateChange(this.ctx.state);
+    }
+  }
+
   init() {
     if (this.ctx) {
       if (this.ctx.state === 'suspended') {
-        this.ctx.resume().then(() => this._onContextRunning()).catch(() => {});
+        this.ctx.resume().then(() => this._syncState()).catch(() => {});
       } else {
-        this._onContextRunning();
+        this._syncState();
       }
-      this.unlocked = true;
       return;
     }
 
@@ -46,6 +62,7 @@ class SoundEngine {
     if (!AudioCtx) return;
 
     this.ctx = new AudioCtx({ latencyHint: 'interactive' });
+    this.ctx.onstatechange = () => this._syncState();
 
     // 1. Master Mastering Chain: Soft Tape Saturator -> Warm EQ -> Compressor -> Destination
     const lowShelf = this.ctx.createBiquadFilter();
@@ -130,19 +147,19 @@ class SoundEngine {
     this._initContinuousWind();
     this._initDeepSpaceDrone();
 
+    this._syncState();
     if (this.ctx.state === 'suspended') {
-      this.ctx.resume().then(() => this._onContextRunning()).catch(() => {});
-    } else {
-      this._onContextRunning();
+      this.ctx.resume().then(() => this._syncState()).catch(() => {});
     }
-    this.unlocked = true;
   }
 
   unlock() {
     this.init();
     if (this.ctx && this.ctx.state === 'suspended') {
-      this.ctx.resume().then(() => this._onContextRunning()).catch(() => {});
+      return this.ctx.resume().then(() => this._syncState()).catch(() => {});
     }
+    this._syncState();
+    return Promise.resolve();
   }
 
   _onContextRunning() {

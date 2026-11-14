@@ -136,14 +136,19 @@ class EchoesApp {
 
   _setupInput() {
     // Attempt immediate Web Audio init (works when browser permits autoplay)
-    // and attach global capture unlockers so ANY first key/tap/click anywhere starts audio.
+    // and attach global capture unlockers across every user-activation event.
+    window.soundEngine.onStateChange = () => this._syncAudioButton();
     try { window.soundEngine.init(); } catch {}
+
     const unlockAudio = () => {
-      try { window.soundEngine.unlock(); } catch {}
+      if (window.soundEngine.needsGesture()) {
+        try { window.soundEngine.unlock(); } catch {}
+      }
     };
-    ['pointerdown', 'mousedown', 'touchstart', 'keydown', 'click'].forEach(evt => {
+    ['pointerdown', 'mousedown', 'mouseup', 'pointerup', 'touchstart', 'touchend', 'keydown', 'keyup', 'click', 'auxclick'].forEach(evt => {
       window.addEventListener(evt, unlockAudio, { capture: true, passive: true });
     });
+    window.addEventListener('focus', unlockAudio, { passive: true });
 
     const getXY = e => ({ x: e.clientX, y: e.clientY });
 
@@ -159,6 +164,9 @@ class EchoesApp {
     });
 
     this.canvas.addEventListener('pointermove', e => {
+      if (window.soundEngine.needsGesture()) {
+        try { window.soundEngine.unlock(); } catch {}
+      }
       if (this.paused || !this.currentGame) return;
       const { x, y } = getXY(e);
       const now = performance.now();
@@ -231,9 +239,8 @@ class EchoesApp {
           this.openDossier();
         }
       } else if (e.key === 'm' || e.key === 'M') {
-        const btnAudio = document.getElementById('btn-audio');
-        const muted = window.soundEngine.toggleMute();
-        if (btnAudio) btnAudio.style.opacity = muted ? '0.45' : '1';
+        window.soundEngine.toggleMute();
+        this._syncAudioButton();
       } else if (e.key === 'Escape') {
         this.hideModals();
       }
@@ -323,12 +330,27 @@ class EchoesApp {
       this.showMemoryShard(this.currentIndex);
     });
 
-    // Sound Mute Toggle
+    // Sound Mute Toggle (if audio was awaiting browser gesture, first click wakes audio cleanly)
     const btnAudio = document.getElementById('btn-audio');
+    let audioWasLockedOnPress = false;
+    btnAudio.addEventListener('pointerdown', () => {
+      audioWasLockedOnPress = window.soundEngine.needsGesture();
+    }, { capture: true });
     btnAudio.addEventListener('click', () => {
       btnAudio.blur();
+      if (audioWasLockedOnPress || window.soundEngine.needsGesture()) {
+        audioWasLockedOnPress = false;
+        window.soundEngine.muted = false;
+        window.soundEngine.unlock();
+        if (window.soundEngine.masterGain && window.soundEngine.ctx) {
+          window.soundEngine.masterGain.gain.setTargetAtTime(0.94, window.soundEngine.ctx.currentTime, 0.04);
+        }
+        window.soundEngine.playUIChime(5);
+        this._syncAudioButton();
+        return;
+      }
       const muted = window.soundEngine.toggleMute();
-      btnAudio.style.opacity = muted ? '0.45' : '1';
+      this._syncAudioButton();
       if (!muted) window.soundEngine.playUITick();
     });
 
@@ -417,7 +439,33 @@ class EchoesApp {
       this.mountGame(nextIdx);
     });
 
+    const introWhisper = document.getElementById('intro-whisper');
+    if (introWhisper) {
+      introWhisper.addEventListener('click', () => {
+        window.soundEngine.unlock();
+        window.soundEngine.playUIChime(4);
+        this._dismissIntroWhisper();
+      });
+    }
+
     this._refreshNavDots();
+    this._syncAudioButton();
+  }
+
+  _syncAudioButton() {
+    const btnAudio = document.getElementById('btn-audio');
+    if (!btnAudio) return;
+    const muted = window.soundEngine.muted;
+    const awaiting = !muted && window.soundEngine.needsGesture();
+    btnAudio.classList.toggle('audio-awaiting', awaiting);
+    btnAudio.style.opacity = muted ? '0.45' : '1';
+    if (muted) {
+      btnAudio.setAttribute('data-tooltip', 'Âm Thanh Đang Tắt (M)');
+    } else if (awaiting) {
+      btnAudio.setAttribute('data-tooltip', 'Chạm để Bật Âm Thanh (Trình duyệt chặn tự phát)');
+    } else {
+      btnAudio.setAttribute('data-tooltip', 'Âm Thanh (M)');
+    }
   }
 
   _dismissIntroWhisper() {
