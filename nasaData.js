@@ -56,6 +56,22 @@ window.NASA_TELEMETRY = (function () {
       date: '1969-07-20',
       imageUrl: 'https://images-assets.nasa.gov/image/as11-40-5877/as11-40-5877~medium.jpg',
       center: 'NASA/JSC'
+    },
+    'pale-blue-dot': {
+      query: 'PIA00452',
+      nasaId: 'PIA00452',
+      title: 'Solar System Portrait - Earth as "Pale Blue Dot" (Voyager 1)',
+      date: '1990-02-14',
+      imageUrl: 'https://images-assets.nasa.gov/image/PIA00452/PIA00452~medium.jpg',
+      center: 'NASA/JPL-Caltech'
+    },
+    'grand-finale': {
+      query: 'PIA21889',
+      nasaId: 'PIA21889',
+      title: "Cassini's Final View of Saturn Before Atmospheric Entry",
+      date: '2017-09-14',
+      imageUrl: 'https://images-assets.nasa.gov/image/PIA21889/PIA21889~medium.jpg',
+      center: 'NASA/JPL-Caltech'
     }
   };
 
@@ -156,6 +172,20 @@ window.NASA_TELEMETRY = (function () {
         return {
           badge: 'LRO NAC SURVEILLANCE // TRANQUILITY BASE (0.67°N, 23.47°E)',
           line: `Dấu chân Apollo 11 đã tồn tại ${yearsSinceApollo11.toFixed(2)} năm • Tốc độ phong hóa vi thiên thạch: ~1–2 mm / triệu năm`
+        };
+      case 'pale-blue-dot': {
+        const yearsSinceVoyager = (now - Date.UTC(1977, 8, 5, 12, 56, 0)) / (86400000 * 365.2425);
+        const voyagerDistKm = 24.4e9 + yearsSinceVoyager * 0.017e9; // ~165+ AU outward cruise
+        const lightHrs = (voyagerDistKm / C_KM_S) / 3600;
+        return {
+          badge: 'DEEP SPACE NETWORK // VOYAGER 1 INTERSTELLAR (>165 AU)',
+          line: `Ảnh Pale Blue Dot chụp cách nhà 6,05 tỷ km (1990) • Nay Voyager 1 cách Trái Đất ~${(voyagerDistKm / 1e9).toFixed(1)} tỷ km (${lightHrs.toFixed(1)} giờ ánh sáng)`
+        };
+      }
+      case 'grand-finale':
+        return {
+          badge: 'CASSINI GRAND FINALE // SATURN UPPER ATMOSPHERE',
+          line: '22 quỹ đạo lặn qua khe vành đai (2017) • Tín hiệu cuối duy trì ăng-ten hướng Trái Đất ở tốc độ 113.000 km/h'
         };
       default:
         return { badge: 'NASA TELEMETRY', line: '' };

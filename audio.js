@@ -873,6 +873,74 @@ class SoundEngine {
       src.start(now, Math.random(), 0.2);
     }
   }
+
+  // Game 7: Voyager 1 Slow-Scan Camera Shutter + Warm Golden Record Harmonic
+  playVoyagerShutter(frameIdx = 0) {
+    if (!this.ctx || this.muted) return;
+    const now = this.ctx.currentTime;
+
+    // 1. Precision mechanical aperture shutter snap
+    if (this.gritBuffer) {
+      const click = this.ctx.createBufferSource();
+      click.buffer = this.gritBuffer;
+      const bp = this.ctx.createBiquadFilter();
+      bp.type = 'bandpass';
+      bp.frequency.value = 2600;
+      bp.Q.value = 2.4;
+      const cg = this.ctx.createGain();
+      cg.gain.setValueAtTime(0.18, now);
+      cg.gain.exponentialRampToValueAtTime(0.0001, now + 0.042);
+      click.connect(bp);
+      bp.connect(cg);
+      cg.connect(this.masterGain);
+      click.start(now, Math.random(), 0.05);
+    }
+
+    // 2. Voyager Golden Record glass chime (ascending cosmic interval)
+    const idx = 3 + (frameIdx * 2) % 5;
+    const f1 = this.pentatonic[idx % this.pentatonic.length];
+    const f2 = this.pentatonic[(idx + 2) % this.pentatonic.length];
+    this._playFMVoice(f1, { volume: 0.13, duration: 2.2, delaySec: 0.03, modRatio: 2.0, modDepth: 1.1, pan: -0.2 });
+    this._playFMVoice(f2, { volume: 0.095, duration: 2.6, delaySec: 0.11, modRatio: 3.0, modDepth: 0.9, pan: 0.24 });
+  }
+
+  // Game 8: Cassini HGA Saturn Ring Packet Chime + Deep-Space Telemetry Ping
+  playCassiniPacket(stepIdx = 0) {
+    if (!this.ctx || this.muted) return;
+    const idx = (stepIdx + 1) % this.pentatonic.length;
+    const freq = this.pentatonic[idx];
+    this._playFMVoice(freq, { volume: 0.13, duration: 2.0, modRatio: 2.5, modDepth: 1.5, pan: ((stepIdx % 3) - 1) * 0.25 });
+    this._playFMVoice(freq * 1.5, { volume: 0.065, duration: 2.3, delaySec: 0.06, modRatio: 2.0, modDepth: 0.8, pan: 0.15 });
+  }
+
+  // Game 8: Atmospheric Entry Plasma Bloom & Gentle Farewell Resonance
+  playCassiniDiveFade() {
+    if (!this.ctx || this.muted) return;
+    const now = this.ctx.currentTime;
+    if (this.noiseBuffer) {
+      const src = this.ctx.createBufferSource();
+      src.buffer = this.noiseBuffer;
+      const bp = this.ctx.createBiquadFilter();
+      bp.type = 'bandpass';
+      bp.Q.value = 1.6;
+      bp.frequency.setValueAtTime(180, now);
+      bp.frequency.exponentialRampToValueAtTime(1250, now + 0.9);
+      bp.frequency.exponentialRampToValueAtTime(220, now + 1.8);
+
+      const g = this.ctx.createGain();
+      g.gain.setValueAtTime(0.0001, now);
+      g.gain.linearRampToValueAtTime(0.14, now + 0.45);
+      g.gain.exponentialRampToValueAtTime(0.0001, now + 1.85);
+
+      src.connect(bp);
+      bp.connect(g);
+      g.connect(this.masterGain);
+      g.connect(this.reverbSend);
+      src.start(now, 0, 1.9);
+    }
+    this._playFMVoice(261.63, { volume: 0.11, duration: 3.0, delaySec: 0.05, modRatio: 2.0, modDepth: 1.0, pan: -0.2 });
+    this._playFMVoice(392.00, { volume: 0.1, duration: 3.2, delaySec: 0.18, modRatio: 2.0, modDepth: 0.9, pan: 0.2 });
+  }
 }
 
 window.soundEngine = new SoundEngine();

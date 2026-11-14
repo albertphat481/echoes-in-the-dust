@@ -103,7 +103,7 @@ window.VANTALUMEN_QUIZZES = [
   },
   {
     id: 'q7-great-red-spot',
-    linkedShardId: 'bonus-outer-planets', // Bonus 7th question in VantaLumen Quiz Deck
+    linkedShardId: 'pale-blue-dot', // Game 7: Voyager 1 Family Portrait & Outer Planets
     image: 'assets/quiz/q7_great_red_spot.jpg',
     questionEn: 'Which planet has the famous Great Red Spot?',
     questionVi: 'Hành tinh nào nổi tiếng với cơn bão Vết Đỏ Lớn (Great Red Spot)?',

@@ -14,7 +14,9 @@ class EchoesApp {
       window.OneWheelLeftGame,
       window.UnsentGame,
       window.MoonStillRingsGame,
-      window.EternalFootprintGame
+      window.EternalFootprintGame,
+      window.PaleBlueDotGame,
+      window.CassiniGrandFinaleGame
     ];
 
     this.currentIndex = 0;
@@ -210,7 +212,7 @@ class EchoesApp {
       } else if (e.key === 'ArrowLeft' && !this.paused) {
         this._dismissIntroWhisper();
         this.mountGame((this.currentIndex - 1 + this.gameClasses.length) % this.gameClasses.length);
-      } else if (e.key >= '1' && e.key <= '6') {
+      } else if (e.key >= '1' && e.key <= '8') {
         this._dismissIntroWhisper();
         this.hideModals();
         this.mountGame(Number(e.key) - 1);
@@ -275,7 +277,7 @@ class EchoesApp {
     this.quizDeckModal = document.getElementById('quiz-deck-modal');
     this.guideModal = document.getElementById('guide-modal');
 
-    // Build 6 wordless constellation dots (with sleek hover mission tooltip)
+    // Build 8 wordless constellation dots (with sleek hover mission tooltip)
     this.navStars = [];
     const navCodes = [
       '01 · InSight',
@@ -283,7 +285,9 @@ class EchoesApp {
       '03 · Spirit Rover',
       '04 · Opportunity',
       '05 · Apollo 12',
-      '06 · Tranquility'
+      '06 · Tranquility',
+      '07 · Voyager 1',
+      '08 · Cassini'
     ];
     window.MEMORY_SHARDS.forEach((shard, idx) => {
       const dot = document.createElement('button');
@@ -724,9 +728,9 @@ class EchoesApp {
     const shards = this.unlockedShards.size;
     const quizzes = this.solvedQuizzes.size;
     const total = shards + quizzes;
-    if (shards >= 6 && quizzes >= 7) return 'Người Giữ Ký Ức VantaLumen ★';
-    if (total >= 8) return 'Kỹ Sư Viễn Thám NASA';
-    if (total >= 4) return 'Nhà Khám Phá Bụi Sao';
+    if (shards >= 8 && quizzes >= 7) return 'Người Giữ Ký Ức VantaLumen ★';
+    if (total >= 10) return 'Kỹ Sư Viễn Thám NASA';
+    if (total >= 5) return 'Nhà Khám Phá Bụi Sao';
     return 'Người Lắng Nghe Khởi Đầu';
   }
 
@@ -1277,17 +1281,18 @@ class EchoesApp {
     ctx.fillStyle = '#38bdf8';
     ctx.fillRect(1009, 360, Math.round(260 * (solvedCount / Math.max(1, totalQuizzes))), 6);
 
-    // 6 NASA Hardware Mission Seals (3x2 grid, total w = 1232)
+    // 8 NASA Hardware Mission Seals (4x2 grid, total w = 1232)
     ctx.fillStyle = '#94a3b8';
     ctx.font = '600 14px "JetBrains Mono", monospace';
-    ctx.fillText('SÁU THIẾT BỊ NASA TRONG BỘ SƯU TẬP', 84, 438);
+    ctx.fillText('TÁM THIẾT BỊ NASA TRONG BỘ SƯU TẬP', 84, 438);
 
     window.MEMORY_SHARDS.forEach((shard, idx) => {
-      const col = idx % 3;
-      const row = Math.floor(idx / 3);
-      const bx = 84 + col * 419;
+      const col = idx % 4;
+      const row = Math.floor(idx / 4);
+      const bw = 293;
+      const gap = 20;
+      const bx = 84 + col * (bw + gap);
       const by = 460 + row * 128;
-      const bw = 394;
       const bh = 108;
       const unlocked = this.unlockedShards.has(shard.id);
 
@@ -1300,22 +1305,22 @@ class EchoesApp {
       // Status dot
       ctx.fillStyle = unlocked ? '#fcd34d' : '#475569';
       ctx.beginPath();
-      ctx.arc(bx + 22, by + 27, 4.5, 0, Math.PI * 2);
+      ctx.arc(bx + 20, by + 27, 4.5, 0, Math.PI * 2);
       ctx.fill();
 
       ctx.fillStyle = unlocked ? '#fcd34d' : '#64748b';
-      ctx.font = '600 12.5px "JetBrains Mono", monospace';
-      ctx.fillText(`${shard.number} • ${unlocked ? 'ĐÃ ĐÁNH THỨC' : 'CHƯA KHÁM PHÁ'}`, bx + 36, by + 31);
+      ctx.font = '600 11.5px "JetBrains Mono", monospace';
+      ctx.fillText(`${shard.number} • ${unlocked ? 'ĐÃ ĐÁNH THỨC' : 'CHƯA KHÁM PHÁ'}`, bx + 33, by + 31);
 
       ctx.fillStyle = unlocked ? '#fef3c7' : '#94a3b8';
-      ctx.font = '600 20px Georgia, serif';
+      ctx.font = '600 18px Georgia, serif';
       const shortTitle = shard.title.split('—')[0].trim();
-      ctx.fillText(shortTitle, bx + 18, by + 63);
+      ctx.fillText(shortTitle, bx + 16, by + 63);
 
       ctx.fillStyle = unlocked ? '#cbd5e1' : '#64748b';
-      ctx.font = '13px Inter, sans-serif';
-      const shortSub = shard.subtitle.length > 46 ? shard.subtitle.slice(0, 44) + '…' : shard.subtitle;
-      ctx.fillText(shortSub, bx + 18, by + 88);
+      ctx.font = '12px Inter, sans-serif';
+      const shortSub = shard.subtitle.length > 34 ? shard.subtitle.slice(0, 32) + '…' : shard.subtitle;
+      ctx.fillText(shortSub, bx + 16, by + 88);
     });
 
     // Footer

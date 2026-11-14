@@ -6,7 +6,7 @@
 window.MEMORY_SHARDS = [
   {
     id: 'under-the-dust',
-    number: '01 / 06',
+    number: '01 / 08',
     title: 'UNDER THE DUST — Nhịp Tim Dưới Lớp Bụi',
     subtitle: 'Trạm đổ bộ InSight & Máy đo địa chấn SEIS (Elysium Planitia, Sao Hỏa)',
     mission: 'NASA Discovery Program • 2018–2022',
@@ -47,7 +47,7 @@ window.MEMORY_SHARDS = [
   },
   {
     id: 'still-there',
-    number: '02 / 06',
+    number: '02 / 08',
     title: 'STILL THERE — Vẫn Còn Ở Đó',
     subtitle: 'Gương phản xạ Laser Mặt Trăng (LRRR — Apollo 11, 14, 15)',
     mission: 'NASA Apollo Program • 1969–Nay',
@@ -77,7 +77,7 @@ window.MEMORY_SHARDS = [
   },
   {
     id: 'one-wheel-left',
-    number: '03 / 06',
+    number: '03 / 08',
     title: 'ONE WHEEL LEFT — Một Bánh Còn Lại',
     subtitle: 'Rover tự hành Spirit (MER-A) & Rãnh Silica tại Home Plate',
     mission: 'NASA Mars Exploration Rover • 2004–2010',
@@ -110,7 +110,7 @@ window.MEMORY_SHARDS = [
   },
   {
     id: 'unsent',
-    number: '04 / 06',
+    number: '04 / 08',
     title: 'UNSENT — Những Điều Chưa Kịp Gửi',
     subtitle: 'Rover tự hành Opportunity (MER-B) & Bộ nhớ Flash 256 MB',
     mission: 'NASA Mars Exploration Rover • 2004–2018',
@@ -139,7 +139,7 @@ window.MEMORY_SHARDS = [
   },
   {
     id: 'moon-still-rings',
-    number: '05 / 06',
+    number: '05 / 08',
     title: 'MOON STILL RINGS — Mặt Trăng Vẫn Ngân',
     subtitle: 'Thí nghiệm Địa chấn Thụ động Apollo (PSE) & Tầng tàu va chạm',
     mission: 'NASA Apollo 12, 14, 15, 16 • 1969–1977',
@@ -166,7 +166,7 @@ window.MEMORY_SHARDS = [
   },
   {
     id: 'eternal-footprint',
-    number: '06 / 06',
+    number: '06 / 08',
     title: 'ETERNAL FOOTPRINT — Dấu Chân Bất Tận',
     subtitle: 'Dấu giày trên lớp đất Regolith & Camera tàu quỹ đạo LRO',
     mission: 'NASA Apollo & Lunar Reconnaissance Orbiter • 1969–Nay',
@@ -191,6 +191,63 @@ window.MEMORY_SHARDS = [
           <line x1="-20" y1="22" x2="20" y2="22" stroke="#fcd34d" stroke-width="3"/>
         </g>
         <text x="16" y="22" fill="#94a3b8" font-family="monospace" font-size="10">LRO NAC // REGOLITH NORMAL-RELIEF IMAGING</text>
+      </svg>
+    `
+  },
+  {
+    id: 'pale-blue-dot',
+    number: '07 / 08',
+    title: 'PALE BLUE DOT — Chấm Xanh Mờ',
+    subtitle: 'Tàu thăm dò Voyager 1 & Bức ảnh Gia Đình Hệ Mặt Trời (6 tỷ km)',
+    mission: 'NASA Voyager Interstellar Mission • 1977–Nay',
+    specs: [
+      { label: 'Phần cứng chính', value: 'Camera Narrow-Angle ISS' },
+      { label: 'Kích thước Trái Đất', value: '0,12 pixel (trong tia nắng)' },
+      { label: 'Khoảng cách năm 1990', value: '6,05 tỷ km (40,5 AU)' }
+    ],
+    defaultStatLabel: 'Bức chân dung gia đình đã chụp',
+    story:
+      'Ngày 14/02/1990, sau khi hoàn tất hành trình ngang qua Sao Mộc và Sao Thổ, theo đề xuất của nhà thiên văn Carl Sagan, NASA đã ra lệnh cho Voyager 1 xoay ngược camera nhìn lại quê hương lần cuối ở khoảng cách 6,05 tỷ km trước khi tắt vĩnh viễn hệ thống máy ảnh để tiết kiệm điện năng tiến vào không gian liên sao. Trong 60 khung hình "Family Portrait", Trái Đất chỉ hiện ra như một chấm xanh nhỏ bé 0,12 pixel lọt thỏm giữa một tia sáng Mặt Trời tán xạ — nhắc nhở nhân loại về mái nhà mong manh duy nhất của mình.',
+    sourceLabel: 'NASA JPL — Voyager 1 Pale Blue Dot & Golden Record',
+    sourceUrl: 'https://science.nasa.gov/mission/voyager/',
+    svgDiagram: `
+      <svg viewBox="0 0 440 155" width="100%" height="100%">
+        <rect width="440" height="155" fill="#060913"/>
+        <polygon points="180,0 245,0 325,155 245,155" fill="#f59e0b" opacity="0.18"/>
+        <circle cx="95" cy="52" r="14" fill="#d97706" stroke="#fcd34d" stroke-width="1.2"/>
+        <ellipse cx="190" cy="46" rx="22" ry="7" fill="none" stroke="#fef3c7" stroke-width="1.6" transform="rotate(-18 190 46)"/>
+        <circle cx="190" cy="46" r="10" fill="#fcd34d"/>
+        <circle cx="272" cy="82" r="12" fill="none" stroke="#38bdf8" stroke-width="1.4" opacity="0.7"/>
+        <circle cx="272" cy="82" r="3" fill="#7dd3fc"/>
+        <text x="16" y="22" fill="#94a3b8" font-family="monospace" font-size="10">VOYAGER 1 // 40.5 AU FAMILY PORTRAIT (0.12 PX EARTH)</text>
+      </svg>
+    `
+  },
+  {
+    id: 'grand-finale',
+    number: '08 / 08',
+    title: 'GRAND FINALE — Cú Lao Cuối Cùng',
+    subtitle: 'Tàu quỹ đạo Cassini & 22 Quỹ Đạo Lặn Vào Sao Thổ',
+    mission: 'NASA / ESA / ASI Cassini–Huygens • 1997–2017',
+    specs: [
+      { label: 'Phần cứng chính', value: 'Ăng-ten High-Gain 4m' },
+      { label: 'Vận tốc lao khí quyển', value: '113.000 km/h' },
+      { label: 'Mục đích hy sinh', value: 'Bảo vệ đại dương Enceladus' }
+    ],
+    defaultStatLabel: 'Gói dữ liệu cuối kịp truyền về',
+    story:
+      'Sau 13 năm khám phá Sao Thổ, phát hiện các mạch nước ngầm ấm áp trên mặt trăng Enceladus và hồ mê-tan trên Titan, nhiên liệu của Cassini dần cạn kiệt vào năm 2017. Để đảm bảo con tàu không bao giờ vô tình va chạm và làm nhiễm vi sinh vật Trái Đất lên Enceladus hay Titan, NASA cho Cassini lặn 22 vòng qua khe hở giữa Sao Thổ và vành đai rồi lao thẳng vào khí quyển hành tinh khí khổng lồ ngày 15/09/2017. Cho tới giây cuối cùng, các động cơ đẩy vẫn cố giữ ăng-ten của Cassini hướng thẳng về Trái Đất để gửi những số liệu khí quyển quý giá nhất.',
+    sourceLabel: 'NASA Science — Cassini Grand Finale at Saturn',
+    sourceUrl: 'https://science.nasa.gov/mission/cassini/',
+    svgDiagram: `
+      <svg viewBox="0 0 440 155" width="100%" height="100%">
+        <rect width="440" height="155" fill="#060913"/>
+        <ellipse cx="145" cy="135" rx="220" ry="70" fill="none" stroke="#fcd34d" stroke-width="4" opacity="0.5"/>
+        <ellipse cx="145" cy="135" rx="195" ry="56" fill="none" stroke="#f59e0b" stroke-width="2.5" opacity="0.35"/>
+        <circle cx="355" cy="34" r="4" fill="#7dd3fc"/>
+        <line x1="215" y1="82" x2="355" y2="34" stroke="#38bdf8" stroke-width="1.6" stroke-dasharray="4 3"/>
+        <rect x="206" y="76" width="16" height="16" rx="2" fill="#d97706" stroke="#fcd34d" stroke-width="1.4"/>
+        <text x="16" y="22" fill="#94a3b8" font-family="monospace" font-size="10">CASSINI-HUYGENS // FINAL HGA LOCK AT 113,000 KM/H</text>
       </svg>
     `
   }

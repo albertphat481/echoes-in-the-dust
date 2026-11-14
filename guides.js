@@ -5,7 +5,7 @@
 window.GAME_GUIDES = [
   {
     id: 'under-the-dust',
-    number: '01 / 06',
+    number: '01 / 08',
     title: 'UNDER THE DUST — Nhịp Tim Dưới Lớp Bụi',
     hardware: 'Trạm đổ bộ NASA InSight & Pin mặt trời UltraFlex',
     goal: 'Thổi tan lớp bụi Sao Hỏa trước khi Mặt Trời lặn để đánh thức nhịp tim địa chấn của hành tinh đỏ.',
@@ -35,7 +35,7 @@ window.GAME_GUIDES = [
   },
   {
     id: 'still-there',
-    number: '02 / 06',
+    number: '02 / 08',
     title: 'STILL THERE — Vẫn Còn Ở Đó',
     hardware: 'Gương phản xạ Laser Apollo 11, 14, 15 trên Mặt Trăng',
     goal: 'Khóa tâm ngắm vào 3 hải đăng phản xạ phát sáng trên Mặt Trăng để ghép thành tam giác chòm sao Apollo.',
@@ -65,7 +65,7 @@ window.GAME_GUIDES = [
   },
   {
     id: 'one-wheel-left',
-    number: '03 / 06',
+    number: '03 / 08',
     title: 'ONE WHEEL LEFT — Một Bánh Còn Lại',
     hardware: 'Xe tự hành NASA Spirit (MER-A) tại Gusev Crater',
     goal: 'Lái rover Spirit tiến về phía Đỉnh Silica Hoàng Hôn (vùng sáng ngọc lam bên phải) và cày lộ rãnh đất phát sáng.',
@@ -90,7 +90,7 @@ window.GAME_GUIDES = [
   },
   {
     id: 'unsent',
-    number: '04 / 06',
+    number: '04 / 08',
     title: 'UNSENT — Những Điều Chưa Kịp Gửi',
     hardware: 'Xe tự hành NASA Opportunity (MER-B) & Bộ nhớ RAM tạm thời',
     goal: 'Chọn 3 tấm ảnh Polaroid kỷ niệm yêu thích để gửi qua chùm sóng lên vệ tinh trung chuyển MRO.',
@@ -115,7 +115,7 @@ window.GAME_GUIDES = [
   },
   {
     id: 'moon-still-rings',
-    number: '05 / 06',
+    number: '05 / 08',
     title: 'MOON STILL RINGS — Mặt Trăng Vẫn Ngân',
     hardware: 'Trạm Địa chấn Thụ động Apollo 12 & Tầng tàu đổ bộ tái dụng',
     goal: 'Chạm 5 điểm quanh vành thiên thể để tạo bản hòa âm bát hát Mặt Trăng rồi so sánh với Trái Đất.',
@@ -140,7 +140,7 @@ window.GAME_GUIDES = [
   },
   {
     id: 'eternal-footprint',
-    number: '06 / 06',
+    number: '06 / 08',
     title: 'ETERNAL FOOTPRINT — Dấu Chân Bất Tận',
     hardware: 'Dấu giày Apollo trên lớp đất Regolith & Tàu quỹ đạo LRO',
     goal: 'In 5 bước chân định danh của bạn lên bụi Mặt Trăng và xoay thanh ánh sáng để ngắm bóng đổ qua hàng triệu năm.',
@@ -162,5 +162,55 @@ window.GAME_GUIDES = [
       'Ngay khi in đủ 5 bước chân, camera sẽ thu nhỏ lên không trung để hòa dấu chân bạn vào dòng xoắn ốc của cộng đồng!'
     ],
     tip: 'Trên Mặt Trăng không có gió hay mưa — dấu chân thực tế có thể tồn tại nguyên vẹn hàng triệu năm.'
+  },
+  {
+    id: 'pale-blue-dot',
+    number: '07 / 08',
+    title: 'PALE BLUE DOT — Chấm Xanh Mờ',
+    hardware: 'Tàu thăm dò Voyager 1 & Camera Góc Hẹp (6 tỷ km)',
+    goal: 'Điều khiển khung ngắm Voyager 1 quay ngược nhìn về Hệ Mặt Trời để chụp lại Sao Mộc, Sao Thổ và Chấm Xanh Mờ Trái Đất.',
+    controls: [
+      {
+        gesture: 'Rê chuột / Chạm để khóa mục tiêu',
+        action: 'Đưa khung ngắm camera lại gần 3 chấm sáng (Sao Mộc, Sao Thổ và Trái Đất trong tia nắng) để khóa nam châm tự động.',
+        svg: `<svg viewBox="0 0 48 48"><path d="M10 18 V10 H18 M30 10 H38 V18 M10 30 V38 H18 M38 30 V38 H30" stroke="#7dd3fc" stroke-width="2.2" fill="none"/><circle cx="24" cy="24" r="3.5" fill="#7dd3fc"/></svg>`
+      },
+      {
+        gesture: 'Nhấp / Chạm hoặc nhấn Space để chụp',
+        action: 'Bấm màn trập máy ảnh Voyager để đóng băng khung hình vào dải ảnh "Family Portrait" và nghe hợp âm Đĩa Vàng.',
+        svg: `<svg viewBox="0 0 48 48"><rect x="10" y="14" width="28" height="20" rx="4" fill="none" stroke="#fcd34d" stroke-width="2"/><circle cx="24" cy="24" r="6" fill="rgba(56,189,248,0.4)" stroke="#7dd3fc" stroke-width="1.8"/></svg>`
+      }
+    ],
+    steps: [
+      'Di chuyển khung ngắm camera qua bầu trời sâu thẳm 6 tỷ km để tìm 3 chấm sáng của Hệ Mặt Trời.',
+      'Khi khung ngắm đổi màu xanh lam khóa vào Sao Mộc, Sao Thổ và chấm Trái Đất giữa tia nắng, hãy nhấp chuột hoặc nhấn Space để chụp.',
+      'Ngay khi hoàn tất bức ảnh Chấm Xanh Mờ thứ 3, ống kính Voyager 1 sẽ từ từ khép lại tiết kiệm năng lượng bước vào không gian liên sao!'
+    ],
+    tip: 'Trong bức ảnh thật năm 1990, toàn bộ Trái Đất chỉ chiếm 0,12 pixel — nhỏ hơn cả một hạt bụi trong tia nắng.'
+  },
+  {
+    id: 'grand-finale',
+    number: '08 / 08',
+    title: 'GRAND FINALE — Cú Lao Cuối Cùng',
+    hardware: 'Tàu quỹ đạo NASA Cassini & Ăng-ten High-Gain hướng Trái Đất',
+    goal: 'Giữ chùm tia liên lạc của Cassini hướng về ngôi sao Trái Đất (hoặc chạm 5 nút dữ liệu vành đai) trong cú lao cuối cùng vào Sao Thổ.',
+    controls: [
+      {
+        gesture: 'Chạm trực tiếp vào 5 nút sáng',
+        action: 'Chạm các hạt dữ liệu sáng quanh vành đai Sao Thổ để truyền tức thì về Trái Đất.',
+        svg: `<svg viewBox="0 0 48 48"><circle cx="24" cy="24" r="14" stroke="#fcd34d" stroke-width="1.8" fill="none"/><circle cx="24" cy="24" r="5" fill="#fef3c7"/></svg>`
+      },
+      {
+        gesture: 'Rê chuột / Phím ← → hoặc A / D',
+        action: 'Hướng chùm tia xanh từ ăng-ten đĩa của Cassini chạm vào ngôi sao Trái Đất phía trên bên phải để tự động truyền dữ liệu.',
+        svg: `<svg viewBox="0 0 48 48"><line x1="12" y1="36" x2="36" y2="12" stroke="#38bdf8" stroke-width="2.5"/><circle cx="36" cy="12" r="4" fill="#e0f2fe"/><ellipse cx="12" cy="36" rx="8" ry="3.5" transform="rotate(-45 12 36)" fill="#fcd34d"/></svg>`
+      }
+    ],
+    steps: [
+      'Chạm vào 5 hạt dữ liệu phát sáng quanh vành đai Sao Thổ, HOẶC hướng chùm sóng xanh của tàu Cassini về phía ngôi sao Trái Đất góc trên phải.',
+      'Mỗi gói dữ liệu truyền thành công sẽ thắp sáng thêm một vòng băng của Sao Thổ kèm nốt nhạc thủy tinh.',
+      'Khi đủ 5/5 gói, Cassini sẽ bừng sáng như một vệt sao băng ấm áp hòa vào tầng mây Sao Thổ để bảo vệ sự sống tiềm năng trên vệ tinh Enceladus.'
+    ],
+    tip: 'Thực tế ngày 15/09/2017, Cassini giữ khóa tín hiệu về Trái Đất tới tận những giây cuối cùng khi bốc cháy ở tốc độ 113.000 km/h!'
   }
 ];
