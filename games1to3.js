@@ -635,9 +635,10 @@ class StillThereGame {
 
     // 3 Real Apollo LRRR Sites (Apollo 11, 14, 15) — gently visible beacon glints
     this.sites = [
-      { id: 0, u: 0.30, v: 0.07, lit: false, glow: 0, echoes: 0 },
-      { id: 1, u: -0.24, v: 0.16, lit: false, glow: 0, echoes: 0 },
-      { id: 2, u: 0.05, v: -0.30, lit: false, glow: 0, echoes: 0 }
+      // Real selenographic positions projected onto the disc
+      { id: 0, u: 0.40, v: -0.01, lit: false, glow: 0, echoes: 0 }, // Apollo 11 (Mare Tranquillitatis)
+      { id: 1, u: -0.30, v: 0.06, lit: false, glow: 0, echoes: 0 }, // Apollo 14 (Fra Mauro)
+      { id: 2, u: 0.06, v: -0.44, lit: false, glow: 0, echoes: 0 }  // Apollo 15 (Hadley-Apennine)
     ];
 
     this.aim = { x: window.innerWidth * 0.5, y: window.innerHeight * 0.42 };
