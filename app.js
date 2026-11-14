@@ -258,6 +258,7 @@ class EchoesApp {
       dot.className = 'nav-star';
       dot.setAttribute('aria-label', shard.title);
       dot.addEventListener('click', () => {
+        dot.blur();
         window.soundEngine.init();
         this.hideModals();
         this.mountGame(idx);
@@ -273,19 +274,22 @@ class EchoesApp {
     });
 
     // Top-Right Guide Button (6 Separate Guides)
-    document.getElementById('btn-guide').addEventListener('click', () => {
+    document.getElementById('btn-guide').addEventListener('click', e => {
+      e.currentTarget.blur();
       window.soundEngine.init();
       this.openGuide(this.currentIndex);
     });
 
     // Top-Right Quiz Deck Button
-    document.getElementById('btn-quiz-deck').addEventListener('click', () => {
+    document.getElementById('btn-quiz-deck').addEventListener('click', e => {
+      e.currentTarget.blur();
       window.soundEngine.init();
       this.openQuizDeck(this.currentIndex);
     });
 
     // Instant Shard Inspection Button
-    document.getElementById('btn-instant-shard').addEventListener('click', () => {
+    document.getElementById('btn-instant-shard').addEventListener('click', e => {
+      e.currentTarget.blur();
       window.soundEngine.init();
       this.showMemoryShard(this.currentIndex);
     });
@@ -293,12 +297,14 @@ class EchoesApp {
     // Sound Mute Toggle
     const btnAudio = document.getElementById('btn-audio');
     btnAudio.addEventListener('click', () => {
+      btnAudio.blur();
       const muted = window.soundEngine.toggleMute();
       btnAudio.style.opacity = muted ? '0.45' : '1';
     });
 
     // Open Memory Shards Archive Gallery
-    document.getElementById('btn-gallery').addEventListener('click', () => {
+    document.getElementById('btn-gallery').addEventListener('click', e => {
+      e.currentTarget.blur();
       window.soundEngine.init();
       this.openGallery();
     });
@@ -398,6 +404,10 @@ class EchoesApp {
   }
 
   mountGame(index, animate = true) {
+    if (this._completeTimer) {
+      clearTimeout(this._completeTimer);
+      this._completeTimer = null;
+    }
     window.soundEngine.setBrushWind(0);
     const curtain = document.getElementById('cinema-transition');
 
@@ -432,12 +442,20 @@ class EchoesApp {
     this._refreshNavDots();
     window.soundEngine.playSuccessBloom();
 
-    setTimeout(() => {
-      this.showMemoryShard(this.currentIndex);
+    if (this._completeTimer) clearTimeout(this._completeTimer);
+    const targetIdx = this.currentIndex;
+    this._completeTimer = setTimeout(() => {
+      this._completeTimer = null;
+      this.showMemoryShard(targetIdx);
     }, 650);
   }
 
   showMemoryShard(index) {
+    if (this._completeTimer) {
+      clearTimeout(this._completeTimer);
+      this._completeTimer = null;
+    }
+    window.soundEngine.setBrushWind(0);
     this.paused = true;
     const shard = window.MEMORY_SHARDS[index];
     document.getElementById('shard-number').textContent = `MẢNH VỠ KÝ ỨC • ${shard.number}`;
