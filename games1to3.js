@@ -86,8 +86,8 @@ class UnderTheDustGame {
 
     const pctx = this.panelCtx;
     const cx = w * 0.5;
-    const cy = h * 0.5;
-    const radius = Math.min(w, h) * 0.37;
+    const cy = h * 0.52;
+    const radius = Math.min(w, h) * (w < 640 ? 0.41 : 0.37);
     this.panelGeometry = { cx, cy, radius };
 
     // 1. Elysium Planitia Twilight Ground with Regolith Micro-Grain
@@ -400,8 +400,9 @@ class UnderTheDustGame {
 
     if (this.panelGeometry) {
       const { cx, cy, radius } = this.panelGeometry;
-      if (Math.hypot(x - cx, y - cy) < radius * 1.15) {
-        this.cleanRatio = Math.min(1, this.cleanRatio + (r / 70) * 0.0052);
+      if (Math.hypot(x - cx, y - cy) < radius * 1.18) {
+        const normR = r / Math.max(115, radius * 0.32);
+        this.cleanRatio = Math.min(1, this.cleanRatio + normR * 0.0058);
       }
     }
   }
@@ -663,7 +664,7 @@ class StillThereGame {
   onResize() {}
 
   _getMoonGeometry(w, h) {
-    return { cx: w * 0.5, cy: h * 0.42, r: Math.min(w, h) * 0.25 };
+    return { cx: w * 0.5, cy: h * 0.44, r: Math.min(w, h) * (w < 640 ? 0.31 : 0.25) };
   }
 
   _updateLock(x, y) {
@@ -680,10 +681,10 @@ class StillThereGame {
       }
     }
 
-    if (nearest && minDist < Math.max(75, r * 0.5)) {
+    if (nearest && minDist < Math.max(88, r * 0.58)) {
       this.lockedSite = nearest.site;
-      this.aim.x = x * 0.3 + nearest.sx * 0.7;
-      this.aim.y = y * 0.3 + nearest.sy * 0.7;
+      this.aim.x = x * 0.22 + nearest.sx * 0.78;
+      this.aim.y = y * 0.22 + nearest.sy * 0.78;
     } else {
       this.lockedSite = null;
       this.aim.x = x;
@@ -709,7 +710,9 @@ class StillThereGame {
     const w = window.innerWidth;
     const h = window.innerHeight;
     const { cx, cy, r } = this._getMoonGeometry(w, h);
-    this._updateLock(x || this.aim.x, y || this.aim.y);
+    const px = Number.isFinite(x) ? x : this.aim.x;
+    const py = Number.isFinite(y) ? y : this.aim.y;
+    this._updateLock(px, py);
 
     // If user clicked anywhere on the Moon or space without locking, auto-snap to next unlit reflector if reasonably close!
     let targetSite = this.lockedSite;
@@ -1019,6 +1022,8 @@ class OneWheelLeftGame {
     this.roverX = 120;
     this.roverSpeed = 0;
     this.pointerDir = 0; // +1 forward, -1 reverse, 0 idle
+    this.touchCruiseTimer = 0;
+    this.touchCruiseDir = 1;
     this.keyForward = false;
     this.keyBackward = false;
 
@@ -1042,13 +1047,18 @@ class OneWheelLeftGame {
   onPointerDown(x) {
     if (!this.hasInteracted) this.hasInteracted = true;
     const w = window.innerWidth;
-    // Left 28% reverses carefully; clicking anywhere right of left margin drives forward smoothly!
-    this.pointerDir = x < w * 0.25 ? -1 : 1;
+    // Left 25% reverses carefully; tapping or holding right of left margin drives forward smoothly!
+    const dir = x < w * 0.25 ? -1 : 1;
+    this.pointerDir = dir;
+    this.touchCruiseDir = dir;
+    this.touchCruiseTimer = 1.85;
   }
 
   onPointerMove(x) {
     if (this.pointerDir !== 0) {
-      this.pointerDir = x < window.innerWidth * 0.25 ? -1 : 1;
+      const dir = x < window.innerWidth * 0.25 ? -1 : 1;
+      this.pointerDir = dir;
+      this.touchCruiseDir = dir;
     }
   }
 
@@ -1091,8 +1101,13 @@ class OneWheelLeftGame {
       this.ghostAlpha = Math.max(0, this.ghostAlpha - dt * 2.5);
     }
 
-    const pushingForward = this.keyForward || this.pointerDir > 0;
-    const pushingBackward = !pushingForward && (this.keyBackward || this.pointerDir < 0);
+    if (this.touchCruiseTimer > 0 && this.pointerDir === 0) {
+      this.touchCruiseTimer = Math.max(0, this.touchCruiseTimer - dt);
+    }
+
+    const activeCruise = this.touchCruiseTimer > 0 ? this.touchCruiseDir : 0;
+    const pushingForward = this.keyForward || this.pointerDir > 0 || activeCruise > 0;
+    const pushingBackward = !pushingForward && (this.keyBackward || this.pointerDir < 0 || activeCruise < 0);
 
     if (!this.goalReached) {
       if (pushingForward) {
@@ -1338,6 +1353,39 @@ class OneWheelLeftGame {
 
     ctx.restore();
     ctx.restore();
+
+    // Subtle wordless on-screen touch drive indicators (Reverse ‹ / Forward ›) for tablets & phones
+    if (!this.goalReached) {
+      const padY = h * 0.84;
+      const forwardActive = this.pointerDir > 0 || this.keyForward || (this.touchCruiseTimer > 0 && this.touchCruiseDir > 0);
+      const reverseActive = this.pointerDir < 0 || this.keyBackward || (this.touchCruiseTimer > 0 && this.touchCruiseDir < 0);
+
+      [
+        { x: w * 0.14, dir: -1, active: reverseActive },
+        { x: w * 0.86, dir: 1, active: forwardActive }
+      ].forEach(btn => {
+        ctx.save();
+        ctx.translate(btn.x, padY);
+        ctx.fillStyle = btn.active ? 'rgba(252, 211, 77, 0.22)' : 'rgba(15, 23, 42, 0.45)';
+        ctx.strokeStyle = btn.active ? '#fcd34d' : 'rgba(255, 255, 255, 0.22)';
+        ctx.lineWidth = btn.active ? 2 : 1.2;
+        ctx.beginPath();
+        ctx.arc(0, 0, 22, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.strokeStyle = btn.active ? '#fef3c7' : 'rgba(226, 232, 240, 0.72)';
+        ctx.lineWidth = 2.2;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        ctx.beginPath();
+        ctx.moveTo(-3 * btn.dir, -6);
+        ctx.lineTo(4 * btn.dir, 0);
+        ctx.lineTo(-3 * btn.dir, 6);
+        ctx.stroke();
+        ctx.restore();
+      });
+    }
 
     if (this.ghostAlpha > 0.01) {
       drawGhostHand(ctx, w * 0.56, h * 0.74, this.ghostAlpha, 1, true);

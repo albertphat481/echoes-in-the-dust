@@ -57,12 +57,12 @@ class UnsentGame {
     ];
 
     const cols = 3;
-    const cardW = Math.min(116, w * 0.25);
+    const cardW = Math.min(116, w * (w < 640 ? 0.235 : 0.25));
     const cardH = cardW * 1.24;
-    const gapX = cardW * 1.32;
-    const gapY = cardH * 1.15;
+    const gapX = cardW * (w < 640 ? 1.22 : 1.32);
+    const gapY = cardH * (w < 640 ? 1.08 : 1.15);
     const startX = w * 0.5 - gapX;
-    const startY = h * 0.54 - gapY * 0.85;
+    const startY = h * 0.55 - gapY * 0.85;
 
     this.cards = types.map((t, i) => {
       const col = i % cols;
@@ -131,7 +131,7 @@ class UnsentGame {
     for (let i = this.cards.length - 1; i >= 0; i--) {
       const c = this.cards[i];
       if (c.sent || c.launching) continue;
-      if (Math.abs(x - c.x) <= c.w * 0.58 && Math.abs(y - c.y) <= c.h * 0.58) {
+      if (Math.abs(x - c.x) <= c.w * 0.65 && Math.abs(y - c.y) <= c.h * 0.65) {
         this.draggedCard = c;
         window.soundEngine.playPentatonicNote(c.note, 0.13, 0.6, 0, 'sine');
         break;
@@ -152,11 +152,13 @@ class UnsentGame {
     this.draggedCard = null;
 
     const h = window.innerHeight;
-    const movedDist = this.downPos ? Math.hypot(x - this.downPos.x, y - this.downPos.y) : 99;
-    const swipedUp = this.downPos ? (this.downPos.y - y) > 42 : false;
+    const px = Number.isFinite(x) ? x : c.x;
+    const py = Number.isFinite(y) ? y : c.y;
+    const movedDist = this.downPos ? Math.hypot(px - this.downPos.x, py - this.downPos.y) : 0;
+    const swipedUp = this.downPos ? (this.downPos.y - py) > 28 : false;
 
     // Single tap/click OR dragging upward launches the memory cleanly into the beam!
-    if (movedDist < 16 || swipedUp || c.y < h * 0.45) {
+    if (movedDist < 38 || swipedUp || c.y < h * 0.48) {
       this._sendCard(c);
     }
   }
@@ -576,11 +578,11 @@ class MoonStillRingsGame {
   onResize() {}
 
   _getBowlGeometry(w, h) {
-    return { cx: w * 0.5, cy: h * 0.43, r: Math.min(w, h) * 0.25 };
+    return { cx: w * 0.5, cy: h * 0.44, r: Math.min(w, h) * (w < 640 ? 0.30 : 0.25) };
   }
 
   _getSwitchRect(w, h) {
-    return { cx: w * 0.5, y: h * 0.94, w: 120, h: 28 };
+    return { cx: w * 0.5, y: w < 640 ? h * 0.90 : h * 0.93, w: 120, h: 32 };
   }
 
   onPointerDown(x, y) {
@@ -593,7 +595,7 @@ class MoonStillRingsGame {
     const w = window.innerWidth;
     const h = window.innerHeight;
     const sw = this._getSwitchRect(w, h);
-    if (Math.abs(y - sw.y) < 26 && Math.abs(x - sw.cx) < sw.w * 0.7) {
+    if (Math.abs(y - sw.y) < 38 && Math.abs(x - sw.cx) < sw.w * 0.85) {
       this.swiped = true;
       this.isEarthMode = x > sw.cx;
       window.soundEngine.playUITick();
@@ -618,19 +620,21 @@ class MoonStillRingsGame {
     const w = window.innerWidth;
     const h = window.innerHeight;
     const { cx, cy, r } = this._getBowlGeometry(w, h);
+    const px = Number.isFinite(x) ? x : this.downX;
+    const py = Number.isFinite(y) ? y : this.downY;
 
     // Check if user tapped near one of the 5 tuning nodes for clean magnetic snap
-    let bestAngle = Math.atan2(y - cy, x - cx);
+    let bestAngle = Math.atan2(py - cy, px - cx);
     let noteIdx = Math.floor(((bestAngle + Math.PI) / (Math.PI * 2)) * 10) % 10;
     let snappedNode = null;
     let bestNodeDist = Infinity;
     for (const nd of this.nodes) {
       const nx = cx + Math.cos(nd.angle) * r;
       const ny = cy + Math.sin(nd.angle) * r;
-      const d = Math.hypot(x - nx, y - ny);
+      const d = Math.hypot(px - nx, py - ny);
       if (d < bestNodeDist) {
         bestNodeDist = d;
-        if (d < 64) {
+        if (d < 78) {
           snappedNode = nd;
           bestAngle = nd.angle;
           noteIdx = nd.noteIdx;
@@ -978,8 +982,8 @@ class EternalFootprintGame {
   onResize() {}
 
   _getSliderRect(w, h) {
-    const sw = Math.min(340, w * 0.7);
-    return { x: (w - sw) * 0.5, y: h * 0.89, w: sw };
+    const sw = Math.min(340, w * 0.66);
+    return { x: (w - sw) * 0.5, y: w < 640 ? h * 0.85 : h * 0.89, w: sw };
   }
 
   onPointerDown(x, y) {
@@ -989,7 +993,7 @@ class EternalFootprintGame {
     const h = window.innerHeight;
     const sl = this._getSliderRect(w, h);
 
-    if (Math.abs(y - sl.y) < 32 && x >= sl.x - 24 && x <= sl.x + sl.w + 24) {
+    if (Math.abs(y - sl.y) < 42 && x >= sl.x - 28 && x <= sl.x + sl.w + 28) {
       this.isDraggingSlider = true;
       this.sunAngle = Math.max(0, Math.min(1, (x - sl.x) / sl.w));
       window.soundEngine.playUITick();
@@ -1250,7 +1254,7 @@ class EternalFootprintGame {
     ctx.shadowColor = '#f59e0b';
     ctx.shadowBlur = 14;
     ctx.beginPath();
-    ctx.arc(knobX, sl.y, 9, 0, Math.PI * 2);
+    ctx.arc(knobX, sl.y, 11, 0, Math.PI * 2);
     ctx.fill();
     ctx.restore();
 

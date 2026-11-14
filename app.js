@@ -134,6 +134,10 @@ class EchoesApp {
       }
     };
     window.addEventListener('resize', resize);
+    window.addEventListener('orientationchange', () => setTimeout(resize, 120));
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener('resize', resize);
+    }
     resize();
   }
 
@@ -153,14 +157,21 @@ class EchoesApp {
     });
     window.addEventListener('focus', unlockAudio, { passive: true });
 
-    const getXY = e => ({ x: e.clientX, y: e.clientY });
+    const getXY = e => ({
+      x: Number.isFinite(e.clientX) ? e.clientX : (this.lastPointer ? this.lastPointer.x : window.innerWidth * 0.5),
+      y: Number.isFinite(e.clientY) ? e.clientY : (this.lastPointer ? this.lastPointer.y : window.innerHeight * 0.5)
+    });
+    this.activePointerId = null;
 
     this.canvas.addEventListener('pointerdown', e => {
       window.soundEngine.unlock();
       this.idleTime = 0;
       this._dismissIntroWhisper();
       if (this.paused || !this.currentGame) return;
-      this.canvas.setPointerCapture(e.pointerId);
+      this.activePointerId = e.pointerId;
+      try {
+        this.canvas.setPointerCapture(e.pointerId);
+      } catch {}
       const { x, y } = getXY(e);
       this.lastPointer = { x, y, t: performance.now() };
       this.currentGame.onPointerDown(x, y);
@@ -171,6 +182,9 @@ class EchoesApp {
         try { window.soundEngine.unlock(); } catch {}
       }
       if (this.paused || !this.currentGame) return;
+      if (this.activePointerId !== null && e.pointerType === 'touch' && e.pointerId !== this.activePointerId) {
+        return;
+      }
       const { x, y } = getXY(e);
       const now = performance.now();
       const dt = Math.max(4, now - this.lastPointer.t);
@@ -182,6 +196,10 @@ class EchoesApp {
     });
 
     const endPointer = e => {
+      if (this.activePointerId !== null && e.pointerType === 'touch' && e.pointerId !== this.activePointerId) {
+        return;
+      }
+      this.activePointerId = null;
       if (this.paused || !this.currentGame) return;
       const { x, y } = getXY(e);
       this.currentGame.onPointerUp(x, y);
@@ -282,7 +300,7 @@ class EchoesApp {
     this.quizDeckModal = document.getElementById('quiz-deck-modal');
     this.guideModal = document.getElementById('guide-modal');
 
-    // Build 8 wordless constellation dots (with sleek hover mission tooltip)
+    // Build 9 wordless constellation dots + Prev/Next touch buttons for tablets & phones
     this.navStars = [];
     const navCodes = [
       '01 · InSight',
@@ -295,9 +313,26 @@ class EchoesApp {
       '08 · Cassini',
       '09 · Rise Zero-G ★'
     ];
+
+    const prevBtn = document.createElement('button');
+    prevBtn.type = 'button';
+    prevBtn.className = 'nav-arrow-btn';
+    prevBtn.setAttribute('aria-label', 'Trạm trước');
+    prevBtn.title = 'Trạm trước (←)';
+    prevBtn.textContent = '‹';
+    prevBtn.addEventListener('click', () => {
+      prevBtn.blur();
+      window.soundEngine.unlock();
+      this._dismissIntroWhisper();
+      this.hideModals();
+      this.mountGame((this.currentIndex - 1 + this.gameClasses.length) % this.gameClasses.length);
+    });
+    this.navContainer.appendChild(prevBtn);
+
     window.MEMORY_SHARDS.forEach((shard, idx) => {
       const dot = document.createElement('button');
-      dot.className = 'nav-star';
+      dot.type = 'button';
+      dot.className = 'nav-star' + (idx === window.MEMORY_SHARDS.length - 1 ? ' last-star' : '');
       dot.setAttribute('aria-label', shard.title);
       const tip = document.createElement('span');
       tip.className = 'nav-star-tip';
@@ -306,12 +341,28 @@ class EchoesApp {
       dot.addEventListener('click', () => {
         dot.blur();
         window.soundEngine.unlock();
+        this._dismissIntroWhisper();
         this.hideModals();
         this.mountGame(idx);
       });
       this.navContainer.appendChild(dot);
       this.navStars.push(dot);
     });
+
+    const nextBtn = document.createElement('button');
+    nextBtn.type = 'button';
+    nextBtn.className = 'nav-arrow-btn';
+    nextBtn.setAttribute('aria-label', 'Trạm tiếp theo');
+    nextBtn.title = 'Trạm tiếp theo (→)';
+    nextBtn.textContent = '›';
+    nextBtn.addEventListener('click', () => {
+      nextBtn.blur();
+      window.soundEngine.unlock();
+      this._dismissIntroWhisper();
+      this.hideModals();
+      this.mountGame((this.currentIndex + 1) % this.gameClasses.length);
+    });
+    this.navContainer.appendChild(nextBtn);
 
     // VANTALUMEN Emblem -> Open Mission Dossier
     document.getElementById('brand-emblem').addEventListener('click', () => {

@@ -93,7 +93,7 @@ class PaleBlueDotGame {
     this.targetPos.x = x;
     this.targetPos.y = y;
 
-    const hitIdx = this._findSnapTarget(x, y, 108);
+    const hitIdx = this._findSnapTarget(x, y, 125);
     if (hitIdx >= 0) {
       this.reticle.x = this.targets[hitIdx].x;
       this.reticle.y = this.targets[hitIdx].y;
@@ -396,7 +396,7 @@ class PaleBlueDotGame {
     }
 
     // 8. Bottom 3-frame Family Portrait Orbital Film Strip (Wordless Progress Dots)
-    const stripY = h - 54;
+    const stripY = w < 640 ? h - 72 : h - 54;
     const spacing = 46;
     const startX = w * 0.5 - spacing;
     this.targets.forEach((t, i) => {
@@ -515,14 +515,22 @@ class CassiniGrandFinaleGame {
     // Option A: Tap directly on a glowing Saturn ring science node to uplink immediately
     for (let i = 0; i < this.ringNodes.length; i++) {
       const n = this.ringNodes[i];
-      if (!n.sent && Math.hypot(x - n.x, y - n.y) < 58) {
+      if (!n.sent && Math.hypot(x - n.x, y - n.y) < 76) {
         this._sendPacket(i);
         this.craft.targetAngle = Math.atan2(this.earth.y - this.craft.y, this.earth.x - this.craft.x);
         return;
       }
     }
 
-    // Option B: Aim High-Gain Antenna toward pointer
+    // Option B: Tap directly on Earth beacon to lock & transmit next science node
+    if (Math.hypot(x - this.earth.x, y - this.earth.y) < 76) {
+      this.craft.targetAngle = Math.atan2(this.earth.y - this.craft.y, this.earth.x - this.craft.x);
+      const nextIdx = this.ringNodes.findIndex(n => !n.sent);
+      if (nextIdx >= 0) this._sendPacket(nextIdx);
+      return;
+    }
+
+    // Option C: Aim High-Gain Antenna toward pointer
     this.craft.targetAngle = Math.atan2(y - this.craft.y, x - this.craft.x);
   }
 
@@ -1036,7 +1044,7 @@ class RiseZeroGGame {
     this._startVideoPlayback(true);
 
     const distToPlush = Math.hypot(x - this.plush.x, y - this.plush.y);
-    if (distToPlush <= this.plush.r * 1.35) {
+    if (distToPlush <= this.plush.r * 1.45) {
       // Petting / grabbing Rise directly!
       this.isDragging = true;
       this.petCount++;
@@ -1046,7 +1054,7 @@ class RiseZeroGGame {
     }
 
     // Check if user tapped directly on a floating Star Note
-    const hitNote = this.starNotes.find(n => !n.collected && Math.hypot(x - n.x, y - n.y) < 58);
+    const hitNote = this.starNotes.find(n => !n.collected && Math.hypot(x - n.x, y - n.y) < 74);
     if (hitNote) {
       hitNote.collected = true;
       hitNote.bloom = 1.0;
@@ -1443,9 +1451,12 @@ class RiseZeroGGame {
 
     // Artemis II & Lucas Ye Telemetry Inscription
     ctx.fillStyle = 'rgba(226, 232, 240, 0.56)';
-    ctx.font = '500 10.5px "JetBrains Mono", monospace';
+    ctx.font = w < 640 ? '500 9.5px "JetBrains Mono", monospace' : '500 10.5px "JetBrains Mono", monospace';
     ctx.textAlign = 'center';
-    ctx.fillText('NASA ARTEMIS II  //  ORION ZERO-G INDICATOR: "RISE" (BY LUCAS YE)  //  EARTHRISE • 0.00 G', 0, cupR + 24);
+    const cupTelemetry = w < 640
+      ? 'ARTEMIS II // ORION ZERO-G: "RISE" (BY LUCAS YE)'
+      : 'NASA ARTEMIS II  //  ORION ZERO-G INDICATOR: "RISE" (BY LUCAS YE)  //  EARTHRISE • 0.00 G';
+    ctx.fillText(cupTelemetry, 0, cupR + 24);
     ctx.restore();
 
     // 4. Flexible Gold-Kapton Zero-G Tether connecting Orion cabin anchor to Rise
