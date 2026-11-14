@@ -9,7 +9,7 @@
   <link rel="apple-touch-icon" href="assets/vantalumen_logo.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,400&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
@@ -234,68 +234,129 @@
 
   <!-- Team VANTALUMEN — NASA Space Apps Mission Dossier & Judge Controls -->
   <div id="dossier-modal" role="dialog" aria-modal="true">
-    <div class="gallery-container">
-      <div class="gallery-header">
-        <div>
-          <div class="vantalumen-pill">NASA SPACE APPS CHALLENGE • OFFICIAL SUBMISSION</div>
-          <h2 class="gallery-title">VANTALUMEN — Echoes in the Dust</h2>
-          <p class="gallery-subtitle">Từ bóng tối sâu thẳm của bụi vũ trụ (`Vanta`) đến ánh sáng hổ phách của ký ức con người (`Lumen`)</p>
+    <div class="gallery-container dossier-shell">
+      <div class="gallery-header dossier-header">
+        <div class="dossier-brand-row">
+          <div class="dossier-logo-orb">
+            <img src="assets/vantalumen_logo.png" alt="VantaLumen Logo" />
+          </div>
+          <div>
+            <div class="vantalumen-pill">NASA SPACE APPS CHALLENGE • OFFICIAL SUBMISSION</div>
+            <h2 class="gallery-title">VANTALUMEN — Echoes in the Dust</h2>
+            <p class="gallery-subtitle">
+              Từ bóng tối sâu thẳm của bụi vũ trụ (<span class="hl-vanta">Vanta</span>) đến ánh sáng hổ phách của ký ức con người (<span class="hl-lumen">Lumen</span>)
+            </p>
+          </div>
         </div>
         <button id="btn-close-dossier" class="btn btn-ghost">Quay lại trải nghiệm ✕</button>
       </div>
 
+      <div class="dossier-kpi-row">
+        <div class="kpi-tile">
+          <span class="kpi-val">06</span>
+          <span class="kpi-lbl">SỨ MỆNH NASA THỰC TẾ</span>
+        </div>
+        <div class="kpi-tile">
+          <span class="kpi-val cyan">100%</span>
+          <span class="kpi-lbl">ÂM THANH FM WEB AUDIO V3</span>
+        </div>
+        <div class="kpi-tile">
+          <span class="kpi-val">07</span>
+          <span class="kpi-lbl">THẺ TRI THỨC SONG NGỮ</span>
+        </div>
+        <div class="kpi-tile">
+          <span class="kpi-val emerald">0%</span>
+          <span class="kpi-lbl">CHỮ CHE KHUẤT LÚC CHƠI</span>
+        </div>
+      </div>
+
       <div class="dossier-grid">
         <div class="dossier-card">
-          <h3>1. Triết lý "Show Trước, Tell Sau"</h3>
+          <div class="dossier-card-head">
+            <span class="dossier-icon">
+              <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8v4l3 2"/></svg>
+            </span>
+            <div>
+              <span class="dossier-step">01 / TRIẾT LÝ THIẾT KẾ</span>
+              <h3>Show Trước, Tell Sau</h3>
+            </div>
+          </div>
           <p>
-            Đề bài yêu cầu truyền tải kiến thức về <strong>phần cứng vũ trụ và những khám phá khoa học</strong> theo cách cuốn hút nhất. Thay vì bảo tàng chữ khô khan, <strong>VantaLumen</strong> đặt người chơi vào đúng thao tác vật lý của thiết bị trong 20–35 giây hoàn toàn không lời:
+            Thay vì bảo tàng chữ khô khan, người chơi nhập vai vào đúng thao tác vật lý của từng thiết bị trong <strong>20–35 giây không lời</strong> — không thanh phần trăm, không Game Over.
           </p>
-          <ul>
-            <li>Không chữ, không thanh %, không Game Over lúc đang chơi.</li>
-            <li>Sau khi hoàng hôn buông xuống, thẻ <strong>Mảnh Vỡ Ký Ức</strong> cùng <strong>Thử thách Câu hỏi Minh họa VantaLumen</strong> mới mở ra để củng cố kiến thức khoa học NASA.</li>
-          </ul>
+          <div class="chip-row">
+            <span class="metric-chip">Cảm thụ vật lý</span>
+            <span class="metric-chip">Thẻ Mảnh Vỡ Ký Ức</span>
+            <span class="metric-chip">Kiểm chứng Quiz</span>
+          </div>
         </div>
 
         <div class="dossier-card">
-          <h3>2. Ngôn Ngữ Cảm Xúc &amp; Âm Thanh</h3>
+          <div class="dossier-card-head">
+            <span class="dossier-icon cyan">
+              <svg viewBox="0 0 24 24"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+            </span>
+            <div>
+              <span class="dossier-step">02 / MỸ HỌC &amp; ÂM THANH</span>
+              <h3>Ngôn Ngữ VantaLumen</h3>
+            </div>
+          </div>
           <p>
-            Tên nhóm <strong>VantaLumen</strong> chính là bảng màu chủ đạo của toàn bộ vũ trụ:
+            Cân bằng giữa <span class="hl-vanta">Vanta</span> (bụi &amp; sự lãng quên) và <span class="hl-lumen">Lumen</span> (ánh vàng đánh thức ký ức), kết hợp tổng hợp FM kính mờ, delay ping-pong &amp; vang không gian 4,8 giây.
           </p>
-          <ul>
-            <li><strong>Vanta (Xám xanh lạnh &amp; Bụi)</strong>: Trạng thái bị thời gian lãng quên.</li>
-            <li><strong>Lumen (Vàng hổ phách ấm)</strong>: Trạng thái được đánh thức và nhớ đến.</li>
-            <li><strong>Web Audio Tổng Hợp 100%</strong>: Cả 6 game dùng chung thang âm ngũ cung, buồng vang stereo 4,8 giây (Convolver Reverb) và <strong>motif 3 nốt đi lên</strong> khi khám phá thành công.</li>
-          </ul>
+          <div class="chip-row">
+            <span class="metric-chip cyan">Ngũ cung C4–A5</span>
+            <span class="metric-chip cyan">Convolver 4.8s</span>
+            <span class="metric-chip">Motif 3 nốt</span>
+          </div>
         </div>
 
         <div class="dossier-card">
-          <h3>3. Sáu Thiết Bị &amp; Bộ 7 Câu Hỏi VantaLumen</h3>
-          <ul>
-            <li><strong>01. InSight Lander</strong> + Câu hỏi <em>Red Planet (Mars)</em>.</li>
-            <li><strong>02. Apollo Retroreflectors</strong> + Câu hỏi <em>What is the Sun?</em></li>
-            <li><strong>03. Spirit Rover</strong> + Câu hỏi <em>Largest Volcano (Olympus Mons)</em>.</li>
-            <li><strong>04. Opportunity Rover</strong> + Câu hỏi <em>NASA's Famous Mars Rover</em>.</li>
-            <li><strong>05. Apollo 12 Seismometer</strong> + Câu hỏi <em>Earth's Magnetic Shield</em>.</li>
-            <li><strong>06. LRO Bootprints</strong> + Câu hỏi <em>Sun's Hottest Layer (Corona)</em> &amp; <em>Jupiter's Great Red Spot</em>.</li>
-          </ul>
+          <div class="dossier-card-head">
+            <span class="dossier-icon">
+              <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            </span>
+            <div>
+              <span class="dossier-step">03 / CẤU TRÚC TRẢI NGHIỆM</span>
+              <h3>6 Thiết Bị &amp; 7 Thử Thách</h3>
+            </div>
+          </div>
+          <div class="mission-mini-grid">
+            <span><strong>01. InSight</strong> • Sao Hỏa</span>
+            <span><strong>02. Apollo LRRR</strong> • Mặt Trời</span>
+            <span><strong>03. Spirit Rover</strong> • Olympus Mons</span>
+            <span><strong>04. Opportunity</strong> • Mars Rover</span>
+            <span><strong>05. Apollo 12 ALSEP</strong> • Từ trường</span>
+            <span><strong>06. LRO Bootprints</strong> • Vành nhật hoa</span>
+          </div>
         </div>
 
         <div class="dossier-card">
-          <h3>4. Tư Liệu NASA &amp; Tác Động Giáo Dục</h3>
+          <div class="dossier-card-head">
+            <span class="dossier-icon cyan">
+              <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+            </span>
+            <div>
+              <span class="dossier-step">04 / KHOA HỌC NASA &amp; JPL</span>
+              <h3>Thông Số Thực Tế &amp; Giáo Dục</h3>
+            </div>
+          </div>
           <p>
-            Mỗi thao tác trong game mô phỏng trực tiếp thông số khoa học chính thức từ <strong>NASA Science &amp; JPL</strong>:
+            Mô phỏng trực tiếp dữ liệu thật từ NASA Science, tích hợp tra cứu ảnh gốc qua NASA Images API và xuất Chứng nhận Sứ mệnh PNG chuẩn in ấn.
           </p>
-          <ul>
-            <li>Hiện tượng <em>saltation</em> cứu pin InSight (`1.319` trận marsquakes), trễ laser `2,562s` của LRRR, `>90%` opaline silica của Spirit, và tuổi thọ `5.111 sols` của Opportunity.</li>
-            <li>Học sinh thực hành qua <strong>Vòng lặp 3 bước</strong>: Cảm thụ vật lý → Đọc hồ sơ phần cứng → Kiểm chứng qua bộ 7 câu hỏi song ngữ Anh–Việt &amp; tải Chứng nhận PNG.</li>
-          </ul>
+          <div class="chip-row">
+            <span class="metric-chip">1,319 marsquakes</span>
+            <span class="metric-chip">2,562s laser</span>
+            <span class="metric-chip">&gt;90% silica</span>
+            <span class="metric-chip">5,111 sols</span>
+          </div>
         </div>
       </div>
 
       <div class="judge-bar">
         <div class="judge-bar-text">
           <h4>Chế độ Ban Giám Khảo &amp; Thuyết Trình (Judge / Pitch Mode)</h4>
-          <p>Phím <code>1–6</code> / <code>← →</code> chuyển màn, <code>H</code> Hướng dẫn, <code>I</code> Thẻ Ký Ức, <code>Q</code> 7 Câu Hỏi, <code>J</code> Hồ Sơ Dự Án.</p>
+          <p>Phím <code>1–6</code> / <code>← →</code> chuyển màn · <code>H</code> Hướng dẫn · <code>I</code> Thẻ Ký Ức · <code>Q</code> 7 Câu Hỏi · <code>J</code> Hồ Sơ</p>
         </div>
         <div class="btn-group">
           <button id="btn-export-cert-dossier" class="btn btn-ghost">Chứng Nhận PNG ↓</button>

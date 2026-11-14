@@ -268,15 +268,27 @@ class EchoesApp {
     this.quizDeckModal = document.getElementById('quiz-deck-modal');
     this.guideModal = document.getElementById('guide-modal');
 
-    // Build 6 wordless constellation dots
+    // Build 6 wordless constellation dots (with sleek hover mission tooltip)
     this.navStars = [];
+    const navCodes = [
+      '01 · InSight',
+      '02 · Apollo LRRR',
+      '03 · Spirit Rover',
+      '04 · Opportunity',
+      '05 · Apollo 12',
+      '06 · Tranquility'
+    ];
     window.MEMORY_SHARDS.forEach((shard, idx) => {
       const dot = document.createElement('button');
       dot.className = 'nav-star';
       dot.setAttribute('aria-label', shard.title);
+      const tip = document.createElement('span');
+      tip.className = 'nav-star-tip';
+      tip.textContent = navCodes[idx] || shard.title;
+      dot.appendChild(tip);
       dot.addEventListener('click', () => {
         dot.blur();
-        window.soundEngine.init();
+        window.soundEngine.unlock();
         this.hideModals();
         this.mountGame(idx);
       });
@@ -286,28 +298,28 @@ class EchoesApp {
 
     // VANTALUMEN Emblem -> Open Mission Dossier
     document.getElementById('brand-emblem').addEventListener('click', () => {
-      window.soundEngine.init();
+      window.soundEngine.unlock();
       this.openDossier();
     });
 
     // Top-Right Guide Button (6 Separate Guides)
     document.getElementById('btn-guide').addEventListener('click', e => {
       e.currentTarget.blur();
-      window.soundEngine.init();
+      window.soundEngine.unlock();
       this.openGuide(this.currentIndex);
     });
 
     // Top-Right Quiz Deck Button
     document.getElementById('btn-quiz-deck').addEventListener('click', e => {
       e.currentTarget.blur();
-      window.soundEngine.init();
+      window.soundEngine.unlock();
       this.openQuizDeck(this.currentIndex);
     });
 
     // Instant Shard Inspection Button
     document.getElementById('btn-instant-shard').addEventListener('click', e => {
       e.currentTarget.blur();
-      window.soundEngine.init();
+      window.soundEngine.unlock();
       this.showMemoryShard(this.currentIndex);
     });
 
@@ -317,12 +329,13 @@ class EchoesApp {
       btnAudio.blur();
       const muted = window.soundEngine.toggleMute();
       btnAudio.style.opacity = muted ? '0.45' : '1';
+      if (!muted) window.soundEngine.playUITick();
     });
 
     // Open Memory Shards Archive Gallery
     document.getElementById('btn-gallery').addEventListener('click', e => {
       e.currentTarget.blur();
-      window.soundEngine.init();
+      window.soundEngine.unlock();
       this.openGallery();
     });
 
@@ -354,10 +367,12 @@ class EchoesApp {
 
     // Quiz Deck Prev / Next Navigation
     document.getElementById('btn-prev-quiz').addEventListener('click', () => {
+      window.soundEngine.playUITick();
       const len = window.VANTALUMEN_QUIZZES.length;
       this.renderQuizDeckSlide((this.currentDeckQuizIndex - 1 + len) % len);
     });
     document.getElementById('btn-next-quiz').addEventListener('click', () => {
+      window.soundEngine.playUITick();
       const len = window.VANTALUMEN_QUIZZES.length;
       this.renderQuizDeckSlide((this.currentDeckQuizIndex + 1) % len);
     });
@@ -442,7 +457,7 @@ class EchoesApp {
       return;
     }
 
-    window.soundEngine.playUIChime(3 + (index % 5));
+    window.soundEngine.playStageSwitch(index);
     curtain.classList.add('active');
     setTimeout(() => {
       applyMount();
@@ -524,8 +539,18 @@ class EchoesApp {
     };
 
     showDiagram();
-    if (tabDiagram) tabDiagram.onclick = showDiagram;
-    if (tabPhoto) tabPhoto.onclick = loadAndShowPhoto;
+    if (tabDiagram) {
+      tabDiagram.onclick = () => {
+        window.soundEngine.playUITick();
+        showDiagram();
+      };
+    }
+    if (tabPhoto) {
+      tabPhoto.onclick = () => {
+        window.soundEngine.playUITick();
+        loadAndShowPhoto();
+      };
+    }
     // Prefetch NASA archive photo silently for instant tab switching
     if (window.NASA_TELEMETRY) {
       window.NASA_TELEMETRY.fetchMissionPhoto(shard.id);
@@ -821,7 +846,10 @@ class EchoesApp {
       btn.className = `guide-tab-btn ${idx === safeIdx ? 'active' : ''}`;
       const shortName = g.title.split('—')[0].trim();
       btn.textContent = `0${idx + 1}. ${shortName}`;
-      btn.addEventListener('click', () => this.renderGuide(idx));
+      btn.addEventListener('click', () => {
+        window.soundEngine.playUITick();
+        this.renderGuide(idx);
+      });
       tabsEl.appendChild(btn);
     });
 
