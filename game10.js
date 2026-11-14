@@ -33,14 +33,16 @@ class SpiritRescueGame {
     this.hitCooldown = 0;
     this._seedTransitObjects();
 
-    // Pickup phase
+    // Pickup phase: astronauts descend -> walk to Spirit -> pull out of quicksand -> return -> clamp hoist
     this.landingFlare = 1.0;
-    this.pickupProgress = 0;
+    this.rescueProgress = 0; // 0..1 astronaut EVA rescue sequence
+    this.pickupProgress = 0; // 0..1 mechanical clamp hoist into cargo bay
     this.isLifting = false;
     this.spiritPickedUp = false;
 
-    // Replace motor phase: 'unbolt' -> 'remove_old' -> 'removing' -> 'install_new' -> 'installing' -> 'done'
-    this.motorStep = 'unbolt';
+    // Replace parts phase: motor -> board -> battery
+    this.repairPart = 'motor'; // 'motor' | 'board' | 'battery'
+    this.motorStep = 'unbolt'; // 'unbolt' -> 'remove_old' -> 'removing' -> 'install_new' -> 'installing' -> 'done'
     this.boltsLeft = 4;
     this.wrenchAngle = 0;
     this.motorAnim = 0;
@@ -89,6 +91,8 @@ class SpiritRescueGame {
       shipLandX: w * (isNarrow ? 0.27 : 0.28),
       spiritX: w * (isNarrow ? 0.69 : 0.67),
       hubPos: { x: w * 0.5 - (isNarrow ? 60 : 94), y: h * 0.565 },
+      pcbPos: { x: w * 0.5 + (isNarrow ? 8 : 14), y: h * 0.49 },
+      battPos: { x: w * 0.5 - (isNarrow ? 14 : 22), y: h * 0.505 },
       newMotorPos: { x: w * (isNarrow ? 0.77 : 0.74), y: h * 0.51 },
       solarPos: { x: w * 0.5, y: h * 0.45 },
       chargePadPos: { x: w * 0.5, y: h * (isNarrow ? 0.77 : 0.76) }
@@ -146,28 +150,29 @@ class SpiritRescueGame {
       this.isLifting = true;
       window.soundEngine.playUIChime(2);
     } else if (this.phase === 'replace_motor') {
+      const targetPos = this.repairPart === 'motor' ? L.hubPos : this.repairPart === 'board' ? L.pcbPos : L.battPos;
       if (this.motorStep === 'unbolt') {
-        if (Math.hypot(x - L.hubPos.x, y - L.hubPos.y) < 130 || y > h * 0.3) {
+        if (Math.hypot(x - targetPos.x, y - targetPos.y) < 130 || y > h * 0.3) {
           this.boltsLeft = Math.max(0, this.boltsLeft - 1);
           this.wrenchAngle += Math.PI * 0.5;
           window.soundEngine.playUITick();
-          this._spawnSparks(L.hubPos.x, L.hubPos.y, '#7dd3fc', 8);
+          this._spawnSparks(targetPos.x, targetPos.y, '#7dd3fc', 8);
           if (this.boltsLeft === 0) {
             this.motorStep = 'remove_old';
             window.soundEngine.playUIChime(3);
           }
         }
       } else if (this.motorStep === 'remove_old') {
-        if (Math.hypot(x - L.hubPos.x, y - L.hubPos.y) < 130 || y > h * 0.3) {
+        if (Math.hypot(x - targetPos.x, y - targetPos.y) < 135 || y > h * 0.3) {
           this.motorStep = 'removing';
           this.motorAnim = 0;
           window.soundEngine.playGravelCrunch();
-          this._spawnSparks(L.hubPos.x, L.hubPos.y, '#fb923c', 22);
+          this._spawnSparks(targetPos.x, targetPos.y, '#fb923c', 22);
         }
       } else if (this.motorStep === 'install_new') {
         if (
-          Math.hypot(x - L.newMotorPos.x, y - L.newMotorPos.y) < 130 ||
-          Math.hypot(x - L.hubPos.x, y - L.hubPos.y) < 130
+          Math.hypot(x - L.newMotorPos.x, y - L.newMotorPos.y) < 135 ||
+          Math.hypot(x - targetPos.x, y - targetPos.y) < 135
         ) {
           this.motorStep = 'installing';
           this.motorAnim = 0;
@@ -230,6 +235,7 @@ class SpiritRescueGame {
         this.isLifting = true;
       } else if (this.phase === 'replace_motor') {
         const L = this._getLayout(window.innerWidth, window.innerHeight);
+        const targetPos = this.repairPart === 'motor' ? L.hubPos : this.repairPart === 'board' ? L.pcbPos : L.battPos;
         if (this.motorStep === 'unbolt') {
           this.boltsLeft = Math.max(0, this.boltsLeft - 1);
           this.wrenchAngle += Math.PI * 0.5;
@@ -239,7 +245,7 @@ class SpiritRescueGame {
           this.motorStep = 'removing';
           this.motorAnim = 0;
           window.soundEngine.playGravelCrunch();
-          this._spawnSparks(L.hubPos.x, L.hubPos.y, '#fb923c', 22);
+          this._spawnSparks(targetPos.x, targetPos.y, '#fb923c', 22);
         } else if (this.motorStep === 'install_new') {
           this.motorStep = 'installing';
           this.motorAnim = 0;
@@ -372,27 +378,46 @@ class SpiritRescueGame {
         this.landingFlare = Math.max(0, this.landingFlare - dt * 0.9);
       }
       if (this.isLifting && !this.spiritPickedUp) {
-        this.pickupProgress = Math.min(1, this.pickupProgress + dt * 0.62);
-        if (Math.random() < 0.35) {
-          const sx = L.spiritX + (L.shipLandX - L.spiritX) * this.pickupProgress;
-          const sy = L.groundY - Math.sin(this.pickupProgress * Math.PI) * 115;
-          this._spawnSparks(sx, sy - 22, '#fcd34d', 2);
-        }
-        if (this.pickupProgress >= 1) {
-          this.spiritPickedUp = true;
-          this._spawnSparks(L.shipLandX, L.groundY - 76, '#38bdf8', 26);
-          window.soundEngine.playSignatureMotif(2);
-          setTimeout(() => {
-            if (!this.completed && this.phase === 'pickup') {
-              this.transitProgress = 0;
-              this._advancePhase('to_earth');
-            }
-          }, 750);
+        if (this.rescueProgress < 1) {
+          const prev = this.rescueProgress;
+          this.rescueProgress = Math.min(1, this.rescueProgress + dt * 0.25);
+          // Dust puffs when astronauts walk or pull Spirit out of quicksand
+          if (this.rescueProgress >= 0.48 && this.rescueProgress <= 0.76 && Math.random() < 0.4) {
+            const pullT = (this.rescueProgress - 0.48) / 0.28;
+            const px = L.spiritX - pullT * 92;
+            this._spawnSparks(px, L.groundY - 4, '#d97706', 2);
+          }
+          if (prev < 0.76 && this.rescueProgress >= 0.76) {
+            window.soundEngine.playUIChime(3);
+          }
+          if (this.rescueProgress >= 1) {
+            window.soundEngine.playUIChime(4);
+          }
+        } else {
+          this.pickupProgress = Math.min(1, this.pickupProgress + dt * 0.56);
+          const pullSpiritX = L.spiritX - 92;
+          if (Math.random() < 0.35) {
+            const sx = pullSpiritX + (L.shipLandX - pullSpiritX) * this.pickupProgress;
+            const sy = L.groundY - Math.sin(this.pickupProgress * Math.PI) * 115;
+            this._spawnSparks(sx, sy - 22, '#fcd34d', 2);
+          }
+          if (this.pickupProgress >= 1) {
+            this.spiritPickedUp = true;
+            this._spawnSparks(L.shipLandX, L.groundY - 76, '#38bdf8', 26);
+            window.soundEngine.playSignatureMotif(2);
+            setTimeout(() => {
+              if (!this.completed && this.phase === 'pickup') {
+                this.transitProgress = 0;
+                this._advancePhase('to_earth');
+              }
+            }, 750);
+          }
         }
       } else if (!this.spiritPickedUp && this.pickupProgress > 0) {
         this.pickupProgress = Math.max(0, this.pickupProgress - dt * 0.22);
       }
     } else if (this.phase === 'replace_motor') {
+      const targetPos = this.repairPart === 'motor' ? L.hubPos : this.repairPart === 'board' ? L.pcbPos : L.battPos;
       if (this.motorStep === 'removing') {
         this.motorAnim += dt * 1.85;
         if (this.motorAnim >= 1) {
@@ -403,15 +428,27 @@ class SpiritRescueGame {
       } else if (this.motorStep === 'installing') {
         this.motorAnim += dt * 1.75;
         if (this.motorAnim >= 1) {
-          this.motorStep = 'done';
-          this.motorAnim = 1;
-          this._spawnSparks(L.hubPos.x, L.hubPos.y, '#38bdf8', 30);
-          window.soundEngine.playSuccessBloom();
-          setTimeout(() => {
-            if (!this.completed && this.phase === 'replace_motor') {
-              this._advancePhase('charge_battery');
-            }
-          }, 950);
+          this._spawnSparks(targetPos.x, targetPos.y, '#38bdf8', 28);
+          if (this.repairPart === 'motor') {
+            this.repairPart = 'board';
+            this.motorStep = 'remove_old';
+            this.motorAnim = 0;
+            window.soundEngine.playUIChime(4);
+          } else if (this.repairPart === 'board') {
+            this.repairPart = 'battery';
+            this.motorStep = 'remove_old';
+            this.motorAnim = 0;
+            window.soundEngine.playUIChime(5);
+          } else {
+            this.motorStep = 'done';
+            this.motorAnim = 1;
+            window.soundEngine.playSuccessBloom();
+            setTimeout(() => {
+              if (!this.completed && this.phase === 'replace_motor') {
+                this._advancePhase('charge_battery');
+              }
+            }, 950);
+          }
         }
       } else if (this.motorStep === 'done') {
         this.wheelSpin += dt * 5.8;
@@ -792,6 +829,211 @@ class SpiritRescueGame {
     ctx.restore();
   }
 
+  _drawAstronaut(ctx, x, y, dir = 1, walkPhase = 0, pulling = false, scale = 1) {
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.scale(dir * scale, scale);
+    const lean = pulling ? -0.22 : 0.05;
+    ctx.rotate(lean);
+
+    // Legs with walking stride
+    const legA = Math.sin(walkPhase) * 4.5;
+    ctx.strokeStyle = '#cbd5e1';
+    ctx.lineWidth = 3.2;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(-2, -8);
+    ctx.lineTo(-2 - legA, 0);
+    ctx.moveTo(2, -8);
+    ctx.lineTo(2 + legA, 0);
+    ctx.stroke();
+
+    // Boots
+    ctx.fillStyle = '#334155';
+    ctx.fillRect(-4 - legA, -1.5, 4.5, 2.5);
+    ctx.fillRect(0 + legA, -1.5, 4.5, 2.5);
+
+    // PLSS Backpack
+    ctx.fillStyle = '#94a3b8';
+    ctx.beginPath();
+    ctx.roundRect(-7.5, -19, 5, 10, 1.5);
+    ctx.fill();
+
+    // EVA Torso
+    ctx.fillStyle = '#f8fafc';
+    ctx.strokeStyle = '#64748b';
+    ctx.lineWidth = 0.8;
+    ctx.beginPath();
+    ctx.roundRect(-4.5, -19, 9, 11.5, 2.5);
+    ctx.fill();
+    ctx.stroke();
+
+    // Chest control module
+    ctx.fillStyle = '#38bdf8';
+    ctx.fillRect(-1.5, -16, 3.5, 2.5);
+
+    // Arms (reaching forward or pulling back)
+    ctx.strokeStyle = '#e2e8f0';
+    ctx.lineWidth = 2.6;
+    ctx.beginPath();
+    if (pulling) {
+      ctx.moveTo(1, -16.5);
+      ctx.lineTo(8, -13);
+    } else {
+      ctx.moveTo(1, -16.5);
+      ctx.lineTo(4 + Math.cos(walkPhase) * 3, -10.5);
+    }
+    ctx.stroke();
+
+    // SpaceX-style Helmet + Gold Visor
+    ctx.fillStyle = '#ffffff';
+    ctx.beginPath();
+    ctx.arc(0, -23.5, 5.2, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#0f172a';
+    ctx.beginPath();
+    ctx.ellipse(2, -23.5, 3.3, 2.8, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = 'rgba(252, 211, 77, 0.72)';
+    ctx.beginPath();
+    ctx.ellipse(2.6, -24.1, 2.0, 1.4, -0.2, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.restore();
+  }
+
+  _drawClamp(ctx, x, y, openAmt = 1, scale = 1) {
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.scale(scale, scale);
+
+    // Hydraulic collar
+    ctx.fillStyle = '#334155';
+    ctx.strokeStyle = '#94a3b8';
+    ctx.lineWidth = 1.4;
+    ctx.beginPath();
+    ctx.roundRect(-9, -7, 18, 9, 3);
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.fillStyle = openAmt < 0.25 ? '#4ade80' : '#38bdf8';
+    ctx.beginPath();
+    ctx.arc(0, -2.5, 2.4, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Left & Right articulated pincer jaws
+    const spread = 5 + openAmt * 11;
+    const jawAngle = openAmt * 0.42;
+    [-1, 1].forEach(side => {
+      ctx.save();
+      ctx.translate(side * 6, 1);
+      ctx.rotate(side * -jawAngle);
+      ctx.strokeStyle = '#e2e8f0';
+      ctx.lineWidth = 3.2;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.lineTo(side * (spread * 0.45), 11);
+      ctx.lineTo(side * (spread * 0.15), 20);
+      ctx.stroke();
+
+      // Grip pad
+      ctx.fillStyle = '#fcd34d';
+      ctx.beginPath();
+      ctx.arc(side * (spread * 0.15), 20, 2.3, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    });
+
+    ctx.restore();
+  }
+
+  _drawCircuitBoard(ctx, x, y, isNew, scale = 1) {
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.scale(scale, scale);
+
+    const g = ctx.createRadialGradient(0, 0, 4, 0, 0, 36);
+    g.addColorStop(0, isNew ? 'rgba(52, 211, 153, 0.42)' : 'rgba(249, 115, 22, 0.36)');
+    g.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = g;
+    ctx.beginPath();
+    ctx.arc(0, 0, 36, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = isNew ? '#065f46' : '#29150c';
+    ctx.strokeStyle = isNew ? '#34d399' : '#c2410c';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.roundRect(-22, -16, 44, 32, 4);
+    ctx.fill();
+    ctx.stroke();
+
+    // Gold edge pins
+    ctx.fillStyle = isNew ? '#fcd34d' : '#78350f';
+    for (let i = -15; i <= 15; i += 6) {
+      ctx.fillRect(i - 1.5, 15, 3, 4);
+    }
+
+    // Center processor & traces
+    ctx.fillStyle = isNew ? '#0f172a' : '#1c0f08';
+    ctx.strokeStyle = isNew ? '#6ee7b7' : '#9a3412';
+    ctx.lineWidth = 1.2;
+    ctx.fillRect(-8, -8, 16, 16);
+    ctx.strokeRect(-8, -8, 16, 16);
+
+    ctx.strokeStyle = isNew ? 'rgba(110, 231, 183, 0.75)' : 'rgba(154, 52, 18, 0.6)';
+    ctx.beginPath();
+    ctx.moveTo(-18, -8); ctx.lineTo(-8, -4);
+    ctx.moveTo(-18, 6); ctx.lineTo(-8, 4);
+    ctx.moveTo(8, -4); ctx.lineTo(18, -8);
+    ctx.moveTo(8, 4); ctx.lineTo(18, 6);
+    ctx.stroke();
+
+    if (!isNew) {
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.55)';
+      ctx.beginPath();
+      ctx.arc(3, -2, 7, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  _drawBatteryPack(ctx, x, y, isNew, scale = 1) {
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.scale(scale, scale);
+
+    const g = ctx.createRadialGradient(0, 0, 4, 0, 0, 36);
+    g.addColorStop(0, isNew ? 'rgba(56, 189, 248, 0.45)' : 'rgba(239, 68, 68, 0.36)');
+    g.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = g;
+    ctx.beginPath();
+    ctx.arc(0, 0, 36, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Terminals
+    ctx.fillStyle = isNew ? '#fcd34d' : '#78350f';
+    ctx.fillRect(-13, -20, 7, 5);
+    ctx.fillRect(6, -20, 7, 5);
+
+    ctx.fillStyle = isNew ? '#0f172a' : '#271410';
+    ctx.strokeStyle = isNew ? '#38bdf8' : '#ef4444';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.roundRect(-20, -15, 40, 32, 5);
+    ctx.fill();
+    ctx.stroke();
+
+    // Charge cells
+    for (let i = 0; i < 3; i++) {
+      ctx.fillStyle = isNew ? '#22d3ee' : i === 0 ? '#ef4444' : 'rgba(148,163,184,0.18)';
+      ctx.fillRect(-14 + i * 10, -8, 7, 18);
+    }
+    ctx.restore();
+  }
+
   render(ctx, w, h) {
     const L = this._getLayout(w, h);
 
@@ -1010,19 +1252,125 @@ class SpiritRescueGame {
     const landY = L.groundY - 35 * shipScale - this.landingFlare * 46;
     this._drawStarship(ctx, L.shipLandX, landY, -Math.PI * 0.5, shipScale, this.landingFlare > 0.1, true, 1);
 
+    // Quicksand pit ("vùng cát lún") around Spirit's original stuck position
+    ctx.save();
+    const pitG = ctx.createRadialGradient(L.spiritX, L.groundY + 4, 8, L.spiritX, L.groundY + 4, 62);
+    pitG.addColorStop(0, 'rgba(120, 53, 15, 0.92)');
+    pitG.addColorStop(0.55, 'rgba(180, 83, 9, 0.68)');
+    pitG.addColorStop(1, 'rgba(138, 52, 21, 0)');
+    ctx.fillStyle = pitG;
+    ctx.beginPath();
+    ctx.ellipse(L.spiritX, L.groundY + 5, 62, 16, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(245, 158, 11, 0.35)';
+    ctx.lineWidth = 1.2;
+    ctx.beginPath();
+    ctx.ellipse(L.spiritX, L.groundY + 5, 42, 10, 0, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.restore();
+
     const bayX = L.shipLandX - 12 * shipScale;
     const bayY = landY - 27 * shipScale;
+    const rp = this.rescueProgress;
     const p = this.pickupProgress;
-    const sx = L.spiritX + (bayX - L.spiritX) * p;
-    const sy = L.groundY - Math.sin(p * Math.PI) * 118 - p * (35 * shipScale + 27 * shipScale - 14);
+
+    // Spirit's position: sunk in quicksand until astronauts pull it out (rp 0.48..0.76), then hoisted into bay (p 0..1)
+    const pullT = Math.max(0, Math.min(1, (rp - 0.48) / 0.28));
+    const pulledX = L.spiritX - pullT * 92;
+    const sinkY = (1 - pullT) * 13;
+    const stuckTilt = (1 - pullT) * -0.11;
+
+    const sx = pulledX + (bayX - pulledX) * p;
+    const sy = L.groundY + sinkY * (1 - p) - Math.sin(p * Math.PI) * 118 - p * (35 * shipScale + 27 * shipScale - 14);
     const spiritScale = (L.isNarrow ? 0.88 : 1.1) * (1 - p * 0.48);
 
+    // Astronaut EVA sequence (rp: 0..1)
+    if (rp > 0.005 && rp < 0.995 && p < 0.02) {
+      const groundEntryX = L.shipLandX + 26 * shipScale;
+      const spiritStandX = pulledX - 42;
+      const astroScale = L.isNarrow ? 0.82 : 0.96;
+
+      let ax = groundEntryX;
+      let ay = L.groundY;
+      let dir = 1;
+      let walkPhase = 0;
+      let pulling = false;
+
+      if (rp < 0.20) {
+        // Descending from Starship's open cargo bay down to Mars surface
+        const t = rp / 0.20;
+        ax = bayX + (groundEntryX - bayX) * t;
+        ay = bayY + (L.groundY - bayY) * t;
+        ctx.save();
+        ctx.strokeStyle = 'rgba(226, 232, 240, 0.7)';
+        ctx.lineWidth = 1.4;
+        ctx.beginPath();
+        ctx.moveTo(bayX, bayY);
+        ctx.lineTo(ax, ay - 22 * astroScale);
+        ctx.stroke();
+        ctx.restore();
+      } else if (rp < 0.48) {
+        // Walking to Spirit in quicksand
+        const t = (rp - 0.20) / 0.28;
+        ax = groundEntryX + (L.spiritX - 42 - groundEntryX) * t;
+        ay = L.groundY;
+        dir = 1;
+        walkPhase = t * 22;
+      } else if (rp < 0.76) {
+        // Pulling Spirit out of quicksand!
+        ax = spiritStandX;
+        ay = L.groundY;
+        dir = -1; // facing left toward ship while leaning/pulling
+        pulling = true;
+        walkPhase = pullT * 18;
+
+        // Tow ropes from astronauts to Spirit
+        ctx.save();
+        ctx.strokeStyle = '#fcd34d';
+        ctx.lineWidth = 1.8;
+        ctx.beginPath();
+        ctx.moveTo(ax + 6, ay - 13 * astroScale);
+        ctx.lineTo(sx - 22 * spiritScale, sy - 14 * spiritScale);
+        ctx.moveTo(ax - 8, ay - 13 * astroScale);
+        ctx.lineTo(sx - 18 * spiritScale, sy - 16 * spiritScale);
+        ctx.stroke();
+        ctx.restore();
+      } else {
+        // Walking back to Starship & ascending into cargo bay
+        const t = (rp - 0.76) / 0.24;
+        if (t < 0.6) {
+          const wt = t / 0.6;
+          ax = (L.spiritX - 92 - 42) + (groundEntryX - (L.spiritX - 92 - 42)) * wt;
+          ay = L.groundY;
+          dir = -1;
+          walkPhase = wt * 18;
+        } else {
+          const ct = (t - 0.6) / 0.4;
+          ax = groundEntryX + (bayX - groundEntryX) * ct;
+          ay = L.groundY + (bayY - L.groundY) * ct;
+          dir = -1;
+          ctx.save();
+          ctx.strokeStyle = 'rgba(226, 232, 240, 0.7)';
+          ctx.lineWidth = 1.4;
+          ctx.beginPath();
+          ctx.moveTo(bayX, bayY);
+          ctx.lineTo(ax, ay - 22 * astroScale);
+          ctx.stroke();
+          ctx.restore();
+        }
+      }
+
+      this._drawAstronaut(ctx, ax, ay, dir, walkPhase, pulling, astroScale);
+      this._drawAstronaut(ctx, ax - 15 * astroScale, ay + 2, dir, walkPhase + 1.4, pulling, astroScale * 0.94);
+    }
+
+    // Mechanical Clamp & Winch Hoist (after astronauts return aboard)
     if (p > 0.01 && !this.spiritPickedUp) {
       const hoistTopX = bayX - 6 * shipScale;
       const hoistTopY = bayY - 4 * shipScale;
-      const cradleY = sy - 34 * spiritScale;
+      const clampY = sy - 38 * spiritScale;
+      const clampOpen = Math.max(0, 1 - p * 5);
       ctx.save();
-      // Telescopic cargo boom from open payload bay door
       ctx.strokeStyle = '#94a3b8';
       ctx.lineWidth = 3.2;
       ctx.lineCap = 'round';
@@ -1031,34 +1379,28 @@ class SpiritRescueGame {
       ctx.lineTo(hoistTopX, hoistTopY);
       ctx.stroke();
 
-      // Twin vertical/angled winch cables lowering to Spirit's lift cradle
       ctx.strokeStyle = 'rgba(226, 232, 240, 0.85)';
       ctx.lineWidth = 1.6;
       ctx.beginPath();
       ctx.moveTo(hoistTopX - 3, hoistTopY);
-      ctx.lineTo(sx - 10 * spiritScale, cradleY);
+      ctx.lineTo(sx - 4, clampY - 6);
       ctx.moveTo(hoistTopX + 3, hoistTopY);
-      ctx.lineTo(sx + 10 * spiritScale, cradleY);
+      ctx.lineTo(sx + 4, clampY - 6);
       ctx.stroke();
 
-      // Winch pulley & spreader bar
       ctx.fillStyle = '#38bdf8';
       ctx.beginPath();
       ctx.arc(hoistTopX, hoistTopY, 3.8, 0, Math.PI * 2);
       ctx.fill();
-
-      ctx.strokeStyle = '#fcd34d';
-      ctx.lineWidth = 2.2;
-      ctx.beginPath();
-      ctx.moveTo(sx - 12 * spiritScale, cradleY);
-      ctx.lineTo(sx + 12 * spiritScale, cradleY);
-      ctx.stroke();
       ctx.restore();
+
+      this._drawClamp(ctx, sx, clampY, clampOpen, spiritScale * 0.92);
     }
 
     if (!this.spiritPickedUp) {
       ctx.save();
       ctx.translate(sx, sy);
+      ctx.rotate(stuckTilt * (1 - p));
       if (window.VantaGfx && window.VantaGfx.drawMERRover) {
         window.VantaGfx.drawMERRover(ctx, { wheelRot: 0, stuckWheel: true, scale: spiritScale });
       }
@@ -1115,8 +1457,22 @@ class SpiritRescueGame {
     }
     ctx.restore();
 
-    const hx = L.hubPos.x;
-    const hy = L.hubPos.y;
+    const partOrder = ['motor', 'board', 'battery'];
+    const currIdx = partOrder.indexOf(this.repairPart);
+    const targetPos = this.repairPart === 'motor' ? L.hubPos : this.repairPart === 'board' ? L.pcbPos : L.battPos;
+    const drawPart = (px, py, isNew, sc, part = this.repairPart) => {
+      if (part === 'motor') this._drawMotorUnit(ctx, px, py, isNew, sc);
+      else if (part === 'board') this._drawCircuitBoard(ctx, px, py, isNew, sc);
+      else this._drawBatteryPack(ctx, px, py, isNew, sc);
+    };
+
+    // Show previously installed new parts on Spirit
+    if (currIdx > 0 || this.motorStep === 'done') this._drawMotorUnit(ctx, L.hubPos.x, L.hubPos.y, true, 0.82);
+    if (currIdx > 1 || this.motorStep === 'done') this._drawCircuitBoard(ctx, L.pcbPos.x, L.pcbPos.y, true, 0.72);
+    if (this.motorStep === 'done') this._drawBatteryPack(ctx, L.battPos.x, L.battPos.y, true, 0.72);
+
+    const hx = targetPos.x;
+    const hy = targetPos.y;
     ctx.save();
     ctx.strokeStyle = this.motorStep === 'done' ? '#38bdf8' : '#fb923c';
     ctx.lineWidth = 2.2;
@@ -1124,28 +1480,29 @@ class SpiritRescueGame {
     ctx.arc(hx, hy, 36 + Math.sin(this.elapsed * 4) * 3, 0, Math.PI * 2);
     ctx.stroke();
 
-    // 4 Hub Bolts (disappear one by one during 'unbolt')
-    const activeBolts = this.motorStep === 'unbolt' ? this.boltsLeft : this.motorStep === 'done' ? 4 : 0;
-    for (let b = 0; b < 4; b++) {
-      const ba = (b / 4) * Math.PI * 2 + Math.PI * 0.25 + this.wrenchAngle * 0.25;
-      const lit = b < activeBolts;
-      ctx.fillStyle = !lit ? 'rgba(148, 163, 184, 0.2)' : this.motorStep === 'done' ? '#4ade80' : '#fcd34d';
-      ctx.beginPath();
-      ctx.arc(hx + Math.cos(ba) * 26, hy + Math.sin(ba) * 26, 3.2, 0, Math.PI * 2);
-      ctx.fill();
+    if (this.repairPart === 'motor') {
+      const activeBolts = this.motorStep === 'unbolt' ? this.boltsLeft : this.motorStep === 'done' ? 4 : 0;
+      for (let b = 0; b < 4; b++) {
+        const ba = (b / 4) * Math.PI * 2 + Math.PI * 0.25 + this.wrenchAngle * 0.25;
+        const lit = b < activeBolts;
+        ctx.fillStyle = !lit ? 'rgba(148, 163, 184, 0.2)' : this.motorStep === 'done' ? '#4ade80' : '#fcd34d';
+        ctx.beginPath();
+        ctx.arc(hx + Math.cos(ba) * 26, hy + Math.sin(ba) * 26, 3.2, 0, Math.PI * 2);
+        ctx.fill();
+      }
     }
     ctx.restore();
 
     if (this.motorStep === 'unbolt' || this.motorStep === 'remove_old') {
-      this._drawMotorUnit(ctx, hx, hy, false, 0.86);
+      drawPart(hx, hy, false, 0.86);
     } else if (this.motorStep === 'removing') {
       const t = this.motorAnim;
-      this._drawMotorUnit(ctx, hx - t * 115, hy - t * 95, false, 0.86 * (1 - t * 0.4));
+      drawPart(hx - t * 115, hy - t * 95, false, 0.86 * (1 - t * 0.4));
     }
 
     if (this.motorStep === 'install_new') {
       const bob = Math.sin(this.elapsed * 3.5) * 6;
-      this._drawMotorUnit(ctx, L.newMotorPos.x, L.newMotorPos.y + bob, true, 1.08);
+      drawPart(L.newMotorPos.x, L.newMotorPos.y + bob, true, 1.08);
       ctx.save();
       ctx.strokeStyle = 'rgba(56, 189, 248, 0.55)';
       ctx.setLineDash([5, 5]);
@@ -1159,10 +1516,25 @@ class SpiritRescueGame {
       const t = 0.5 - 0.5 * Math.cos(this.motorAnim * Math.PI);
       const mx = L.newMotorPos.x + (hx - L.newMotorPos.x) * t;
       const my = L.newMotorPos.y + (hy - L.newMotorPos.y) * t - Math.sin(t * Math.PI) * 48;
-      this._drawMotorUnit(ctx, mx, my, true, 1.08 - t * 0.22);
-    } else if (this.motorStep === 'done') {
-      this._drawMotorUnit(ctx, hx, hy, true, 0.84);
+      drawPart(mx, my, true, 1.08 - t * 0.22);
     }
+
+    // 3-part hardware checklist badge
+    const en = window.VantaI18n && window.VantaI18n.isEn();
+    const partNames = en ? ['Motor', 'Circuit Board', 'Battery Pack'] : ['Động cơ mới', 'Bo mạch mới', 'Cục pin mới'];
+    ctx.save();
+    ctx.font = '500 10.5px "JetBrains Mono", monospace';
+    ctx.textAlign = 'center';
+    const badgeY = Math.max(122, h * 0.195);
+    const gap = Math.min(118, (w - 36) / 3);
+    partNames.forEach((lbl, i) => {
+      const bx = w * 0.5 + (i - 1) * gap;
+      const isDone = i < currIdx || this.motorStep === 'done';
+      const isCurr = i === currIdx && this.motorStep !== 'done';
+      ctx.fillStyle = isDone ? '#4ade80' : isCurr ? '#fcd34d' : 'rgba(148, 163, 184, 0.5)';
+      ctx.fillText(`${isDone ? '✓' : isCurr ? '●' : '○'} ${lbl}`, bx, badgeY);
+    });
+    ctx.restore();
   }
 
   _renderBatteryPhase(ctx, w, h, L) {
@@ -1282,11 +1654,11 @@ class SpiritRescueGame {
     const en = window.VantaI18n && window.VantaI18n.isEn();
     const phases = ['to_mars', 'pickup', 'to_earth', 'replace_motor', 'charge_battery'];
     const labels = en
-      ? ['1. To Mars', '2. Lift Spirit', '3. To Earth', '4. Swap Motor', '5. Charge']
-      : ['1. Bay Sao Hỏa', '2. Bế Spirit', '3. Bay Về', '4. Thay Motor', '5. Sạc Pin'];
+      ? ['1. To Mars', '2. Rescue', '3. To Earth', '4. Swap Parts', '5. Charge']
+      : ['1. Bay Sao Hỏa', '2. Cứu Spirit', '3. Bay Về', '4. Thay Linh Kiện', '5. Sạc Pin'];
     const activeIdx = phases.indexOf(this.phase);
     const y = Math.max(88, h * 0.135);
-    const stepW = Math.min(82, (w - 40) / 5);
+    const stepW = Math.min(126, (w - 32) / 5);
     const startX = w * 0.5 - stepW * 5 * 0.5 + stepW * 0.5;
 
     ctx.save();
@@ -1315,16 +1687,37 @@ class SpiritRescueGame {
     } else if (this.phase === 'to_mars') {
       text = en ? 'HOLD & STEER TO DODGE ASTEROIDS → MARS' : 'NHẤN GIỮ & LÁI TRÁNH THIÊN THẠCH LÊN SAO HỎA';
     } else if (this.phase === 'pickup') {
-      text = this.spiritPickedUp
-        ? (en ? 'SPIRIT SECURED IN CARGO BAY!' : 'ĐÃ ĐƯA SPIRIT VÀO KHOANG TÀU!')
-        : (en ? 'HOLD TO LIFT SPIRIT INTO SPACEX STARSHIP' : 'NHẤN GIỮ ĐỂ BẾ ROVER SPIRIT LÊN TÀU SPACEX');
+      if (this.spiritPickedUp) {
+        text = en ? 'SPIRIT SECURED IN CARGO BAY!' : 'ĐÃ KẸP & ĐƯA SPIRIT VÀO KHOANG TÀU!';
+      } else if (this.rescueProgress < 0.20) {
+        text = en ? 'HOLD: ASTRONAUTS DESCENDING FROM STARSHIP' : 'NHẤN GIỮ: PHI HÀNH GIA XUỐNG TÀU CỨU SPIRIT';
+      } else if (this.rescueProgress < 0.48) {
+        text = en ? 'HOLD: ASTRONAUTS WALKING TO SPIRIT' : 'NHẤN GIỮ: PHI HÀNH GIA ĐANG ĐI BỘ TỚI SPIRIT';
+      } else if (this.rescueProgress < 0.76) {
+        text = en ? 'HOLD: PULLING SPIRIT OUT OF QUICKSAND' : 'NHẤN GIỮ: KÉO SPIRIT RA KHỎI VÙNG CÁT LÚN';
+      } else if (this.rescueProgress < 1) {
+        text = en ? 'HOLD: ASTRONAUTS RETURNING TO STARSHIP' : 'NHẤN GIỮ: PHI HÀNH GIA QUAY LẠI KHOANG TÀU';
+      } else {
+        text = en ? 'HOLD: CLAMPING & HOISTING SPIRIT INTO BAY' : 'NHẤN GIỮ: DÙNG KẸP CẨU SPIRIT LÊN KHOANG TÀU';
+      }
     } else if (this.phase === 'to_earth') {
       text = en ? 'HOLD & STEER THROUGH DEBRIS BACK TO EARTH' : 'NHẤN GIỮ & LÁI TÀU ĐƯA SPIRIT VỀ TRÁI ĐẤT';
     } else if (this.phase === 'replace_motor') {
-      if (this.motorStep === 'unbolt') text = en ? `TAP SEIZED WHEEL TO UNBOLT (${this.boltsLeft} LEFT)` : `CHẠM VÀO BÁNH XE ĐỂ THÁO BU-LÔNG (CÒN ${this.boltsLeft})`;
-      else if (this.motorStep === 'remove_old') text = en ? 'TAP HUB TO EXTRACT BURNT MOTOR' : 'CHẠM LẠI ĐỂ RÚT MOTOR CŨ BỊ CHÁY RA';
-      else if (this.motorStep === 'install_new') text = en ? 'TAP NEW TITANIUM MOTOR TO INSTALL' : 'CHẠM VÀO MOTOR TITAN MỚI ĐỂ LẮP VÀO';
-      else text = en ? 'TORQUE LOCKED • ALL 6 WHEELS SPINNING!' : 'ĐÃ SIẾT CHẶT • 6 BÁNH XE HOẠT ĐỘNG TRƠN TRU!';
+      if (this.repairPart === 'motor') {
+        if (this.motorStep === 'unbolt') text = en ? `TAP SEIZED WHEEL TO UNBOLT (${this.boltsLeft} LEFT)` : `CHẠM VÀO BÁNH XE ĐỂ THÁO BU-LÔNG (CÒN ${this.boltsLeft})`;
+        else if (this.motorStep === 'remove_old') text = en ? 'TAP HUB TO EXTRACT BURNT MOTOR' : 'CHẠM LẠI ĐỂ RÚT ĐỘNG CƠ CŨ BỊ CHÁY';
+        else if (this.motorStep === 'install_new') text = en ? 'TAP NEW TITANIUM MOTOR TO INSTALL' : 'CHẠM VÀO ĐỘNG CƠ MỚI ĐỂ LẮP VÀO';
+        else text = en ? 'INSTALLING NEW MOTOR...' : 'ĐANG LẮP ĐỘNG CƠ MỚI...';
+      } else if (this.repairPart === 'board') {
+        if (this.motorStep === 'remove_old') text = en ? 'TAP CHASSIS TO EXTRACT FRIED CIRCUIT BOARD' : 'CHẠM VÀO THÂN XE ĐỂ THÁO BO MẠCH CŨ';
+        else if (this.motorStep === 'install_new') text = en ? 'TAP NEW AVIONICS BOARD TO INSTALL' : 'CHẠM VÀO BO MẠCH MỚI ĐỂ LẮP VÀO';
+        else text = en ? 'INSTALLING NEW CIRCUIT BOARD...' : 'ĐANG LẮP BO MẠCH MỚI...';
+      } else {
+        if (this.motorStep === 'remove_old') text = en ? 'TAP DEAD BATTERY PACK TO REMOVE' : 'CHẠM VÀO THÂN XE ĐỂ THÁO CỤC PIN HỎNG';
+        else if (this.motorStep === 'install_new') text = en ? 'TAP NEW BATTERY PACK TO INSTALL' : 'CHẠM VÀO CỤC PIN MỚI ĐỂ LẮP VÀO';
+        else if (this.motorStep === 'done') text = en ? 'MOTOR • BOARD • BATTERY REPLACED!' : 'ĐÃ THAY ĐỘNG CƠ • BO MẠCH • CỤC PIN MỚI!';
+        else text = en ? 'INSTALLING NEW BATTERY PACK...' : 'ĐANG LẮP CỤC PIN MỚI...';
+      }
     } else if (this.phase === 'charge_battery') {
       text = this.solarClean < 0.8
         ? (en ? 'SWIPE ROVER ROOF TO CLEAN DUST • HOLD ⚡ TO CHARGE' : 'VUỐT NÓC XE LAU BỤI SAO HỎA • NHẤN GIỮ ⚡ ĐỂ SẠC PIN')
@@ -1352,7 +1745,7 @@ class SpiritRescueGame {
 
   getSessionMetric() {
     const en = window.VantaI18n && window.VantaI18n.isEn();
-    return en ? '225M km × 2 • New Motor • Battery 100%' : '225 triệu km × 2 • Motor mới • Pin 100%';
+    return en ? '225M km × 2 • Motor + PCB + Battery 100%' : '225 triệu km × 2 • Động cơ + Bo mạch + Pin 100%';
   }
 }
 
