@@ -167,6 +167,7 @@
     uniform int uType;      // 0 = Earth, 1 = Mars, 2 = Moon
     uniform float uTime;
     uniform float uSpin;
+    uniform float uTilt;
     uniform vec3 uSunDir;
 
     float hash31(vec3 p) {
@@ -223,6 +224,12 @@
       float c = cos(a);
       float s = sin(a);
       return vec3(c * p.x + s * p.z, p.y, -s * p.x + c * p.z);
+    }
+
+    vec3 rotX(vec3 p, float a) {
+      float c = cos(a);
+      float s = sin(a);
+      return vec3(p.x, c * p.y - s * p.z, s * p.y + c * p.z);
     }
 
     vec3 acesFilm(vec3 x) {
@@ -286,7 +293,7 @@
       // Ray-sphere hit point & geometric normal
       float z = sqrt(max(0.0, 1.0 - r2));
       vec3 N = normalize(vec3(p.x, p.y, z));
-      vec3 sp = rotY(N, uSpin);
+      vec3 sp = rotY(rotX(N, uTilt), uSpin);
 
       // Subpixel anti-aliased limb mask
       float aaEdge = smoothstep(1.0, 0.986, r);
@@ -300,7 +307,7 @@
       vec3 grad = vec3(hx - h0, hy - h0, hz - h0) / eps;
       // Project gradient onto tangent plane
       grad -= sp * dot(grad, sp);
-      vec3 worldGrad = rotY(grad, -uSpin);
+      vec3 worldGrad = rotX(rotY(grad, -uSpin), -uTilt);
 
       float bumpStrength = (uType == 0) ? 0.16 : ((uType == 1) ? 0.36 : 0.44);
       vec3 B = normalize(N - worldGrad * bumpStrength);
@@ -583,6 +590,7 @@
         uType: gl.getUniformLocation(prog, 'uType'),
         uTime: gl.getUniformLocation(prog, 'uTime'),
         uSpin: gl.getUniformLocation(prog, 'uSpin'),
+        uTilt: gl.getUniformLocation(prog, 'uTilt'),
         uSunDir: gl.getUniformLocation(prog, 'uSunDir')
       };
 
@@ -604,12 +612,13 @@
       if (!this.ready || radius <= 1) return false;
       const {
         spin = performance.now() * 0.00008,
+        tilt = 0,
         sunDir = [-0.62, 0.42, 0.66],
         alpha = 1.0
       } = opts;
 
       const dpr = Math.min(2, window.devicePixelRatio || 1);
-      const targetSize = Math.min(640, Math.max(256, Math.ceil(radius * 2.64 * dpr)));
+      const targetSize = Math.min(768, Math.max(256, Math.ceil(radius * 2.64 * dpr)));
       if (Math.abs(this.canvas.width - targetSize) > 64) {
         this.canvas.width = targetSize;
         this.canvas.height = targetSize;
@@ -624,6 +633,7 @@
       gl.uniform1i(this.locs.uType, typeId);
       gl.uniform1f(this.locs.uTime, performance.now() * 0.001);
       gl.uniform1f(this.locs.uSpin, spin);
+      gl.uniform1f(this.locs.uTilt, tilt);
       gl.uniform3f(this.locs.uSunDir, sunDir[0], sunDir[1], sunDir[2]);
       gl.drawArrays(gl.TRIANGLES, 0, 6);
 

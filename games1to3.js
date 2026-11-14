@@ -653,6 +653,10 @@ class StillThereGame {
     ];
 
     this.aim = { x: window.innerWidth * 0.5, y: window.innerHeight * 0.42 };
+    this.moonYaw = 0;
+    this.moonPitch = 0;
+    this.targetYaw = 0;
+    this.targetPitch = 0;
     this.lockedSite = null;
     this.isCharging = false;
     this.chargePhase = 0;
@@ -679,13 +683,24 @@ class StillThereGame {
     return { cx: w * 0.5, cy: h * 0.44, r: Math.min(w, h) * (w < 640 ? 0.31 : 0.25) };
   }
 
+  _getSitePos(s, cx, cy, r) {
+    const z0 = Math.sqrt(Math.max(0.04, 1 - s.u * s.u - s.v * s.v));
+    const cy1 = Math.cos(this.moonYaw);
+    const sy1 = Math.sin(this.moonYaw);
+    const x1 = cy1 * s.u - sy1 * z0;
+    const z1 = sy1 * s.u + cy1 * z0;
+    const cx2 = Math.cos(this.moonPitch);
+    const sx2 = Math.sin(this.moonPitch);
+    const y2 = cx2 * s.v + sx2 * z1;
+    return { sx: cx + x1 * r, sy: cy + y2 * r };
+  }
+
   _updateLock(x, y) {
     const { cx, cy, r } = this._getMoonGeometry(window.innerWidth, window.innerHeight);
     let nearest = null;
     let minDist = Infinity;
     for (const s of this.sites) {
-      const sx = cx + s.u * r;
-      const sy = cy + s.v * r;
+      const { sx, sy } = this._getSitePos(s, cx, cy, r);
       const d = Math.hypot(x - sx, y - sy);
       if (d < minDist) {
         minDist = d;
@@ -712,6 +727,10 @@ class StillThereGame {
   }
 
   onPointerMove(x, y) {
+    const nx = (x / Math.max(1, window.innerWidth) - 0.5) * 2;
+    const ny = (y / Math.max(1, window.innerHeight) - 0.5) * 2;
+    this.targetYaw = -nx * 0.42;
+    this.targetPitch = ny * 0.28;
     this._updateLock(x, y);
   }
 
@@ -732,8 +751,7 @@ class StillThereGame {
       let bestUnlit = null;
       let bestDist = Infinity;
       for (const s of this.sites) {
-        const sx = cx + s.u * r;
-        const sy = cy + s.v * r;
+        const { sx, sy } = this._getSitePos(s, cx, cy, r);
         const d = Math.hypot(this.aim.x - sx, this.aim.y - sy);
         const weight = s.lit ? d * 1.6 : d;
         if (weight < bestDist) {
@@ -746,8 +764,9 @@ class StillThereGame {
       }
     }
 
-    const tx = targetSite ? cx + targetSite.u * r : this.aim.x;
-    const ty = targetSite ? cy + targetSite.v * r : this.aim.y;
+    const targetPos = targetSite ? this._getSitePos(targetSite, cx, cy, r) : null;
+    const tx = targetPos ? targetPos.sx : this.aim.x;
+    const ty = targetPos ? targetPos.sy : this.aim.y;
 
     window.soundEngine.playLaserLaunch();
     this.beams.push({ x0: w * 0.5, y0: h * 0.9, x1: tx, y1: ty, life: 1.0 });
@@ -765,6 +784,9 @@ class StillThereGame {
   }
 
   update(dt) {
+    this.moonYaw += (this.targetYaw - this.moonYaw) * Math.min(1, dt * 6);
+    this.moonPitch += (this.targetPitch - this.moonPitch) * Math.min(1, dt * 6);
+
     if (this.hasInteracted) {
       this.elapsed += dt;
       this.ghostAlpha = Math.max(0, this.ghostAlpha - dt * 2.5);
@@ -871,7 +893,8 @@ class StillThereGame {
     ctx.fill();
 
     if (!(window.vantaPlanetGL && window.vantaPlanetGL.drawPlanet(ctx, 'moon', cx, cy, r, {
-      spin: 0.42,
+      spin: 0.42 + this.moonYaw,
+      tilt: -this.moonPitch,
       sunDir: [-0.55, 0.35, 0.75]
     }))) {
       ctx.drawImage(this.moonCanvas, cx - r * 1.087, cy - r * 1.087, r * 2.174, r * 2.174);
@@ -887,8 +910,7 @@ class StillThereGame {
       ctx.lineWidth = 2;
       ctx.beginPath();
       litSites.forEach((s, i) => {
-        const sx = cx + s.u * r;
-        const sy = cy + s.v * r;
+        const { sx, sy } = this._getSitePos(s, cx, cy, r);
         if (i === 0) ctx.moveTo(sx, sy);
         else ctx.lineTo(sx, sy);
       });
@@ -899,8 +921,7 @@ class StillThereGame {
 
     // Visible Beacon Glints on 3 Retroreflector Sites (Wordless clarity!)
     for (const s of this.sites) {
-      const sx = cx + s.u * r;
-      const sy = cy + s.v * r;
+      const { sx, sy } = this._getSitePos(s, cx, cy, r);
       const pulse = 0.55 + 0.45 * Math.sin(now * 2 + s.id * 1.8);
 
       // Faint orbital beacon ring even before lit so players clearly see targets!
@@ -985,19 +1006,30 @@ class StillThereGame {
     }
     ctx.restore();
 
-    // Earth Observatory Horizon + Laser Dome
-    ctx.fillStyle = '#03060d';
-    ctx.beginPath();
-    ctx.moveTo(0, h);
-    ctx.lineTo(0, h * 0.91);
-    ctx.quadraticCurveTo(w * 0.5, h * 0.87, w, h * 0.91);
-    ctx.lineTo(w, h);
-    ctx.closePath();
-    ctx.fill();
+    // 3D RTX Earth Horizon + Laser Observatory Dome
+    const earthR = Math.max(w * 0.62, h * 0.56);
+    const earthCx = w * 0.5;
+    const earthCy = h * 0.885 + earthR;
+    const usedRTXEarthHorizon = window.vantaPlanetGL && window.vantaPlanetGL.drawPlanet(ctx, 'earth', earthCx, earthCy, earthR, {
+      spin: this.elapsed * 0.025 + 1.15,
+      tilt: 0.22,
+      sunDir: [-0.45, 0.52, 0.72]
+    });
+
+    if (!usedRTXEarthHorizon) {
+      const earthGrad = ctx.createRadialGradient(earthCx, earthCy - earthR * 0.75, earthR * 0.05, earthCx, earthCy, earthR);
+      earthGrad.addColorStop(0, '#0ea5e9');
+      earthGrad.addColorStop(0.55, '#0369a1');
+      earthGrad.addColorStop(1, '#082f49');
+      ctx.fillStyle = earthGrad;
+      ctx.beginPath();
+      ctx.arc(earthCx, earthCy, earthR, 0, Math.PI * 2);
+      ctx.fill();
+    }
 
     ctx.save();
     ctx.translate(w * 0.5, h * 0.9);
-    ctx.fillStyle = '#1e293b';
+    ctx.fillStyle = '#0f172a';
     ctx.strokeStyle = '#fcd34d';
     ctx.lineWidth = 1.6;
     ctx.beginPath();
@@ -1007,7 +1039,8 @@ class StillThereGame {
     ctx.restore();
 
     if (this.ghostAlpha > 0.01) {
-      drawGhostHand(ctx, cx + this.sites[0].u * r, cy + this.sites[0].v * r, this.ghostAlpha, 1, false);
+      const gPos = this._getSitePos(this.sites[0], cx, cy, r);
+      drawGhostHand(ctx, gPos.sx, gPos.sy, this.ghostAlpha, 1, false);
     }
   }
 
