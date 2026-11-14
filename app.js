@@ -848,21 +848,23 @@ class EchoesApp {
     }
     container.style.display = 'block';
 
+    const en = window.VantaI18n && window.VantaI18n.isEn();
     const isSolved = this.solvedQuizzes.has(quiz.id);
+    const totalQ = window.VANTALUMEN_QUIZZES.length;
+    const expl = window.VantaI18n ? window.VantaI18n.getQuizExplanation(quiz) : quiz.explanation;
     container.innerHTML = `
       <div class="quiz-header-bar">
-        <span class="quiz-tag">KIỂM CHỨNG TRI THỨC ${isSolved ? '• ✓ ĐÃ GIẢI MÃ' : ''}</span>
-        <button type="button" class="quiz-deck-link" id="btn-expand-quiz-deck">Bộ 9 câu hỏi ↗</button>
+        <span class="quiz-tag">${en ? 'KNOWLEDGE CHECK' : 'KIỂM CHỨNG TRI THỨC'} ${isSolved ? (en ? '• ✓ DECODED' : '• ✓ ĐÃ GIẢI MÃ') : ''}</span>
+        <button type="button" class="quiz-deck-link" id="btn-expand-quiz-deck">${en ? `All ${totalQ} Questions ↗` : `Bộ ${totalQ} câu hỏi ↗`}</button>
       </div>
       <div class="quiz-card-layout">
         <div>
-          <div class="quiz-q-title">${quiz.questionEn}</div>
-          <div class="quiz-q-sub">${quiz.questionVi}</div>
+          <div class="quiz-q-title">${en ? quiz.questionEn : quiz.questionVi}</div>
           <div class="quiz-options-grid" id="shard-quiz-opts"></div>
         </div>
       </div>
       <div class="quiz-feedback ${isSolved ? 'visible' : ''}" id="shard-quiz-feedback">
-        ${isSolved ? `<strong>Chính xác (${quiz.correctKey})!</strong> ${quiz.explanation}` : ''}
+        ${isSolved ? `<strong>${en ? 'Correct' : 'Chính xác'} (${quiz.correctKey})!</strong> ${expl}` : ''}
       </div>
     `;
 
@@ -875,20 +877,20 @@ class EchoesApp {
       if (isSolved && opt.key === quiz.correctKey) {
         btn.classList.add('correct');
       }
-      btn.innerHTML = `<span>${opt.label}</span><span class="opt-vi">${opt.vi}</span>`;
+      btn.innerHTML = `<span>${en ? opt.label : `${opt.key}) ${opt.vi}`}</span>`;
       btn.addEventListener('click', () => {
         if (opt.key === quiz.correctKey) {
           btn.classList.add('correct');
           this._markQuizSolved(quiz.id);
           window.soundEngine.playSuccessBloom();
-          const expl = window.VantaI18n ? window.VantaI18n.getQuizExplanation(quiz) : quiz.explanation;
-      const okLbl = window.VantaI18n && window.VantaI18n.isEn() ? 'Correct' : 'Chính xác';
-      fbEl.innerHTML = `<strong>${okLbl} (${quiz.correctKey})!</strong> ${expl}`;
+          fbEl.innerHTML = `<strong>${en ? 'Correct' : 'Chính xác'} (${quiz.correctKey})!</strong> ${expl}`;
           fbEl.classList.add('visible');
         } else {
           btn.classList.add('wrong');
           window.soundEngine.playPentatonicNote(0, 0.14, 0.4, 0, 'sine');
-          fbEl.innerHTML = `Chưa chính xác — hãy thử chọn lại đáp án đúng nhé!`;
+          fbEl.innerHTML = en
+            ? 'Not quite — please try another answer!'
+            : 'Chưa chính xác — hãy thử chọn lại đáp án đúng nhé!';
           fbEl.classList.add('visible');
         }
       });
@@ -915,13 +917,14 @@ class EchoesApp {
   }
 
   _getMissionRank() {
+    const en = window.VantaI18n && window.VantaI18n.isEn();
     const shards = this.unlockedShards.size;
     const quizzes = this.solvedQuizzes.size;
     const total = shards + quizzes;
-    if (shards >= 9 && quizzes >= 9) return 'Người Giữ Ký Ức VantaLumen ★';
-    if (total >= 12) return 'Kỹ Sư Viễn Thám NASA';
-    if (total >= 5) return 'Nhà Khám Phá Bụi Sao';
-    return 'Người Lắng Nghe Khởi Đầu';
+    if (shards >= 10 && quizzes >= 10) return en ? 'VantaLumen Memory Keeper ★' : 'Người Giữ Ký Ức VantaLumen ★';
+    if (total >= 12) return en ? 'NASA Deep-Space Engineer' : 'Kỹ Sư Viễn Thám NASA';
+    if (total >= 5) return en ? 'Stardust Explorer' : 'Nhà Khám Phá Bụi Sao';
+    return en ? 'First-Contact Listener' : 'Người Lắng Nghe Khởi Đầu';
   }
 
   openQuizDeck(startIndex = 0) {
@@ -936,16 +939,22 @@ class EchoesApp {
   }
 
   renderQuizDeckSlide(index) {
+    const en = window.VantaI18n && window.VantaI18n.isEn();
     const quizzes = window.VANTALUMEN_QUIZZES;
     this.currentDeckQuizIndex = ((index % quizzes.length) + quizzes.length) % quizzes.length;
     const quiz = quizzes[this.currentDeckQuizIndex];
     const isSolved = this.solvedQuizzes.has(quiz.id);
 
-    document.getElementById('deck-counter-badge').textContent =
-      `VANTALUMEN QUIZ • 0${this.currentDeckQuizIndex + 1} / 0${quizzes.length} • ĐÃ GIẢI: ${this.solvedQuizzes.size}/${quizzes.length}`;
+    const numStr = String(this.currentDeckQuizIndex + 1).padStart(2, '0');
+    const totStr = String(quizzes.length).padStart(2, '0');
+    document.getElementById('deck-counter-badge').textContent = en
+      ? `VANTALUMEN QUIZ • ${numStr} / ${totStr} • SOLVED: ${this.solvedQuizzes.size}/${quizzes.length}`
+      : `CÂU HỎI VANTALUMEN • ${numStr} / ${totStr} • ĐÃ GIẢI: ${this.solvedQuizzes.size}/${quizzes.length}`;
     document.getElementById('deck-img').src = quiz.image;
-    document.getElementById('deck-question-en').textContent = quiz.questionEn;
-    document.getElementById('deck-question-vi').textContent = quiz.questionVi;
+    document.getElementById('deck-question-en').textContent = en ? quiz.questionEn : quiz.questionVi;
+    const subEl = document.getElementById('deck-question-vi');
+    subEl.textContent = '';
+    subEl.style.display = 'none';
 
     // Progress dots
     const dotsEl = document.getElementById('deck-dots');
@@ -962,10 +971,9 @@ class EchoesApp {
     const fbEl = document.getElementById('deck-feedback');
     optsEl.innerHTML = '';
 
+    const expl = window.VantaI18n ? window.VantaI18n.getQuizExplanation(quiz) : quiz.explanation;
     if (isSolved) {
-      const expl = window.VantaI18n ? window.VantaI18n.getQuizExplanation(quiz) : quiz.explanation;
-      const okLbl = window.VantaI18n && window.VantaI18n.isEn() ? 'Correct' : 'Chính xác';
-      fbEl.innerHTML = `<strong>${okLbl} (${quiz.correctKey})!</strong> ${expl}`;
+      fbEl.innerHTML = `<strong>${en ? 'Correct' : 'Chính xác'} (${quiz.correctKey})!</strong> ${expl}`;
       fbEl.classList.add('visible');
     } else {
       fbEl.innerHTML = '';
@@ -978,22 +986,21 @@ class EchoesApp {
       if (isSolved && opt.key === quiz.correctKey) {
         btn.classList.add('correct');
       }
-      btn.innerHTML = `<span>${opt.label}</span><span class="opt-vi">${opt.vi}</span>`;
+      btn.innerHTML = `<span>${en ? opt.label : `${opt.key}) ${opt.vi}`}</span>`;
       btn.addEventListener('click', () => {
         if (opt.key === quiz.correctKey) {
           btn.classList.add('correct');
           this._markQuizSolved(quiz.id);
           window.soundEngine.playSuccessBloom();
-          const expl = window.VantaI18n ? window.VantaI18n.getQuizExplanation(quiz) : quiz.explanation;
-      const okLbl = window.VantaI18n && window.VantaI18n.isEn() ? 'Correct' : 'Chính xác';
-      fbEl.innerHTML = `<strong>${okLbl} (${quiz.correctKey})!</strong> ${expl}`;
+          fbEl.innerHTML = `<strong>${en ? 'Correct' : 'Chính xác'} (${quiz.correctKey})!</strong> ${expl}`;
           fbEl.classList.add('visible');
-          // Refresh progress dot & score badge
           this.renderQuizDeckSlide(this.currentDeckQuizIndex);
         } else {
           btn.classList.add('wrong');
           window.soundEngine.playPentatonicNote(0, 0.14, 0.4, 0, 'sine');
-          fbEl.innerHTML = `Chưa chính xác — hãy quan sát bức ảnh VantaLumen và chọn lại nhé!`;
+          fbEl.innerHTML = en
+            ? 'Not quite — look closely at the card and try again!'
+            : 'Chưa chính xác — hãy quan sát bức ảnh VantaLumen và chọn lại nhé!';
           fbEl.classList.add('visible');
         }
       });

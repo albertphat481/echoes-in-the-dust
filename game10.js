@@ -755,7 +755,9 @@ class SpiritRescueGame {
     ctx.fillStyle = 'rgba(226, 232, 240, 0.82)';
     ctx.textAlign = 'center';
     ctx.fillText(
-      isOutbound ? `SPACEX STARSHIP • EARTH → MARS • ${km}M / 225M KM` : `STARSHIP CARGO: SPIRIT • MARS → EARTH • ${km}M KM`,
+      isOutbound
+        ? (en ? `SPACEX STARSHIP • EARTH → MARS • ${km}M / 225M KM` : `SPACEX STARSHIP • TRÁI ĐẤT → SAO HỎA • ${km} / 225 TRIỆU KM`)
+        : (en ? `STARSHIP CARGO: SPIRIT • MARS → EARTH • ${km}M KM` : `KHOANG TÀU SPIRIT • SAO HỎA → TRÁI ĐẤT • ${km} TRIỆU KM`),
       w * 0.5,
       Math.max(122, h * 0.21)
     );
@@ -1112,7 +1114,8 @@ class SpiritRescueGame {
   }
 
   getSessionMetric() {
-    return '225M km × 2 • Motor mới • Pin 100%';
+    const en = window.VantaI18n && window.VantaI18n.isEn();
+    return en ? '225M km × 2 • New Motor • Battery 100%' : '225 triệu km × 2 • Motor mới • Pin 100%';
   }
 }
 
