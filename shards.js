@@ -402,19 +402,19 @@ window.MEMORY_SHARDS = [
   {
     id: 'rise-zero-g',
     number: '09 / 09 ★',
-    title: 'RISE IN ZERO-G — Linh Vật Không Trọng Lực',
-    subtitle: 'Búp bê Plushie Rise & Truyền thống Zero-G Indicator trên tàu vũ trụ',
-    mission: 'VantaLumen × NASA Human Spaceflight Tradition • LEO 408 km',
+    title: 'RISE — Giấc Mơ Lớn Từ Mặt Trăng Nhỏ',
+    subtitle: 'A Little Moon With a Big Dream • Vật Chỉ Thị Không Trọng Lực NASA Artemis II & NASA Space Apps 2026',
+    mission: 'NASA Artemis II (Orion) • Thiết kế bởi Lucas Ye (8 tuổi)',
     specs: [
-      { label: 'Vai trò trên tàu', value: 'Zero-G Indicator (MECO)' },
-      { label: 'Gia tốc vi trọng lực', value: '0,00 G (Rơi tự do quỹ đạo)' },
-      { label: 'Vận tốc quỹ đạo ISS', value: '27.600 km/h (7,66 km/s)' }
+      { label: 'Nhà thiết kế nhí', value: 'Lucas Ye (8 tuổi • Artemis II)' },
+      { label: '4 Biểu tượng thiết kế', value: 'Mũ Trái Đất • 7 Sao • 2 Tên Lửa • Dấu Chân' },
+      { label: 'Hành trình lịch sử', value: '1968 Apollo 8 → 1969 Apollo 11 → 2026 Artemis II' }
     ],
-    defaultStatLabel: 'Cộng hưởng hộp nhạc Zero-G',
+    defaultStatLabel: 'Chòm 7 ngôi sao trên vành mũ Rise',
     story:
-      'Từ chuyến bay lịch sử của Yuri Gagarin (1961), các sứ mệnh Apollo, tàu con thoi Space Shuttle, trạm vũ trụ ISS cho đến tàu Orion của sứ mệnh mặt trăng Artemis I, các phi hành gia luôn mang theo một chú thú bông nhỏ được buộc dây mảnh trong khoang lái làm "Zero-G Indicator" (Chỉ báo Không Trọng Lực). Khoảnh khắc tầng tên lửa chính ngắt động cơ (MECO) và chú thú bông bắt đầu lơ lửng nhẹ nhàng trước mặt phi hành đoàn chính là tín hiệu trực quan đầu tiên báo rằng con tàu đã thoát khỏi lực hút mặt đất và bước vào quỹ đạo vũ trụ. Plushie "Rise" là linh vật đồng hành của đội VantaLumen — mang nụ cười, hộp nhạc ấm áp và lời nhắc rằng trong vũ trụ lạnh giá, tâm hồn trẻ thơ và niềm hy vọng của con người luôn cùng bay lên.',
-    sourceLabel: 'NASA — Artemis & ISS Zero-G Indicator Tradition',
-    sourceUrl: 'https://www.nasa.gov/humans-in-space/',
+      'Được sáng tạo bởi cậu bé 8 tuổi Lucas Ye trong cuộc thi thiết kế linh vật của NASA và trở thành Vật Chỉ Thị Trạng Thái Không Trọng Lực (Zero-Gravity Indicator) trên tàu Orion trong sứ mệnh Artemis II năm 2026, Rise ("A Little Moon With a Big Dream") lấy cảm hứng từ bức ảnh lịch sử Earthrise (Trái Đất Mọc) do tàu Apollo 8 ghi lại năm 1968. Từng chi tiết trên Rise đều mang ý nghĩa biểu tượng sâu sắc: (1) Thân tròn màu kem ngà tượng trưng cho Mặt Trăng; (2) Chiếc mũ Trái Đất với đại dương xanh biếc và lục địa xanh lá nhắc nhở nhân loại trân trọng mái nhà chung mong manh; (3) Vành mũ đen gắn 7 ngôi sao và 2 hình tên lửa tôn vinh bầu trời vũ trụ bao la cùng khát vọng khám phá không ngừng; (4) Dấu chân phi hành gia màu xám phía sau lưng kết nối trực tiếp với những bước chân lịch sử đầu tiên của sứ mệnh Apollo 11 năm 1969. Từ Apollo đến Artemis — ước mơ nhỏ có thể mở ra những khám phá vĩ đại!',
+    sourceLabel: 'NASA Artemis II — Zero-Gravity Indicator "Rise"',
+    sourceUrl: 'https://www.nasa.gov/mission/artemis-ii/',
     svgDiagram: `
       <svg viewBox="0 0 440 155" width="100%" height="100%">
         <defs>
@@ -425,28 +425,46 @@ window.MEMORY_SHARDS = [
         <rect width="440" height="155" fill="#060911"/>
         <rect width="440" height="155" fill="url(#cad-grid)"/>
         <line x1="12" y1="30" x2="428" y2="30" stroke="rgba(255,255,255,0.08)" stroke-width="0.8"/>
-        <text x="16" y="21" fill="#94a3b8" font-family="monospace" font-size="9.5" letter-spacing="1">CAD-09 // ZERO-G INDICATOR PLUSHIE "RISE" (MECO MICROGRAVITY SENSOR)</text>
-        <!-- Cupola Octagonal Frame & Tether Schematic -->
-        <g transform="translate(152, 92)" fill="none" stroke="#cbd5e1" stroke-width="1.1">
-          <circle cx="0" cy="0" r="46" stroke="rgba(148,163,184,0.35)" stroke-dasharray="4 3"/>
-          <circle cx="0" cy="0" r="32" fill="#0f172a" stroke="#7dd3fc" stroke-width="1.2"/>
-          <!-- Rise Cap Visor -->
-          <path d="M -26 -12 A 28 24 0 0 1 26 -12" stroke="#38bdf8" stroke-width="2"/>
-          <ellipse cx="0" cy="-20" rx="18" ry="8" fill="#090d16" stroke="#fcd34d" stroke-width="1.1"/>
-          <!-- Eyes & Smile -->
-          <circle cx="-10" cy="-2" r="3.5" fill="#fcd34d"/>
-          <circle cx="10" cy="-2" r="3.5" fill="#fcd34d"/>
-          <circle cx="-17" cy="5" r="3" fill="rgba(244,114,182,0.55)" stroke="none"/>
-          <circle cx="17" cy="5" r="3" fill="rgba(244,114,182,0.55)" stroke="none"/>
-          <path d="M -7 6 Q 0 12 7 6" stroke="#fcd34d" stroke-width="1.4"/>
-          <!-- Umbilical Tether -->
-          <path d="M 0 32 Q 14 44 42 46" stroke="#fcd34d" stroke-width="1.1" stroke-dasharray="3 2"/>
+        <text x="16" y="21" fill="#94a3b8" font-family="monospace" font-size="9.2" letter-spacing="0.8">CAD-09 // ARTEMIS II ZERO-G INDICATOR "RISE" (BY LUCAS YE, AGE 8)</text>
+        <!-- Front View: Moon Body + Earth Cap + 7 Stars & 2 Rockets Brim -->
+        <g transform="translate(88, 95)" fill="none" stroke="#cbd5e1" stroke-width="1.1">
+          <circle cx="0" cy="4" r="32" fill="#0f172a" stroke="#fef3c7" stroke-width="1.2"/>
+          <!-- Earth Cap Dome (Oceans + Continents) -->
+          <path d="M -28 -8 A 28 24 0 0 1 28 -8" fill="rgba(14,165,233,0.22)" stroke="#38bdf8" stroke-width="1.4"/>
+          <path d="M -16 -22 Q -6 -26 2 -18 Q -6 -12 -16 -22 Z" fill="rgba(34,197,94,0.45)" stroke="#4ade80" stroke-width="0.9"/>
+          <path d="M 8 -20 Q 18 -22 22 -13 Q 12 -11 8 -20 Z" fill="rgba(34,197,94,0.45)" stroke="#4ade80" stroke-width="0.9"/>
+          <!-- Cap Brim with 7 Stars & 2 Rockets -->
+          <ellipse cx="0" cy="-9" rx="25" ry="7.5" fill="#090d16" stroke="#fcd34d" stroke-width="1.1"/>
+          <circle cx="-12" cy="-9" r="1.1" fill="#fcd34d" stroke="none"/>
+          <circle cx="-8" cy="-10.5" r="1.1" fill="#fcd34d" stroke="none"/>
+          <circle cx="-4" cy="-11" r="1.1" fill="#fcd34d" stroke="none"/>
+          <circle cx="0" cy="-11.2" r="1.2" fill="#fcd34d" stroke="none"/>
+          <circle cx="4" cy="-11" r="1.1" fill="#fcd34d" stroke="none"/>
+          <circle cx="8" cy="-10.5" r="1.1" fill="#fcd34d" stroke="none"/>
+          <circle cx="12" cy="-9" r="1.1" fill="#fcd34d" stroke="none"/>
+          <!-- Eyes, Cheeks & Smile -->
+          <circle cx="-10" cy="4" r="3.2" fill="#fcd34d"/>
+          <circle cx="10" cy="4" r="3.2" fill="#fcd34d"/>
+          <circle cx="-17" cy="10" r="2.8" fill="rgba(244,114,182,0.55)" stroke="none"/>
+          <circle cx="17" cy="10" r="2.8" fill="rgba(244,114,182,0.55)" stroke="none"/>
+          <path d="M -6 11 Q 0 16 6 11" stroke="#fcd34d" stroke-width="1.3"/>
         </g>
-        <g font-family="monospace" font-size="8.5" fill="#94a3b8">
-          <text x="232" y="64" fill="#fcd34d">PAYLOAD: "RISE" PLUSHIE MASCOT</text>
-          <text x="232" y="82">ACCELERATION: a = 0.000 m/s² (LEO)</text>
-          <text x="232" y="100" fill="#7dd3fc">AUDIO: PENTATONIC MUSIC-BOX CHIME</text>
-          <text x="232" y="118">TETHER: KAPTON BRAIDED UMBILICAL</text>
+        <!-- Back View: Apollo 11 Astronaut Footprint on Lunar Body -->
+        <g transform="translate(174, 102)" fill="none" stroke="#94a3b8" stroke-width="1">
+          <circle cx="0" cy="0" r="22" fill="#0f172a" stroke="#cbd5e1"/>
+          <rect x="-6" y="-11" width="12" height="22" rx="5" stroke="#fcd34d" stroke-width="1"/>
+          <line x1="-4" y1="-6" x2="4" y2="-6" stroke="#94a3b8"/>
+          <line x1="-4" y1="-1" x2="4" y2="-1" stroke="#94a3b8"/>
+          <line x1="-4" y1="4" x2="4" y2="4" stroke="#94a3b8"/>
+          <line x1="-4" y1="8" x2="4" y2="8" stroke="#94a3b8"/>
+        </g>
+        <!-- 4 Official Design Callouts -->
+        <g font-family="monospace" font-size="8.3" fill="#cbd5e1">
+          <text x="218" y="54" fill="#38bdf8">01. EARTH CAP: BLUE OCEANS &amp; GREEN CONTINENTS</text>
+          <text x="218" y="72" fill="#fcd34d">02. CAP BRIM: 7 STARS &amp; 2 ROCKET MOTIFS</text>
+          <text x="218" y="90" fill="#fef3c7">03. MOON BODY: INSPIRED BY APOLLO 8 EARTHRISE</text>
+          <text x="218" y="108" fill="#94a3b8">04. BACK TREAD: 1969 APOLLO 11 LUNAR FOOTPRINT</text>
+          <text x="218" y="128" fill="#f472b6">TIMELINE: 1968 APOLLO 8 → 1969 APOLLO 11 → 2026 ARTEMIS II</text>
         </g>
       </svg>
     `

@@ -872,7 +872,7 @@ class RiseZeroGGame {
     this.finaleTimer = 0;
     this.ghostAlpha = 0.85;
 
-    this.targetChimes = 6;
+    this.targetChimes = 7;
     this.chimesCollected = 0;
     this.petCount = 0;
     this.joyPulse = 0;
@@ -938,21 +938,30 @@ class RiseZeroGGame {
   _initStarNotes(w, h) {
     const cx = w * 0.5;
     const cy = h * 0.48;
-    const rx = Math.min(w * 0.34, 340);
-    const ry = Math.min(h * 0.28, 230);
-    const glyphs = ['♪', '✦', '♫', '★', '♪', '✦'];
-    this.starNotes = Array.from({ length: 6 }, (_, i) => {
-      const a = (i / 6) * Math.PI * 2 - Math.PI / 2;
+    const rx = Math.min(w * 0.35, 355);
+    const ry = Math.min(h * 0.29, 235);
+    const tags = [
+      '★ EARTHRISE 1968',
+      '★ APOLLO 11',
+      '★ LUCAS YE',
+      '★ EARTH CAP',
+      '★ 7 STARS',
+      '★ ORION MPCV',
+      '★ ARTEMIS II'
+    ];
+    this.starNotes = Array.from({ length: 7 }, (_, i) => {
+      const a = (i / 7) * Math.PI * 2 - Math.PI / 2;
       return {
         baseAngle: a,
         rx,
         ry,
         x: cx + Math.cos(a) * rx,
         y: cy + Math.sin(a) * ry,
-        glyph: glyphs[i],
+        glyph: '★',
+        tag: tags[i],
         collected: false,
         bloom: 0,
-        phase: i * 1.1
+        phase: i * 0.95
       };
     });
   }
@@ -1242,37 +1251,57 @@ class RiseZeroGGame {
   }
 
   _drawFallbackPlushieFace(ctx, r) {
-    // Cream plush head
-    const headGrad = ctx.createRadialGradient(-r * 0.2, -r * 0.2, r * 0.1, 0, 0, r);
+    // Ivory Moon plush head ("A Little Moon With a Big Dream")
+    const headGrad = ctx.createRadialGradient(-r * 0.2, -r * 0.1, r * 0.1, 0, r * 0.1, r);
     headGrad.addColorStop(0, '#fffdf7');
     headGrad.addColorStop(0.75, '#f5eedc');
     headGrad.addColorStop(1, '#e2d6be');
     ctx.fillStyle = headGrad;
     ctx.beginPath();
-    ctx.arc(0, 0, r, 0, Math.PI * 2);
+    ctx.arc(0, r * 0.08, r * 0.92, 0, Math.PI * 2);
     ctx.fill();
 
-    // Black & Cyan Cap at top
+    // 1. The Earth Cap (Blue oceans + Green continents)
     ctx.save();
     ctx.beginPath();
-    ctx.arc(0, -r * 0.18, r * 0.96, Math.PI * 1.08, Math.PI * 1.92);
-    ctx.fillStyle = '#0ea5e9';
-    ctx.fill();
-
+    ctx.ellipse(0, -r * 0.38, r * 0.88, r * 0.58, 0, Math.PI, Math.PI * 2);
+    ctx.closePath();
+    ctx.clip();
+    ctx.fillStyle = '#0284c7';
+    ctx.fillRect(-r, -r, r * 2, r);
+    ctx.fillStyle = '#22c55e';
     ctx.beginPath();
-    ctx.ellipse(0, -r * 0.62, r * 0.66, r * 0.34, 0, 0, Math.PI * 2);
+    ctx.ellipse(-r * 0.28, -r * 0.55, r * 0.34, r * 0.22, -0.3, 0, Math.PI * 2);
+    ctx.ellipse(r * 0.32, -r * 0.48, r * 0.28, r * 0.2, 0.25, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+
+    // 2 & 3. Black Cap Brim with 7 Stars & 2 Rocket Motifs
+    ctx.save();
+    ctx.beginPath();
+    ctx.ellipse(0, -r * 0.36, r * 0.84, r * 0.24, -0.04, 0, Math.PI * 2);
     ctx.fillStyle = '#18181b';
     ctx.fill();
     ctx.strokeStyle = '#09090b';
-    ctx.lineWidth = 3;
+    ctx.lineWidth = 2.5;
     ctx.stroke();
+
+    // 7 Golden Stars across brim
+    ctx.fillStyle = '#fcd34d';
+    for (let s = -3; s <= 3; s++) {
+      const sx = s * r * 0.16;
+      const sy = -r * 0.38 + Math.abs(s) * r * 0.015;
+      ctx.beginPath();
+      ctx.arc(sx, sy, r * 0.032, 0, Math.PI * 2);
+      ctx.fill();
+    }
     ctx.restore();
 
     // Rosy Pink Embroidered Cheeks
     ctx.fillStyle = '#f472b6';
     [-r * 0.48, r * 0.48].forEach(cx => {
       ctx.beginPath();
-      ctx.arc(cx, r * 0.16, r * 0.13, 0, Math.PI * 2);
+      ctx.arc(cx, r * 0.22, r * 0.12, 0, Math.PI * 2);
       ctx.fill();
     });
 
@@ -1280,21 +1309,21 @@ class RiseZeroGGame {
     [-r * 0.28, r * 0.28].forEach(ex => {
       ctx.fillStyle = '#18181b';
       ctx.beginPath();
-      ctx.arc(ex, -r * 0.02, r * 0.13, 0, Math.PI * 2);
+      ctx.arc(ex, r * 0.06, r * 0.12, 0, Math.PI * 2);
       ctx.fill();
 
       ctx.fillStyle = '#ffffff';
       ctx.beginPath();
-      ctx.arc(ex - r * 0.04, -r * 0.06, r * 0.045, 0, Math.PI * 2);
+      ctx.arc(ex - r * 0.035, r * 0.02, r * 0.042, 0, Math.PI * 2);
       ctx.fill();
     });
 
     // Happy plush smile
     ctx.strokeStyle = '#18181b';
-    ctx.lineWidth = 3.2;
+    ctx.lineWidth = 3;
     ctx.lineCap = 'round';
     ctx.beginPath();
-    ctx.arc(0, r * 0.08, r * 0.16, 0.2, Math.PI - 0.2);
+    ctx.arc(0, r * 0.14, r * 0.15, 0.2, Math.PI - 0.2);
     ctx.stroke();
   }
 
@@ -1302,11 +1331,11 @@ class RiseZeroGGame {
     const cx = w * 0.5;
     const cy = h * 0.48;
 
-    // 1. Deep Orbital Space + VantaLumen GLSL Nebula Backdrop
-    const bg = ctx.createRadialGradient(cx, h * 0.95, 40, cx, cy, Math.max(w, h) * 0.9);
-    bg.addColorStop(0, '#0c2344');
-    bg.addColorStop(0.45, '#071022');
-    bg.addColorStop(1, '#03060e');
+    // 1. Deep Lunar Orbit Space + VantaLumen GLSL Nebula Backdrop
+    const bg = ctx.createRadialGradient(cx, h * 0.82, 40, cx, cy, Math.max(w, h) * 0.9);
+    bg.addColorStop(0, '#0d2242');
+    bg.addColorStop(0.48, '#060f20');
+    bg.addColorStop(1, '#02050c');
     ctx.fillStyle = bg;
     ctx.fillRect(0, 0, w, h);
 
@@ -1315,31 +1344,77 @@ class RiseZeroGGame {
         alpha: 0.78,
         lumen: 0.95,
         cyan: 0.85,
-        stars: 0.8
+        stars: 0.82
       });
     }
 
     if (window.VantaGfx) {
-      if (!this._stars) this._stars = window.VantaGfx.createStarfield(130, 0.9);
-      window.VantaGfx.drawStarfield(ctx, this._stars, w, h, this.elapsed, 0.9);
+      if (!this._stars) this._stars = window.VantaGfx.createStarfield(135, 0.9);
+      window.VantaGfx.drawStarfield(ctx, this._stars, w, h, this.elapsed, 0.92);
     }
 
-    // 2. Curved Glowing Blue Earth Limb below the Cupola Window
+    // 2. Iconic EARTHRISE (Trái Đất Mọc — Apollo 8 1968 -> Artemis II 2026) above the Lunar Horizon
     ctx.save();
-    const earthR = Math.max(w, h) * 1.35;
-    const earthY = h + earthR * 0.82;
-    const atmoGrad = ctx.createRadialGradient(cx, earthY, earthR * 0.96, cx, earthY, earthR * 1.03);
-    atmoGrad.addColorStop(0, '#06152d');
-    atmoGrad.addColorStop(0.65, '#0284c7');
-    atmoGrad.addColorStop(0.84, 'rgba(56, 189, 248, 0.55)');
-    atmoGrad.addColorStop(1, 'rgba(56, 189, 248, 0)');
-    ctx.fillStyle = atmoGrad;
+    const earthRiseX = cx + Math.min(w, h) * 0.24;
+    const earthRiseY = h * 0.76;
+    const earthRiseR = Math.min(w, h) * 0.13;
+    const earthGlow = ctx.createRadialGradient(earthRiseX, earthRiseY, earthRiseR * 0.5, earthRiseX, earthRiseY, earthRiseR * 1.65);
+    earthGlow.addColorStop(0, 'rgba(56, 189, 248, 0.45)');
+    earthGlow.addColorStop(0.6, 'rgba(14, 165, 233, 0.15)');
+    earthGlow.addColorStop(1, 'rgba(0, 0, 0, 0)');
+    ctx.fillStyle = earthGlow;
     ctx.beginPath();
-    ctx.arc(cx, earthY, earthR * 1.03, 0, Math.PI * 2);
+    ctx.arc(earthRiseX, earthRiseY, earthRiseR * 1.65, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Earthrise Globe (Blue oceans + Green continents + White cloud swirls)
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(earthRiseX, earthRiseY, earthRiseR, 0, Math.PI * 2);
+    ctx.clip();
+    const oceanGrad = ctx.createRadialGradient(
+      earthRiseX - earthRiseR * 0.3,
+      earthRiseY - earthRiseR * 0.3,
+      earthRiseR * 0.1,
+      earthRiseX,
+      earthRiseY,
+      earthRiseR
+    );
+    oceanGrad.addColorStop(0, '#38bdf8');
+    oceanGrad.addColorStop(0.55, '#0284c7');
+    oceanGrad.addColorStop(1, '#082f49');
+    ctx.fillStyle = oceanGrad;
+    ctx.fillRect(earthRiseX - earthRiseR, earthRiseY - earthRiseR, earthRiseR * 2, earthRiseR * 2);
+
+    ctx.fillStyle = 'rgba(34, 197, 94, 0.72)';
+    ctx.beginPath();
+    ctx.ellipse(earthRiseX - earthRiseR * 0.22, earthRiseY - earthRiseR * 0.18, earthRiseR * 0.42, earthRiseR * 0.25, -0.35, 0, Math.PI * 2);
+    ctx.ellipse(earthRiseX + earthRiseR * 0.28, earthRiseY + earthRiseR * 0.12, earthRiseR * 0.32, earthRiseR * 0.22, 0.4, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.35)';
+    ctx.beginPath();
+    ctx.ellipse(earthRiseX - earthRiseR * 0.1, earthRiseY - earthRiseR * 0.38, earthRiseR * 0.55, earthRiseR * 0.12, -0.18, 0, Math.PI * 2);
     ctx.fill();
     ctx.restore();
 
-    // 3. ISS / Artemis Octagonal Cupola Observation Window Frame
+    // Sculpted Gray-Ivory Lunar Horizon Curve at Bottom ("A Little Moon With a Big Dream")
+    const moonR = Math.max(w, h) * 1.45;
+    const moonY = h + moonR * 0.84;
+    const moonGrad = ctx.createRadialGradient(cx, moonY - moonR * 0.98, 10, cx, moonY, moonR * 1.02);
+    moonGrad.addColorStop(0, '#94a3b8');
+    moonGrad.addColorStop(0.35, '#475569');
+    moonGrad.addColorStop(1, '#0f172a');
+    ctx.fillStyle = moonGrad;
+    ctx.beginPath();
+    ctx.arc(cx, moonY, moonR, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(226, 232, 240, 0.32)';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+    ctx.restore();
+
+    // 3. Orion Spacecraft Cabin Window Frame (Artemis II Lunar Flyby)
     const cupR = Math.min(w, h) * 0.44;
     ctx.save();
     ctx.translate(cx, cy);
@@ -1366,14 +1441,14 @@ class RiseZeroGGame {
       ctx.stroke();
     }
 
-    // Subtle Cupola telemetry inscription
-    ctx.fillStyle = 'rgba(148, 163, 184, 0.46)';
+    // Artemis II & Lucas Ye Telemetry Inscription
+    ctx.fillStyle = 'rgba(226, 232, 240, 0.56)';
     ctx.font = '500 10.5px "JetBrains Mono", monospace';
     ctx.textAlign = 'center';
-    ctx.fillText('CUPOLA OBSERVATION DOME  //  ZERO-G INDICATOR: RISE  //  0.00 G MICROGRAVITY', 0, cupR + 24);
+    ctx.fillText('NASA ARTEMIS II  //  ORION ZERO-G INDICATOR: "RISE" (BY LUCAS YE)  //  EARTHRISE • 0.00 G', 0, cupR + 24);
     ctx.restore();
 
-    // 4. Flexible Gold-Kapton Zero-G Tether connecting Cupola anchor to Rise
+    // 4. Flexible Gold-Kapton Zero-G Tether connecting Orion cabin anchor to Rise
     ctx.save();
     ctx.strokeStyle = 'rgba(252, 211, 77, 0.34)';
     ctx.lineWidth = 2;
@@ -1386,43 +1461,49 @@ class RiseZeroGGame {
     ctx.stroke();
     ctx.restore();
 
-    // 5. Floating Orbital Music-Box Star Notes
+    // 5. Floating 7 Stars of Rise's Cap Brim (Seven Stars Symbolism)
     this.starNotes.forEach((n, idx) => {
       if (n.collected && n.bloom <= 0.02) return;
-      const alpha = n.collected ? n.bloom : 0.92;
+      const alpha = n.collected ? n.bloom : 0.94;
       const pulse = 1 + Math.sin(this.elapsed * 3.2 + n.phase) * 0.12;
 
       ctx.save();
       ctx.translate(n.x, n.y);
       ctx.scale(pulse, pulse);
 
-      const halo = ctx.createRadialGradient(0, 0, 2, 0, 0, 34);
-      halo.addColorStop(0, `rgba(244, 114, 182, ${0.45 * alpha})`);
-      halo.addColorStop(0.5, `rgba(252, 211, 77, ${0.22 * alpha})`);
+      const halo = ctx.createRadialGradient(0, 0, 2, 0, 0, 36);
+      halo.addColorStop(0, `rgba(252, 211, 77, ${0.48 * alpha})`);
+      halo.addColorStop(0.5, `rgba(56, 189, 248, ${0.22 * alpha})`);
       halo.addColorStop(1, 'rgba(0,0,0,0)');
       ctx.fillStyle = halo;
       ctx.beginPath();
-      ctx.arc(0, 0, 34, 0, Math.PI * 2);
+      ctx.arc(0, 0, 36, 0, Math.PI * 2);
       ctx.fill();
 
-      ctx.strokeStyle = `rgba(252, 211, 77, ${0.68 * alpha})`;
+      ctx.strokeStyle = `rgba(252, 211, 77, ${0.72 * alpha})`;
       ctx.lineWidth = 1.4;
       ctx.beginPath();
       ctx.arc(0, 0, 18, 0, Math.PI * 2);
       ctx.stroke();
 
       ctx.fillStyle = `rgba(254, 243, 199, ${alpha})`;
-      ctx.font = '600 17px "Be Vietnam Pro", sans-serif';
+      ctx.font = '600 16px "Be Vietnam Pro", sans-serif';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      ctx.fillText(n.glyph, 0, 1);
+      ctx.fillText(n.glyph, 0, 0);
+
+      if (n.tag) {
+        ctx.font = '500 9px "JetBrains Mono", monospace';
+        ctx.fillStyle = `rgba(226, 232, 240, ${alpha * 0.78})`;
+        ctx.fillText(n.tag.replace('★ ', ''), 0, 28);
+      }
       ctx.restore();
     });
 
     // 6. Joy Ripples
     this.ripples.forEach(rp => {
       ctx.save();
-      ctx.strokeStyle = `rgba(244, 114, 182, ${rp.alpha})`;
+      ctx.strokeStyle = `rgba(252, 211, 77, ${rp.alpha})`;
       ctx.lineWidth = 2;
       ctx.beginPath();
       ctx.arc(rp.x, rp.y, rp.r, 0, Math.PI * 2);
@@ -1430,28 +1511,28 @@ class RiseZeroGGame {
       ctx.restore();
     });
 
-    // 7. RISE — ZERO-G PLUSHIE INDICATOR (Live Cropped Video + Space Helmet Bubble)
+    // 7. RISE — ARTEMIS II ZERO-G INDICATOR (Full Earth Cap + Rockets + 7 Stars Video Portrait)
     const pr = this.plush.r * (1 + this.joyPulse * 0.08);
     ctx.save();
     ctx.translate(this.plush.x, this.plush.y);
     ctx.rotate(this.plush.angle);
 
-    // Outer warm aurora glow around Rise
-    const auraR = pr * (this.ending ? 2.1 : 1.55);
+    // Outer warm lunar-gold & Earth-blue aura around Rise
+    const auraR = pr * (this.ending ? 2.15 : 1.6);
     const aura = ctx.createRadialGradient(0, 0, pr * 0.6, 0, 0, auraR);
-    aura.addColorStop(0, 'rgba(244, 114, 182, 0.34)');
-    aura.addColorStop(0.5, 'rgba(252, 211, 77, 0.18)');
+    aura.addColorStop(0, 'rgba(56, 189, 248, 0.32)');
+    aura.addColorStop(0.5, 'rgba(252, 211, 77, 0.22)');
     aura.addColorStop(1, 'rgba(56, 189, 248, 0)');
     ctx.fillStyle = aura;
     ctx.beginPath();
     ctx.arc(0, 0, auraR, 0, Math.PI * 2);
     ctx.fill();
 
-    // Cute Plush Astronaut Little Arms floating on sides
+    // Cute Plush Little Arms with subtle Apollo 11 Footprint badge hint
     const armWave = Math.sin(this.elapsed * 3.8 + this.joyPulse * 4) * 0.22;
     [-1, 1].forEach(dir => {
       ctx.save();
-      ctx.translate(dir * pr * 0.86, pr * 0.32);
+      ctx.translate(dir * pr * 0.92, pr * 0.34);
       ctx.rotate(dir * (0.45 + armWave));
       ctx.fillStyle = '#f5eedc';
       ctx.strokeStyle = 'rgba(226, 214, 190, 0.85)';
@@ -1463,71 +1544,68 @@ class RiseZeroGGame {
       ctx.restore();
     });
 
-    // Circular Plush Portrait Clipped to Center of rise_plushie.mp4 (100% watermark-free!)
+    // Generous Rounded-Squircle Orion Viewport Medallion so 100% of Rise's Earth Cap, Rockets & 7 Stars Brim is visible (while cropping out bottom-right watermark)
+    const boxW = pr * 2.18;
+    const boxH = pr * 2.14;
+    const cornerR = pr * 0.86;
     ctx.save();
     ctx.beginPath();
-    ctx.arc(0, 0, pr, 0, Math.PI * 2);
+    ctx.roundRect(-boxW * 0.5, -boxH * 0.52, boxW, boxH, cornerR);
     ctx.clip();
 
     if (this.video && this.video.readyState >= 2 && this.video.videoWidth > 0) {
       const vw = this.video.videoWidth;
       const vh = this.video.videoHeight;
-      // Crop central square tightly around Rise's plush head (excludes dark background corners & bottom-right watermark)
-      const cropSize = vh * 0.94;
-      const sx = (vw - cropSize) * 0.5;
-      const sy = vh * 0.02;
-      ctx.drawImage(this.video, sx, sy, cropSize, cropSize, -pr * 1.05, -pr * 1.05, pr * 2.1, pr * 2.1);
+      // Central region (x: 18%..82%, y: 0%..100%) preserves 100% of the Earth Cap, rocket motifs & 7 stars on the brim while excluding the watermark at x~90%
+      const sx = vw * 0.19;
+      const sy = 0;
+      const sw = vw * 0.62;
+      const sh = vh;
+      ctx.drawImage(this.video, sx, sy, sw, sh, -boxW * 0.52, -boxH * 0.54, boxW * 1.04, boxH * 1.04);
     } else {
       this._drawFallbackPlushieFace(ctx, pr);
     }
 
-    // Soft spherical plush vignette & polycarbonate helmet glass sheen
-    const innerShade = ctx.createRadialGradient(-pr * 0.28, -pr * 0.32, pr * 0.2, 0, 0, pr);
-    innerShade.addColorStop(0, 'rgba(255, 255, 255, 0.14)');
-    innerShade.addColorStop(0.72, 'rgba(0, 0, 0, 0)');
-    innerShade.addColorStop(1, 'rgba(8, 14, 28, 0.42)');
+    // Soft optical edge blend inside the Zero-G bubble
+    const innerShade = ctx.createRadialGradient(0, -pr * 0.1, pr * 0.68, 0, 0, pr * 1.15);
+    innerShade.addColorStop(0, 'rgba(255, 255, 255, 0)');
+    innerShade.addColorStop(0.78, 'rgba(8, 14, 28, 0.08)');
+    innerShade.addColorStop(1, 'rgba(6, 11, 24, 0.52)');
     ctx.fillStyle = innerShade;
-    ctx.fillRect(-pr, -pr, pr * 2, pr * 2);
+    ctx.fillRect(-boxW * 0.55, -boxH * 0.55, boxW * 1.1, boxH * 1.1);
     ctx.restore();
 
-    // Polycarbonate Space Helmet Bubble Rim & Specular Highlight Arc
-    ctx.strokeStyle = 'rgba(224, 242, 254, 0.52)';
+    // Orion Zero-G Medallion Rim & Specular Highlight
+    ctx.strokeStyle = 'rgba(125, 211, 252, 0.52)';
     ctx.lineWidth = 2.2;
     ctx.beginPath();
-    ctx.arc(0, 0, pr * 1.03, 0, Math.PI * 2);
+    ctx.roundRect(-boxW * 0.5, -boxH * 0.52, boxW, boxH, cornerR);
     ctx.stroke();
 
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.45)';
-    ctx.lineWidth = 3;
-    ctx.lineCap = 'round';
-    ctx.beginPath();
-    ctx.arc(0, 0, pr * 0.95, -Math.PI * 0.78, -Math.PI * 0.46);
-    ctx.stroke();
-
-    // Golden Orbital Joy Resonance Progress Ring around Rise's Helmet
+    // Golden 7-Star Orbital Progress Ring around Rise
     const progress = this.chimesCollected / this.targetChimes;
     if (progress > 0) {
       ctx.strokeStyle = '#fcd34d';
       ctx.lineWidth = 3.5;
       ctx.beginPath();
-      ctx.arc(0, 0, pr * 1.11, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * progress);
+      ctx.arc(0, -pr * 0.02, pr * 1.18, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * progress);
       ctx.stroke();
     }
 
-    // Mini "RISE // 0-G" Nameplate Collar Badge at Bottom of Helmet
-    ctx.fillStyle = 'rgba(9, 14, 26, 0.88)';
-    ctx.strokeStyle = 'rgba(252, 211, 77, 0.65)';
+    // "RISE // ARTEMIS II" Nameplate Badge at Bottom
+    ctx.fillStyle = 'rgba(9, 14, 26, 0.9)';
+    ctx.strokeStyle = 'rgba(252, 211, 77, 0.72)';
     ctx.lineWidth = 1.2;
     ctx.beginPath();
-    ctx.roundRect(-48, pr * 0.86, 96, 22, 11);
+    ctx.roundRect(-64, pr * 0.92, 128, 22, 11);
     ctx.fill();
     ctx.stroke();
 
     ctx.fillStyle = '#fef3c7';
-    ctx.font = '600 10.5px "JetBrains Mono", monospace';
+    ctx.font = '600 10px "JetBrains Mono", monospace';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText('RISE // 0-G', 0, pr * 0.86 + 11);
+    ctx.fillText('RISE // ARTEMIS II', 0, pr * 0.92 + 11);
 
     ctx.restore();
 
@@ -1539,7 +1617,7 @@ class RiseZeroGGame {
       if (s.isHeart) {
         ctx.font = `${Math.round(s.size * 3.8)}px "Be Vietnam Pro", sans-serif`;
         ctx.textAlign = 'center';
-        ctx.fillText('♥', s.x, s.y);
+        ctx.fillText('★', s.x, s.y);
       } else {
         ctx.beginPath();
         ctx.arc(s.x, s.y, s.size, 0, Math.PI * 2);
@@ -1555,7 +1633,7 @@ class RiseZeroGGame {
   }
 
   getSessionMetric() {
-    return `Rise Zero-G • ${this.chimesCollected}/${this.targetChimes} Nốt Nhạc • 0.00 G`;
+    return `Rise (Artemis II) • ${this.chimesCollected}/${this.targetChimes} Sao • 0.00 G`;
   }
 }
 

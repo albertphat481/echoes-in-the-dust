@@ -216,26 +216,26 @@ window.GAME_GUIDES = [
   {
     id: 'rise-zero-g',
     number: '09 / 09 ★',
-    title: 'RISE IN ZERO-G — Linh Vật Không Trọng Lực',
-    hardware: 'Búp bê Plushie Rise (Zero-G Indicator) & Cửa sổ Cupola Quỹ đạo',
-    goal: 'Tương tác với linh vật plushie Rise đang lơ lửng không trọng lực và thu thập 6 nốt nhạc hộp nhạc quanh khoang tàu.',
+    title: 'RISE — Giấc Mơ Lớn Từ Mặt Trăng Nhỏ (Artemis II)',
+    hardware: 'Vật Chỉ Thị Không Trọng Lực Rise (Tàu Orion • NASA Artemis II & Space Apps 2026)',
+    goal: 'Tương tác với linh vật plushie Rise (do cậu bé 8 tuổi Lucas Ye thiết kế) và thu thập đủ 7 Ngôi Sao trên vành mũ trước khung cảnh Trái Đất Mọc (Earthrise).',
     controls: [
       {
         gesture: 'Chạm / Xoa đầu hoặc Kéo thả Rise',
-        action: 'Chạm trực tiếp vào Rise để phát giai điệu hộp nhạc, xem biểu cảm nháy mắt và đẩy nhẹ Rise bay trong môi trường 0-G.',
-        svg: `<svg viewBox="0 0 48 48"><circle cx="24" cy="24" r="14" stroke="#f472b6" stroke-width="2" fill="rgba(244,114,182,0.15)"/><circle cx="19" cy="22" r="2.2" fill="#fcd34d"/><circle cx="29" cy="22" r="2.2" fill="#fcd34d"/><path d="M20 27 Q24 31 28 27" stroke="#fcd34d" stroke-width="2" fill="none"/></svg>`
+        action: 'Chạm trực tiếp vào Rise để phát giai điệu hộp nhạc, ngắm chiếc mũ Trái Đất & 2 tên lửa và đẩy nhẹ Rise bay trong môi trường 0-G.',
+        svg: `<svg viewBox="0 0 48 48"><circle cx="24" cy="24" r="14" stroke="#38bdf8" stroke-width="2" fill="rgba(56,189,248,0.15)"/><circle cx="19" cy="22" r="2.2" fill="#fcd34d"/><circle cx="29" cy="22" r="2.2" fill="#fcd34d"/><path d="M20 27 Q24 31 28 27" stroke="#fcd34d" stroke-width="2" fill="none"/></svg>`
       },
       {
-        gesture: 'Chạm vào 6 Nốt Nhạc Sao (♪ ✦ ♫)',
-        action: 'Chạm vào các nốt nhạc quanh cửa sổ Cupola (hoặc lái Rise bằng chuột / phím mũi tên / Space) để Rise bay tới đón nốt nhạc.',
-        svg: `<svg viewBox="0 0 48 48"><circle cx="24" cy="24" r="15" stroke="#fcd34d" stroke-width="1.8" stroke-dasharray="4 3" fill="none"/><text x="24" y="29" text-anchor="middle" fill="#fef3c7" font-size="16">♪</text></svg>`
+        gesture: 'Thu thập 7 Ngôi Sao (★ 01 → ★ 07)',
+        action: 'Chạm vào 7 ngôi sao quanh cửa sổ tàu Orion (hoặc lái Rise bằng chuột / phím mũi tên / Space) để thắp sáng đủ 7 ngôi sao trên vành mũ của Rise.',
+        svg: `<svg viewBox="0 0 48 48"><circle cx="24" cy="24" r="15" stroke="#fcd34d" stroke-width="1.8" stroke-dasharray="4 3" fill="none"/><text x="24" y="29" text-anchor="middle" fill="#fef3c7" font-size="16">★</text></svg>`
       }
     ],
     steps: [
-      'Chạm vào plushie Rise đang lơ lửng giữa cửa sổ quan sát Cupola để đánh thức video biểu cảm và tiếng hộp nhạc trong trẻo.',
-      'Kéo thả Rise hoặc chạm vào 6 nốt nhạc phát sáng quanh khoang tàu để Rise lướt qua thu thập trong môi trường vi trọng lực 0.00 G.',
-      'Khi thu thập đủ 6/6 nốt nhạc cộng hưởng, Rise sẽ tỏa hào quang vàng hồng và mở khóa Thẻ Ký Ức Đặc Biệt của linh vật VantaLumen!'
+      'Chạm vào plushie Rise đang lơ lửng trước cửa sổ tàu Orion (ngắm Trái Đất mọc phía trên đường chân trời Mặt Trăng — Earthrise).',
+      'Kéo thả Rise hoặc chạm vào 7 Ngôi Sao (Earthrise 1968, Apollo 11, Lucas Ye, Earth Cap, 7 Stars, Orion, Artemis II) để Rise bay tới thu thập.',
+      'Khi thắp sáng đủ 7/7 ngôi sao, bạn sẽ mở khóa Hồ sơ & Infographic chính thức của Rise: "A Little Moon With a Big Dream"!'
     ],
-    tip: 'Trong các sứ mệnh vũ trụ thật (từ Apollo đến Artemis I), thú bông Zero-G Indicator lơ lửng là dấu hiệu đầu tiên báo hiệu tàu đã vào quỹ đạo!'
+    tip: 'Rise được thiết kế bởi cậu bé 8 tuổi Lucas Ye — mang thân Mặt Trăng màu kem, mũ Trái Đất, 7 ngôi sao, 2 tên lửa và dấu giày Apollo 11 phía sau lưng!'
   }
 ];

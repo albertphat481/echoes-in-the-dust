@@ -74,12 +74,13 @@ window.NASA_TELEMETRY = (function () {
       center: 'NASA/JPL-Caltech'
     },
     'rise-zero-g': {
-      query: 'iss042e340858',
-      nasaId: 'ISS042-E-340858',
-      title: 'Zero-G Indicator & Earth Horizon Viewed from the ISS Cupola Observation Dome',
-      date: '2015-01-04',
-      imageUrl: 'https://images-assets.nasa.gov/image/iss042e340858/iss042e340858~medium.jpg',
-      center: 'NASA/JSC'
+      localOnly: true,
+      query: 'Artemis+II+Orion+Zero+G+Indicator',
+      nasaId: 'ARTEMIS-II-RISE',
+      title: 'RISE — A Little Moon With a Big Dream (NASA Artemis II Zero-G Indicator by Lucas Ye)',
+      date: '2026',
+      imageUrl: 'assets/rise_infographic.jpg',
+      center: 'NASA Artemis II / Space Apps 2026'
     }
   };
 
@@ -89,6 +90,11 @@ window.NASA_TELEMETRY = (function () {
   async function fetchMissionPhoto(shardId) {
     if (liveCache[shardId]) return liveCache[shardId];
     const fallback = CURATED_ARCHIVE[shardId] || CURATED_ARCHIVE['under-the-dust'];
+    if (fallback.localOnly) {
+      const localRecord = { ...fallback, source: 'OFFICIAL INFOGRAPHIC' };
+      liveCache[shardId] = localRecord;
+      return localRecord;
+    }
 
     try {
       const controller = new AbortController();
@@ -197,8 +203,8 @@ window.NASA_TELEMETRY = (function () {
         };
       case 'rise-zero-g':
         return {
-          badge: 'LOW EARTH ORBIT CUPOLA // ZERO-G INDICATOR "RISE"',
-          line: 'Độ cao quỹ đạo ISS: ~408 km • Chu kỳ quay quanh Trái Đất: 92,6 phút • Vi trọng lực: 0,00 G (MECO Confirmed)'
+          badge: 'NASA ARTEMIS II // ORION ZERO-G INDICATOR "RISE" (2026)',
+          line: 'Cảm hứng: Earthrise (Apollo 8, 1968) & Dấu chân Apollo 11 (1969) • Thiết kế bởi Lucas Ye (8 tuổi) • Tàu Orion bay vòng quanh Mặt Trăng'
         };
       default:
         return { badge: 'NASA TELEMETRY', line: '' };
