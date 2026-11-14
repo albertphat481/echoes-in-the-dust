@@ -464,64 +464,61 @@ class SpiritRescueGame {
 
     if (boosting) {
       const flicker = 0.88 + Math.sin(this.elapsed * 46) * 0.16;
-      const plumeLen = 58 * flicker;
-      const flameG = ctx.createLinearGradient(0, 28, 0, 28 + plumeLen);
+      const plumeLen = 64 * flicker;
+      const flameG = ctx.createLinearGradient(0, 32, 0, 32 + plumeLen);
       flameG.addColorStop(0, '#f0f9ff');
-      flameG.addColorStop(0.25, '#60a5fa');
-      flameG.addColorStop(0.62, 'rgba(139, 92, 246, 0.65)');
+      flameG.addColorStop(0.22, '#60a5fa');
+      flameG.addColorStop(0.6, 'rgba(139, 92, 246, 0.58)');
       flameG.addColorStop(1, 'rgba(56, 189, 248, 0)');
       ctx.fillStyle = flameG;
       ctx.beginPath();
-      ctx.moveTo(-9.5, 27);
-      ctx.quadraticCurveTo(-5, 28 + plumeLen * 0.6, 0, 28 + plumeLen);
-      ctx.quadraticCurveTo(5, 28 + plumeLen * 0.6, 9.5, 27);
+      ctx.moveTo(-8.5, 31);
+      ctx.quadraticCurveTo(-4.5, 32 + plumeLen * 0.6, 0, 32 + plumeLen);
+      ctx.quadraticCurveTo(4.5, 32 + plumeLen * 0.6, 8.5, 31);
       ctx.closePath();
       ctx.fill();
 
       for (let d = 0; d < 3; d++) {
-        const dy = 34 + d * 12 * flicker;
-        const dr = 4.2 - d * 1.1;
-        ctx.fillStyle = `rgba(224, 242, 254, ${0.85 - d * 0.24})`;
+        const dy = 38 + d * 13 * flicker;
+        const dr = 3.8 - d * 1.0;
+        ctx.fillStyle = `rgba(224, 242, 254, ${0.88 - d * 0.24})`;
         ctx.beginPath();
         ctx.moveTo(0, dy - dr);
-        ctx.lineTo(dr * 0.75, dy);
+        ctx.lineTo(dr * 0.72, dy);
         ctx.lineTo(0, dy + dr * 1.3);
-        ctx.lineTo(-dr * 0.75, dy);
+        ctx.lineTo(-dr * 0.72, dy);
         ctx.closePath();
         ctx.fill();
       }
     }
 
-    if (landed) {
-      ctx.strokeStyle = '#94a3b8';
-      ctx.lineWidth = 2.1;
-      [[-11, 20, -24, 34], [11, 20, 24, 34], [0, 23, 0, 34]].forEach(([x0, y0, x1, y1]) => {
-        ctx.beginPath();
-        ctx.moveTo(x0, y0);
-        ctx.lineTo(x1, y1);
-        ctx.stroke();
-        ctx.fillStyle = '#334155';
-        ctx.fillRect(x1 - 3.5, y1 - 1.5, 7, 3);
-      });
-    }
-
-    ctx.fillStyle = '#0f172a';
-    ctx.fillRect(-10, 23, 20, 4);
-    [-5.5, 0, 5.5].forEach(rx => {
+    // Raptor Engine Skirt & 3 Sea-Level / Vacuum Nozzles
+    ctx.fillStyle = '#090d16';
+    ctx.fillRect(-9.5, 27, 19, 4.5);
+    [-5, 0, 5].forEach(rx => {
       ctx.fillStyle = '#334155';
       ctx.beginPath();
-      ctx.moveTo(rx - 2.3, 26);
-      ctx.lineTo(rx - 3.3, 30);
-      ctx.lineTo(rx + 3.3, 30);
-      ctx.lineTo(rx + 2.3, 26);
+      ctx.moveTo(rx - 2.1, 30);
+      ctx.lineTo(rx - 3.1, 34);
+      ctx.lineTo(rx + 3.1, 34);
+      ctx.lineTo(rx + 2.1, 30);
       ctx.closePath();
       ctx.fill();
     });
 
-    const drawFlap = pts => {
-      ctx.fillStyle = '#111827';
-      ctx.strokeStyle = '#64748b';
-      ctx.lineWidth = 1.1;
+    // Forward & Aft Flaps (Starship trapezoidal aero surfaces)
+    const drawFlap = (pts, isDark) => {
+      const fg = ctx.createLinearGradient(pts[0][0], pts[0][1], pts[1][0], pts[1][1]);
+      if (isDark) {
+        fg.addColorStop(0, '#0f172a');
+        fg.addColorStop(1, '#334155');
+      } else {
+        fg.addColorStop(0, '#94a3b8');
+        fg.addColorStop(1, '#e2e8f0');
+      }
+      ctx.fillStyle = fg;
+      ctx.strokeStyle = 'rgba(15, 23, 42, 0.55)';
+      ctx.lineWidth = 0.9;
       ctx.beginPath();
       ctx.moveTo(pts[0][0], pts[0][1]);
       for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i][0], pts[i][1]);
@@ -529,59 +526,126 @@ class SpiritRescueGame {
       ctx.fill();
       ctx.stroke();
     };
-    drawFlap([[-11.5, 6], [-22.5, 22], [-11.5, 24]]);
-    drawFlap([[11.5, 6], [22.5, 22], [11.5, 24]]);
-    drawFlap([[-9.5, -24], [-17.5, -13], [-9.5, -11]]);
-    drawFlap([[9.5, -24], [17.5, -13], [9.5, -11]]);
+    // Aft flaps (large lower delta/trapezoid)
+    drawFlap([[-10.2, 4], [-21.5, 19], [-20.5, 29], [-10.2, 28]], false);
+    drawFlap([[10.2, 4], [21.5, 19], [20.5, 29], [10.2, 28]], true);
+    // Forward flaps (upper nosecone aero flaps)
+    drawFlap([[-8.6, -44], [-16.2, -33], [-15.2, -26], [-9.8, -28]], false);
+    drawFlap([[8.6, -44], [16.2, -33], [15.2, -26], [9.8, -28]], true);
 
-    const hull = ctx.createLinearGradient(-12, 0, 12, 0);
-    hull.addColorStop(0, '#0f172a');
-    hull.addColorStop(0.28, '#334155');
-    hull.addColorStop(0.55, '#e2e8f0');
-    hull.addColorStop(0.78, '#f8fafc');
-    hull.addColorStop(1, '#64748b');
+    // Tall Stainless-Steel Cylindrical Body + Ogive Nosecone
+    const traceHull = () => {
+      ctx.beginPath();
+      ctx.moveTo(-10.5, 29);
+      ctx.lineTo(-10.5, -24);
+      ctx.quadraticCurveTo(-10.5, -45, 0, -58);
+      ctx.quadraticCurveTo(10.5, -45, 10.5, -24);
+      ctx.lineTo(10.5, 29);
+      ctx.closePath();
+    };
+
+    ctx.save();
+    traceHull();
+    ctx.clip();
+
+    // Brushed stainless steel reflection gradient
+    const hull = ctx.createLinearGradient(-10.5, 0, 10.5, 0);
+    hull.addColorStop(0, '#475569');
+    hull.addColorStop(0.22, '#cbd5e1');
+    hull.addColorStop(0.46, '#f8fafc');
+    hull.addColorStop(0.68, '#94a3b8');
+    hull.addColorStop(1, '#334155');
     ctx.fillStyle = hull;
+    ctx.fillRect(-12, -60, 24, 92);
+
+    // Black ceramic heat-shield tiles on right flank & nose tip (as seen in reference photo)
+    ctx.fillStyle = '#0f172a';
     ctx.beginPath();
-    ctx.moveTo(-11.5, 25);
-    ctx.lineTo(-11.5, -19);
-    ctx.quadraticCurveTo(-11.5, -39, 0, -47);
-    ctx.quadraticCurveTo(11.5, -39, 11.5, -19);
-    ctx.lineTo(11.5, 25);
+    ctx.moveTo(4.2, 30);
+    ctx.lineTo(3.2, -24);
+    ctx.quadraticCurveTo(2.5, -43, 0, -58);
+    ctx.lineTo(12, -58);
+    ctx.lineTo(12, 30);
     ctx.closePath();
     ctx.fill();
 
-    ctx.strokeStyle = 'rgba(15, 23, 42, 0.28)';
-    ctx.lineWidth = 0.7;
-    [-14, -4, 6, 16].forEach(ry => {
+    // Dark nosecone tip cap
+    ctx.fillStyle = '#090d16';
+    ctx.fillRect(-12, -59, 24, 14);
+
+    // Subtle stainless steel weld ring seams
+    ctx.strokeStyle = 'rgba(15, 23, 42, 0.22)';
+    ctx.lineWidth = 0.65;
+    [-34, -22, -10, 2, 14, 24].forEach(ry => {
       ctx.beginPath();
-      ctx.moveTo(-11, ry);
-      ctx.lineTo(11, ry);
+      ctx.moveTo(-10.5, ry);
+      ctx.lineTo(10.5, ry);
       ctx.stroke();
     });
 
-    ctx.strokeStyle = 'rgba(248, 250, 252, 0.55)';
-    ctx.lineWidth = 1;
+    // Subtle X emblem near aft skirt
+    ctx.strokeStyle = 'rgba(15, 23, 42, 0.45)';
+    ctx.lineWidth = 0.85;
     ctx.beginPath();
-    ctx.moveTo(-11.5, 25);
-    ctx.lineTo(-11.5, -19);
-    ctx.quadraticCurveTo(-11.5, -39, 0, -47);
-    ctx.quadraticCurveTo(11.5, -39, 11.5, -19);
-    ctx.lineTo(11.5, 25);
-    ctx.closePath();
+    ctx.moveTo(-4, 19);
+    ctx.lineTo(1, 22);
+    ctx.moveTo(-4, 22);
+    ctx.lineTo(1, 19);
     ctx.stroke();
 
-    ctx.fillStyle = bayOpen > 0 ? '#020617' : '#0f172a';
-    ctx.fillRect(-6, -24, 12, 16);
-    if (bayOpen > 0) {
-      const bayGlow = ctx.createRadialGradient(0, -16, 1, 0, -16, 12);
-      bayGlow.addColorStop(0, 'rgba(56, 189, 248, 0.7)');
-      bayGlow.addColorStop(1, 'rgba(56, 189, 248, 0)');
-      ctx.fillStyle = bayGlow;
-      ctx.fillRect(-6, -24, 12, 16);
+    ctx.restore();
+
+    // Crisp outer rim highlight
+    ctx.strokeStyle = 'rgba(248, 250, 252, 0.45)';
+    ctx.lineWidth = 0.9;
+    traceHull();
+    ctx.stroke();
+
+    // Landing struts when landed on Mars
+    if (landed) {
+      ctx.strokeStyle = '#cbd5e1';
+      ctx.lineWidth = 1.6;
+      [[-20, 28, -23, 35], [20, 28, 23, 35], [0, 29, 0, 35]].forEach(([x0, y0, x1, y1]) => {
+        ctx.beginPath();
+        ctx.moveTo(x0, y0);
+        ctx.lineTo(x1, y1);
+        ctx.stroke();
+        ctx.fillStyle = '#475569';
+        ctx.fillRect(x1 - 3, y1 - 1, 6, 2.2);
+      });
     }
-    ctx.strokeStyle = '#38bdf8';
-    ctx.lineWidth = 1;
-    ctx.strokeRect(-6, -24, 12, 16);
+
+    // Payload Bay Door (sleek seam in flight; hinged open with internal truss when landed)
+    if (bayOpen > 0) {
+      ctx.fillStyle = '#050811';
+      ctx.fillRect(-7.5, -35, 9.5, 17);
+      ctx.strokeStyle = 'rgba(148, 163, 184, 0.65)';
+      ctx.lineWidth = 0.8;
+      ctx.strokeRect(-7.5, -35, 9.5, 17);
+
+      // Hinged curved cargo door swung open to the left
+      const doorG = ctx.createLinearGradient(-17, -35, -8, -18);
+      doorG.addColorStop(0, '#64748b');
+      doorG.addColorStop(0.5, '#e2e8f0');
+      doorG.addColorStop(1, '#334155');
+      ctx.fillStyle = doorG;
+      ctx.fillRect(-17.5, -35, 9.5, 17);
+      ctx.strokeStyle = 'rgba(15, 23, 42, 0.65)';
+      ctx.strokeRect(-17.5, -35, 9.5, 17);
+
+      // Subtle winch truss bar
+      ctx.strokeStyle = '#94a3b8';
+      ctx.lineWidth = 1.0;
+      ctx.beginPath();
+      ctx.moveTo(-7.5, -30);
+      ctx.lineTo(-14, -27);
+      ctx.stroke();
+    } else {
+      // Closed cargo bay panel outline
+      ctx.strokeStyle = 'rgba(15, 23, 42, 0.35)';
+      ctx.lineWidth = 0.7;
+      ctx.strokeRect(-6.5, -34, 8, 15);
+    }
 
     ctx.restore();
   }
@@ -942,39 +1006,52 @@ class SpiritRescueGame {
       ctx.fill();
     });
 
-    const landY = L.groundY - 42 - this.landingFlare * 46;
-    this._drawStarship(ctx, L.shipLandX, landY, -Math.PI * 0.5, L.isNarrow ? 1.2 : 1.52, this.landingFlare > 0.1, true, 1);
+    const shipScale = L.isNarrow ? 1.2 : 1.52;
+    const landY = L.groundY - 35 * shipScale - this.landingFlare * 46;
+    this._drawStarship(ctx, L.shipLandX, landY, -Math.PI * 0.5, shipScale, this.landingFlare > 0.1, true, 1);
 
-    const bayX = L.shipLandX;
-    const bayY = landY - 24;
+    const bayX = L.shipLandX - 12 * shipScale;
+    const bayY = landY - 27 * shipScale;
     const p = this.pickupProgress;
     const sx = L.spiritX + (bayX - L.spiritX) * p;
-    const sy = L.groundY - Math.sin(p * Math.PI) * 118 - p * 46;
+    const sy = L.groundY - Math.sin(p * Math.PI) * 118 - p * (35 * shipScale + 27 * shipScale - 14);
     const spiritScale = (L.isNarrow ? 0.88 : 1.1) * (1 - p * 0.48);
 
     if (p > 0.01 && !this.spiritPickedUp) {
-      const elbowX = (bayX + sx) * 0.5;
-      const elbowY = Math.min(bayY, sy - 42) - 48;
+      const hoistTopX = bayX - 6 * shipScale;
+      const hoistTopY = bayY - 4 * shipScale;
+      const cradleY = sy - 34 * spiritScale;
       ctx.save();
-      ctx.strokeStyle = '#cbd5e1';
+      // Telescopic cargo boom from open payload bay door
+      ctx.strokeStyle = '#94a3b8';
       ctx.lineWidth = 3.2;
       ctx.lineCap = 'round';
-      ctx.lineJoin = 'round';
       ctx.beginPath();
-      ctx.moveTo(bayX + 8, bayY);
-      ctx.lineTo(elbowX, elbowY);
-      ctx.lineTo(sx, sy - 38 * spiritScale);
+      ctx.moveTo(bayX + 4, bayY + 2);
+      ctx.lineTo(hoistTopX, hoistTopY);
       ctx.stroke();
 
+      // Twin vertical/angled winch cables lowering to Spirit's lift cradle
+      ctx.strokeStyle = 'rgba(226, 232, 240, 0.85)';
+      ctx.lineWidth = 1.6;
+      ctx.beginPath();
+      ctx.moveTo(hoistTopX - 3, hoistTopY);
+      ctx.lineTo(sx - 10 * spiritScale, cradleY);
+      ctx.moveTo(hoistTopX + 3, hoistTopY);
+      ctx.lineTo(sx + 10 * spiritScale, cradleY);
+      ctx.stroke();
+
+      // Winch pulley & spreader bar
       ctx.fillStyle = '#38bdf8';
       ctx.beginPath();
-      ctx.arc(elbowX, elbowY, 4.5, 0, Math.PI * 2);
+      ctx.arc(hoistTopX, hoistTopY, 3.8, 0, Math.PI * 2);
       ctx.fill();
 
       ctx.strokeStyle = '#fcd34d';
-      ctx.lineWidth = 2;
+      ctx.lineWidth = 2.2;
       ctx.beginPath();
-      ctx.arc(sx, sy - 24 * spiritScale, 26 * spiritScale, Math.PI * 0.15, Math.PI * 0.85);
+      ctx.moveTo(sx - 12 * spiritScale, cradleY);
+      ctx.lineTo(sx + 12 * spiritScale, cradleY);
       ctx.stroke();
       ctx.restore();
     }
