@@ -102,35 +102,35 @@ window.VANTALUMEN_QUIZZES = [
       'Vành Nhật hoa (Corona) là lớp ngoài cùng của khí quyển Mặt Trời, có nhiệt độ lên tới 1–3 triệu độ C (nóng hơn gấp hàng trăm lần bề mặt Quang quyển bên dưới) và phóng ra dòng hạt bức xạ tác động trực tiếp lên bề mặt Mặt Trăng không có khí quyển.'
   },
   {
-    id: 'q7-great-red-spot',
-    linkedShardId: 'pale-blue-dot', // Game 7: Voyager 1 Family Portrait & Outer Planets
-    image: 'assets/quiz/q7_great_red_spot.jpg',
-    questionEn: 'Which planet has the famous Great Red Spot?',
-    questionVi: 'Hành tinh nào nổi tiếng với cơn bão Vết Đỏ Lớn (Great Red Spot)?',
+    id: 'q9-rise-artemis-ii',
+    linkedShardId: 'rise-zero-g', // Game 9: Rise — NASA Artemis II Zero-Gravity Indicator
+    image: 'assets/rise_infographic.jpg',
+    questionEn: 'Which 1968 photo inspired "Rise", the Artemis II Zero-G Indicator by 8-year-old Lucas Ye?',
+    questionVi: 'Bức ảnh năm 1968 nào truyền cảm hứng cho linh vật không trọng lực "Rise" (Artemis II) của Lucas Ye?',
     options: [
-      { key: 'A', label: 'A) Jupiter', vi: 'Sao Mộc' },
-      { key: 'B', label: 'B) Mars', vi: 'Sao Hỏa' },
-      { key: 'C', label: 'C) Neptune', vi: 'Sao Hải Vương' },
-      { key: 'D', label: 'D) Venus', vi: 'Sao Kim' }
+      { key: 'A', label: 'A) Earthrise (Apollo 8)', vi: 'Trái Đất Mọc (Apollo 8, 1968)' },
+      { key: 'B', label: 'B) The Blue Marble', vi: 'Viên Bi Xanh (Apollo 17)' },
+      { key: 'C', label: 'C) Pillars of Creation', vi: 'Cột Trụ Sáng Tạo (Hubble)' },
+      { key: 'D', label: 'D) First Moon Footprint', vi: 'Dấu Chân Mặt Trăng (1969)' }
     ],
     correctKey: 'A',
     explanation:
-      'Sao Mộc (Jupiter) có Vết Đỏ Lớn — một siêu bão xoáy nghịch khổng lồ lớn hơn cả Trái Đất đã tồn tại hàng trăm năm, được các tàu thăm dò Voyager, Galileo, Cassini và Juno của NASA ghi hình chi tiết.'
+      'Rise lấy cảm hứng từ bức ảnh Earthrise (Apollo 8, 1968), kết hợp 4 biểu tượng: thân Mặt Trăng, mũ Trái Đất, vành mũ 7 ngôi sao & 2 tên lửa, cùng dấu chân Apollo 11 (1969) phía sau lưng.'
   },
   {
-    id: 'q8-cassini-saturn',
-    linkedShardId: 'grand-finale', // Game 8: Cassini Grand Finale at Saturn & Enceladus
-    image: 'https://images-assets.nasa.gov/image/PIA21889/PIA21889~medium.jpg',
-    questionEn: 'Why did NASA intentionally plunge the Cassini spacecraft into Saturn in 2017?',
-    questionVi: 'Vì sao năm 2017 NASA chủ động cho tàu Cassini lao vào bầu khí quyển Sao Thổ?',
+    id: 'q10-spirit-rescue',
+    linkedShardId: 'spirit-rescue', // Game 10: Fictional SpaceX Starship Spirit Rescue
+    image: 'assets/quiz/q6_mars_rover.jpg',
+    questionEn: 'In real history, which component on Mars rover Spirit seized in 2006 before its mission ended?',
+    questionVi: 'Trong lịch sử thật, bộ phận nào của rover Spirit bị kẹt cứng năm 2006 trước khi kết thúc sứ mệnh?',
     options: [
-      { key: 'A', label: 'A) Protect icy moons (Enceladus)', vi: 'Bảo vệ mặt trăng băng (Enceladus)' },
-      { key: 'B', label: 'B) Land on a solid surface', vi: 'Đổ bộ lên bề mặt rắn' },
-      { key: 'C', label: 'C) Refuel with hydrogen', vi: 'Tiếp nhiên liệu khí hydro' },
-      { key: 'D', label: 'D) Return samples to Earth', vi: 'Đưa mẫu vật về Trái Đất' }
+      { key: 'A', label: 'A) Right-front wheel motor', vi: 'Motor bánh trước bên phải' },
+      { key: 'B', label: 'B) Parachute cord', vi: 'Dây dù hạ cánh' },
+      { key: 'C', label: 'C) Nuclear RTG core', vi: 'Lõi hạt nhân RTG' },
+      { key: 'D', label: 'D) Heat shield', vi: 'Khiên chắn nhiệt' }
     ],
     correctKey: 'A',
     explanation:
-      'Khi sắp cạn nhiên liệu, NASA cho Cassini lao vào Sao Thổ ở tốc độ 113.000 km/h để tránh nguy cơ tàu va chạm và làm nhiễm bẩn đại dương ngầm có khả năng nuôi dưỡng sự sống trên mặt trăng Enceladus và Titan.'
+      'Motor bánh trước bên phải (Wheel #1) của Spirit bị kẹt từ năm 2006, buộc Spirit phải chạy lùi kéo lê bánh hỏng — nhưng lại vô tình cày lộ lớp đất giàu Silica (>90%) từng có suối nước nóng cổ đại!'
   }
 ];

@@ -6,7 +6,7 @@
 window.MEMORY_SHARDS = [
   {
     id: 'under-the-dust',
-    number: '01 / 08',
+    number: '01 / 09',
     title: 'UNDER THE DUST — Nhịp Tim Dưới Lớp Bụi',
     subtitle: 'Trạm đổ bộ InSight & Máy đo địa chấn SEIS (Elysium Planitia, Sao Hỏa)',
     mission: 'NASA Discovery Program • 2018–2022',
@@ -61,7 +61,7 @@ window.MEMORY_SHARDS = [
   },
   {
     id: 'still-there',
-    number: '02 / 08',
+    number: '02 / 09',
     title: 'STILL THERE — Vẫn Còn Ở Đó',
     subtitle: 'Gương phản xạ Laser Mặt Trăng (LRRR — Apollo 11, 14, 15)',
     mission: 'NASA Apollo Program • 1969–Nay',
@@ -115,7 +115,7 @@ window.MEMORY_SHARDS = [
   },
   {
     id: 'one-wheel-left',
-    number: '03 / 08',
+    number: '03 / 09',
     title: 'ONE WHEEL LEFT — Một Bánh Còn Lại',
     subtitle: 'Rover tự hành Spirit (MER-A) & Rãnh Silica tại Home Plate',
     mission: 'NASA Mars Exploration Rover • 2004–2010',
@@ -168,7 +168,7 @@ window.MEMORY_SHARDS = [
   },
   {
     id: 'unsent',
-    number: '04 / 08',
+    number: '04 / 09',
     title: 'UNSENT — Những Điều Chưa Kịp Gửi',
     subtitle: 'Rover tự hành Opportunity (MER-B) & Bộ nhớ Flash 256 MB',
     mission: 'NASA Mars Exploration Rover • 2004–2018',
@@ -218,7 +218,7 @@ window.MEMORY_SHARDS = [
   },
   {
     id: 'moon-still-rings',
-    number: '05 / 08',
+    number: '05 / 09',
     title: 'MOON STILL RINGS — Mặt Trăng Vẫn Ngân',
     subtitle: 'Thí nghiệm Địa chấn Thụ động Apollo (PSE) & Tầng tàu va chạm',
     mission: 'NASA Apollo 12, 14, 15, 16 • 1969–1977',
@@ -264,7 +264,7 @@ window.MEMORY_SHARDS = [
   },
   {
     id: 'eternal-footprint',
-    number: '06 / 08',
+    number: '06 / 09',
     title: 'ETERNAL FOOTPRINT — Dấu Chân Bất Tận',
     subtitle: 'Dấu giày trên lớp đất Regolith & Camera tàu quỹ đạo LRO',
     mission: 'NASA Apollo & Lunar Reconnaissance Orbiter • 1969–Nay',
@@ -309,21 +309,21 @@ window.MEMORY_SHARDS = [
     `
   },
   {
-    id: 'pale-blue-dot',
-    number: '07 / 08',
-    title: 'PALE BLUE DOT — Chấm Xanh Mờ',
-    subtitle: 'Tàu thăm dò Voyager 1 & Bức ảnh Gia Đình Hệ Mặt Trời (6 tỷ km)',
-    mission: 'NASA Voyager Interstellar Mission • 1977–Nay',
+    id: 'rise-zero-g',
+    number: '07 / 08 ★',
+    title: 'RISE — Giấc Mơ Lớn Từ Mặt Trăng Nhỏ',
+    subtitle: 'A Little Moon With a Big Dream • Vật Chỉ Thị Không Trọng Lực NASA Artemis II & NASA Space Apps 2026',
+    mission: 'NASA Artemis II (Orion) • Thiết kế bởi Lucas Ye (8 tuổi)',
     specs: [
-      { label: 'Phần cứng chính', value: 'Camera Narrow-Angle ISS' },
-      { label: 'Kích thước Trái Đất', value: '0,12 pixel (trong tia nắng)' },
-      { label: 'Khoảng cách năm 1990', value: '6,05 tỷ km (40,5 AU)' }
+      { label: 'Nhà thiết kế nhí', value: 'Lucas Ye (8 tuổi • Artemis II)' },
+      { label: '4 Biểu tượng thiết kế', value: 'Mũ Trái Đất • 7 Sao • 2 Tên Lửa • Dấu Chân' },
+      { label: 'Hành trình lịch sử', value: '1968 Apollo 8 → 1969 Apollo 11 → 2026 Artemis II' }
     ],
-    defaultStatLabel: 'Bức chân dung gia đình đã chụp',
+    defaultStatLabel: 'Chòm 7 ngôi sao trên vành mũ Rise',
     story:
-      'Ngày 14/02/1990, ở khoảng cách 6,05 tỷ km, Voyager 1 xoay ngược camera chụp bộ ảnh Hệ Mặt Trời lần cuối trước khi tắt máy ảnh vĩnh viễn để tiết kiệm điện. Giữa khoảng không mênh mông, Trái Đất chỉ là một "Chấm Xanh Mờ" rộng 0,12 pixel lơ lửng trong tia nắng tán xạ.',
-    sourceLabel: 'NASA JPL — Voyager 1 Pale Blue Dot & Golden Record',
-    sourceUrl: 'https://science.nasa.gov/mission/voyager/',
+      'Linh vật chỉ thị không trọng lực (Zero-G Indicator) trên tàu Orion (Artemis II • 2026), do cậu bé 8 tuổi Lucas Ye thiết kế từ cảm hứng bức ảnh Earthrise (Apollo 8, 1968). Bốn biểu tượng cốt lõi của Rise: (1) Thân Mặt Trăng màu kem; (2) Mũ Trái Đất xanh; (3) Vành mũ gắn 7 ngôi sao & 2 tên lửa; (4) Dấu giày Apollo 11 (1969) phía sau lưng.',
+    sourceLabel: 'NASA Artemis II — Zero-Gravity Indicator "Rise"',
+    sourceUrl: 'https://www.nasa.gov/mission/artemis-ii/',
     svgDiagram: `
       <svg viewBox="0 0 440 155" width="100%" height="100%">
         <defs>
@@ -334,43 +334,66 @@ window.MEMORY_SHARDS = [
         <rect width="440" height="155" fill="#060911"/>
         <rect width="440" height="155" fill="url(#cad-grid)"/>
         <line x1="12" y1="30" x2="428" y2="30" stroke="rgba(255,255,255,0.08)" stroke-width="0.8"/>
-        <text x="16" y="21" fill="#94a3b8" font-family="monospace" font-size="9.5" letter-spacing="1">CAD-07 // VOYAGER 1 ISS NARROW-ANGLE OPTICS AT 40.5 AU</text>
-        <!-- Scattered Sunlight Ray & Camera Field of View -->
-        <polygon points="195,30 235,30 305,155 255,155" fill="rgba(251,191,36,0.12)"/>
-        <line x1="195" y1="30" x2="255" y2="155" stroke="rgba(251,191,36,0.35)" stroke-width="0.8" stroke-dasharray="3 3"/>
-        <line x1="235" y1="30" x2="305" y2="155" stroke="rgba(251,191,36,0.35)" stroke-width="0.8" stroke-dasharray="3 3"/>
-        <!-- Voyager 1 HGA & ISS Camera Boom -->
-        <g transform="translate(76, 92)" fill="none" stroke="#cbd5e1" stroke-width="1.1">
-          <ellipse cx="0" cy="0" rx="8" ry="24" fill="#0f172a" stroke="#e2e8f0"/>
-          <line x1="8" y1="0" x2="48" y2="-18"/>
-          <rect x="46" y="-23" width="10" height="8" fill="#0f172a" stroke="#7dd3fc"/>
+        <text x="16" y="21" fill="#94a3b8" font-family="monospace" font-size="9.2" letter-spacing="0.8">CAD-09 // ARTEMIS II ZERO-G INDICATOR "RISE" (BY LUCAS YE, AGE 8)</text>
+        <!-- Front View: Moon Body + Earth Cap + 7 Stars & 2 Rockets Brim -->
+        <g transform="translate(88, 95)" fill="none" stroke="#cbd5e1" stroke-width="1.1">
+          <circle cx="0" cy="4" r="32" fill="#0f172a" stroke="#fef3c7" stroke-width="1.2"/>
+          <!-- Earth Cap Dome (Oceans + Continents) -->
+          <path d="M -28 -8 A 28 24 0 0 1 28 -8" fill="rgba(14,165,233,0.22)" stroke="#38bdf8" stroke-width="1.4"/>
+          <path d="M -16 -22 Q -6 -26 2 -18 Q -6 -12 -16 -22 Z" fill="rgba(34,197,94,0.45)" stroke="#4ade80" stroke-width="0.9"/>
+          <path d="M 8 -20 Q 18 -22 22 -13 Q 12 -11 8 -20 Z" fill="rgba(34,197,94,0.45)" stroke="#4ade80" stroke-width="0.9"/>
+          <!-- Cap Brim with 7 Stars & 2 Rockets -->
+          <ellipse cx="0" cy="-9" rx="25" ry="7.5" fill="#090d16" stroke="#fcd34d" stroke-width="1.1"/>
+          <circle cx="-12" cy="-9" r="1.1" fill="#fcd34d" stroke="none"/>
+          <circle cx="-8" cy="-10.5" r="1.1" fill="#fcd34d" stroke="none"/>
+          <circle cx="-4" cy="-11" r="1.1" fill="#fcd34d" stroke="none"/>
+          <circle cx="0" cy="-11.2" r="1.2" fill="#fcd34d" stroke="none"/>
+          <circle cx="4" cy="-11" r="1.1" fill="#fcd34d" stroke="none"/>
+          <circle cx="8" cy="-10.5" r="1.1" fill="#fcd34d" stroke="none"/>
+          <circle cx="12" cy="-9" r="1.1" fill="#fcd34d" stroke="none"/>
+          <!-- Eyes, Cheeks & Smile -->
+          <circle cx="-10" cy="4" r="3.2" fill="#fcd34d"/>
+          <circle cx="10" cy="4" r="3.2" fill="#fcd34d"/>
+          <circle cx="-17" cy="10" r="2.8" fill="rgba(244,114,182,0.55)" stroke="none"/>
+          <circle cx="17" cy="10" r="2.8" fill="rgba(244,114,182,0.55)" stroke="none"/>
+          <path d="M -6 11 Q 0 16 6 11" stroke="#fcd34d" stroke-width="1.3"/>
         </g>
-        <line x1="134" y1="72" x2="242" y2="92" stroke="#7dd3fc" stroke-width="0.9" stroke-dasharray="2 3"/>
-        <!-- Earth Mote inside Narrow-Angle Reticle -->
-        <g transform="translate(248, 92)" fill="none">
-          <rect x="-14" y="-14" width="28" height="28" stroke="#7dd3fc" stroke-width="1"/>
-          <circle cx="0" cy="0" r="2.2" fill="#bae6fd"/>
-          <text x="20" y="4" fill="#7dd3fc" font-family="monospace" font-size="9">EARTH (0.12 PX // 6.05B KM)</text>
+        <!-- Back View: Apollo 11 Astronaut Footprint on Lunar Body -->
+        <g transform="translate(174, 102)" fill="none" stroke="#94a3b8" stroke-width="1">
+          <circle cx="0" cy="0" r="22" fill="#0f172a" stroke="#cbd5e1"/>
+          <rect x="-6" y="-11" width="12" height="22" rx="5" stroke="#fcd34d" stroke-width="1"/>
+          <line x1="-4" y1="-6" x2="4" y2="-6" stroke="#94a3b8"/>
+          <line x1="-4" y1="-1" x2="4" y2="-1" stroke="#94a3b8"/>
+          <line x1="-4" y1="4" x2="4" y2="4" stroke="#94a3b8"/>
+          <line x1="-4" y1="8" x2="4" y2="8" stroke="#94a3b8"/>
+        </g>
+        <!-- 4 Official Design Callouts -->
+        <g font-family="monospace" font-size="8.3" fill="#cbd5e1">
+          <text x="218" y="54" fill="#38bdf8">01. EARTH CAP: BLUE OCEANS &amp; GREEN CONTINENTS</text>
+          <text x="218" y="72" fill="#fcd34d">02. CAP BRIM: 7 STARS &amp; 2 ROCKET MOTIFS</text>
+          <text x="218" y="90" fill="#fef3c7">03. MOON BODY: INSPIRED BY APOLLO 8 EARTHRISE</text>
+          <text x="218" y="108" fill="#94a3b8">04. BACK TREAD: 1969 APOLLO 11 LUNAR FOOTPRINT</text>
+          <text x="218" y="128" fill="#f472b6">TIMELINE: 1968 APOLLO 8 → 1969 APOLLO 11 → 2026 ARTEMIS II</text>
         </g>
       </svg>
     `
   },
   {
-    id: 'grand-finale',
-    number: '08 / 08',
-    title: 'GRAND FINALE — Cú Lao Cuối Cùng',
-    subtitle: 'Tàu quỹ đạo Cassini & 22 Quỹ Đạo Lặn Vào Sao Thổ',
-    mission: 'NASA / ESA / ASI Cassini–Huygens • 1997–2017',
+    id: 'spirit-rescue',
+    number: '08 / 08 ★',
+    title: 'SPIRIT RESCUE — Giải Cứu Rover Spirit (Fictional)',
+    subtitle: 'SpaceX Starship Mars Rescue • Đưa Spirit về Trái Đất thay motor bánh xe & sạc pin 100%',
+    mission: 'Fictional SpaceX Starship × NASA MER-A Spirit',
     specs: [
-      { label: 'Phần cứng chính', value: 'Ăng-ten High-Gain 4m' },
-      { label: 'Vận tốc lao khí quyển', value: '113.000 km/h' },
-      { label: 'Mục đích hy sinh', value: 'Bảo vệ đại dương Enceladus' }
+      { label: 'Phương tiện giải cứu', value: 'SpaceX Starship (Raptor Methalox)' },
+      { label: 'Hạng mục sửa chữa', value: 'Thay Motor Bánh #1 & Sạc Pin 100%' },
+      { label: 'Kết quả sứ mệnh', value: '225M km × 2 • Spirit hồi sinh' }
     ],
-    defaultStatLabel: 'Gói dữ liệu cuối kịp truyền về',
+    defaultStatLabel: 'Hành trình giải cứu & phục hồi Spirit',
     story:
-      'Khi cạn nhiên liệu năm 2017, NASA cho tàu Cassini lao vào khí quyển Sao Thổ ở vận tốc 113.000 km/h để tránh làm ô nhiễm đại dương ngầm trên vệ tinh Enceladus. Tới tận giây bốc cháy cuối cùng, Cassini vẫn giữ ăng-ten khóa chặt về hướng Trái Đất để truyền dữ liệu.',
-    sourceLabel: 'NASA Science — Cassini Grand Finale at Saturn',
-    sourceUrl: 'https://science.nasa.gov/mission/cassini/',
+      'Sứ mệnh giả tưởng đầy cảm hứng: tàu SpaceX Starship vượt 225 triệu km lên Hố Gusev trên Sao Hỏa để bế rover Spirit trở về Trái Đất. Tại xưởng phục hồi, bạn tháo motor bánh xe bị kẹt từ năm 2006, lắp motor titan mới và sạc đầy 100% pin để Spirit lăn bánh trở lại.',
+    sourceLabel: 'NASA Mars Exploration Rover Spirit & SpaceX Starship Concept',
+    sourceUrl: 'https://science.nasa.gov/mission/mer-spirit/',
     svgDiagram: `
       <svg viewBox="0 0 440 155" width="100%" height="100%">
         <defs>
@@ -381,21 +404,29 @@ window.MEMORY_SHARDS = [
         <rect width="440" height="155" fill="#060911"/>
         <rect width="440" height="155" fill="url(#cad-grid)"/>
         <line x1="12" y1="30" x2="428" y2="30" stroke="rgba(255,255,255,0.08)" stroke-width="0.8"/>
-        <text x="16" y="21" fill="#94a3b8" font-family="monospace" font-size="9.5" letter-spacing="1">CAD-08 // CASSINI PROXIMAL ORBIT &amp; HGA EARTH-LOCK GEOMETRY</text>
-        <!-- Saturn Limb & Ring Plane -->
-        <path d="M 12 155 A 180 95 0 0 1 255 155" fill="rgba(217,119,6,0.14)" stroke="#f59e0b" stroke-width="1.2"/>
-        <ellipse cx="132" cy="148" rx="195" ry="44" fill="none" stroke="rgba(253,230,138,0.45)" stroke-width="1.2" transform="rotate(-12 132 148)"/>
-        <ellipse cx="132" cy="148" rx="165" ry="36" fill="none" stroke="rgba(253,230,138,0.28)" stroke-width="1" transform="rotate(-12 132 148)"/>
-        <!-- Proximal Dive Trajectory & Cassini Spacecraft -->
-        <path d="M 165 36 Q 210 72 204 134" fill="none" stroke="#fcd34d" stroke-width="1.2" stroke-dasharray="3 2"/>
-        <g transform="translate(200, 84) rotate(-24)" fill="none" stroke="#e2e8f0" stroke-width="1.1">
-          <rect x="-6" y="-6" width="12" height="12" fill="#0f172a" stroke="#fcd34d"/>
-          <ellipse cx="8" cy="0" rx="3" ry="10" stroke="#7dd3fc"/>
+        <text x="16" y="21" fill="#94a3b8" font-family="monospace" font-size="9.2" letter-spacing="0.8">CAD-10 // FICTIONAL SPACEX STARSHIP RESCUE &amp; SPIRIT OVERHAUL</text>
+        <g transform="translate(76, 94)" fill="none" stroke="#cbd5e1" stroke-width="1.2">
+          <path d="M -12 24 L -12 -14 Q -12 -32 0 -40 Q 12 -32 12 -14 L 12 24 Z" fill="#0f172a" stroke="#e2e8f0"/>
+          <path d="M -12 8 L -22 22 L -12 24 Z" fill="#1e293b"/>
+          <path d="M 12 8 L 22 22 L 12 24 Z" fill="#1e293b"/>
+          <rect x="-5" y="-18" width="10" height="10" stroke="#38bdf8"/>
+          <path d="M -6 25 Q 0 42 6 25" stroke="#60a5fa" stroke-width="1.4"/>
         </g>
-        <!-- HGA Telemetry Lock Line to Earth -->
-        <line x1="210" y1="80" x2="378" y2="46" stroke="#7dd3fc" stroke-width="1.1" stroke-dasharray="4 3"/>
-        <circle cx="382" cy="45" r="3" fill="#7dd3fc"/>
-        <text x="278" y="39" fill="#7dd3fc" font-family="monospace" font-size="8.5">EARTH DSN LOCK (83 MIN RTLT)</text>
+        <path d="M 106 86 Q 152 48 196 88" fill="none" stroke="#fcd34d" stroke-width="1.3" stroke-dasharray="4 3"/>
+        <g transform="translate(230, 102)" fill="none" stroke="#94a3b8" stroke-width="1.2">
+          <rect x="-24" y="-20" width="48" height="10" fill="#0f172a" stroke="#fcd34d"/>
+          <circle cx="-18" cy="4" r="7" stroke="#38bdf8" stroke-width="1.5"/>
+          <circle cx="0" cy="4" r="7"/>
+          <circle cx="18" cy="4" r="7"/>
+          <line x1="12" y1="-20" x2="14" y2="-34" stroke="#cbd5e1"/>
+          <rect x="9" y="-38" width="11" height="5" stroke="#38bdf8"/>
+        </g>
+        <g font-family="monospace" font-size="8.4" fill="#cbd5e1">
+          <text x="285" y="60" fill="#38bdf8">01. STARSHIP TRANSIT: 225M KM</text>
+          <text x="285" y="78" fill="#fcd34d">02. GUSEV CRATER PICKUP</text>
+          <text x="285" y="96" fill="#4ade80">03. NEW WHEEL MOTOR INSTALLED</text>
+          <text x="285" y="114" fill="#bae6fd">04. BATTERY SUPER-CHARGE: 100%</text>
+        </g>
       </svg>
     `
   }

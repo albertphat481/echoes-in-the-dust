@@ -15,8 +15,8 @@ class EchoesApp {
       window.UnsentGame,
       window.MoonStillRingsGame,
       window.EternalFootprintGame,
-      window.PaleBlueDotGame,
-      window.CassiniGrandFinaleGame
+      window.RiseZeroGGame,
+      window.SpiritRescueGame
     ];
 
     this.currentIndex = 0;
@@ -234,6 +234,16 @@ class EchoesApp {
         this._dismissIntroWhisper();
         this.hideModals();
         this.mountGame(Number(e.key) - 1);
+      } else if (e.key === '9' || e.key === 'r' || e.key === 'R') {
+        this._dismissIntroWhisper();
+        this.hideModals();
+        const riseIdx = this.gameClasses.indexOf(window.RiseZeroGGame);
+        this.mountGame(riseIdx >= 0 ? riseIdx : 8);
+      } else if (e.key === '0' || e.key === 's' || e.key === 'S') {
+        this._dismissIntroWhisper();
+        this.hideModals();
+        const spiritIdx = this.gameClasses.indexOf(window.SpiritRescueGame);
+        this.mountGame(spiritIdx >= 0 ? spiritIdx : 9);
       } else if (e.key === 'i' || e.key === 'I') {
         if (this.memoryModal.classList.contains('visible')) {
           this.hideModals();
@@ -374,7 +384,32 @@ class EchoesApp {
       this.openDossier();
     });
 
-    // Top-Right Guide Button
+    // Two Circular Mascot Launchers (Bottom-Left: Rise & Spirit)
+    const btnRise = document.getElementById('btn-rise-mascot');
+    if (btnRise) {
+      btnRise.addEventListener('click', e => {
+        e.currentTarget.blur();
+        window.soundEngine.unlock();
+        this._dismissIntroWhisper();
+        this.hideModals();
+        const riseIdx = this.gameClasses.indexOf(window.RiseZeroGGame);
+        this.mountGame(riseIdx >= 0 ? riseIdx : 8);
+      });
+    }
+
+    const btnSpirit = document.getElementById('btn-spirit-mascot');
+    if (btnSpirit) {
+      btnSpirit.addEventListener('click', e => {
+        e.currentTarget.blur();
+        window.soundEngine.unlock();
+        this._dismissIntroWhisper();
+        this.hideModals();
+        const spiritIdx = this.gameClasses.indexOf(window.SpiritRescueGame);
+        this.mountGame(spiritIdx >= 0 ? spiritIdx : 9);
+      });
+    }
+
+    // Top-Right Guide Button (6 Separate Guides)
     document.getElementById('btn-guide').addEventListener('click', e => {
       e.currentTarget.blur();
       window.soundEngine.unlock();
@@ -611,6 +646,16 @@ class EchoesApp {
       const shardId = window.MEMORY_SHARDS[idx].id;
       dot.classList.toggle('unlocked', this.unlockedShards.has(shardId));
     });
+    const btnRise = document.getElementById('btn-rise-mascot');
+    if (btnRise) {
+      const riseIdx = this.gameClasses.indexOf(window.RiseZeroGGame);
+      btnRise.classList.toggle('active', this.currentIndex === riseIdx);
+    }
+    const btnSpirit = document.getElementById('btn-spirit-mascot');
+    if (btnSpirit) {
+      const spiritIdx = this.gameClasses.indexOf(window.SpiritRescueGame);
+      btnSpirit.classList.toggle('active', this.currentIndex === spiritIdx);
+    }
   }
 
   mountGame(index, animate = true) {
@@ -1316,15 +1361,6 @@ class EchoesApp {
         ctx.lineTo(3.5, ry);
         ctx.stroke();
       });
-    } else if (id === 'pale-blue-dot') {
-      ctx.beginPath();
-      ctx.moveTo(-9, -9);
-      ctx.lineTo(9, 9);
-      ctx.stroke();
-      ctx.beginPath();
-      ctx.arc(0, 0, 2.5, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.strokeRect(-7, -7, 14, 14);
     } else if (id === 'rise-zero-g') {
       ctx.beginPath();
       ctx.arc(0, 2, 8.5, 0, Math.PI * 2);
@@ -1568,7 +1604,7 @@ class EchoesApp {
 
     ctx.fillStyle = '#64748b';
     ctx.font = '500 12.5px "JetBrains Mono", monospace';
-    ctx.fillText('HỒ SƠ 8 SỨ MỆNH PHẦN CỨNG NASA', 88, 408);
+    ctx.fillText('HỒ SƠ 8 SỨ MỆNH NASA, ARTEMIS II & SPACEX RESCUE', 88, 408);
 
     const gridX = 88;
     const gridY = 426;
