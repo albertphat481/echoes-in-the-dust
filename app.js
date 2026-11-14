@@ -945,115 +945,210 @@ class EchoesApp {
   exportCertificatePNG() {
     window.soundEngine.playSuccessBloom();
     const c = document.createElement('canvas');
-    c.width = 1200;
-    c.height = 720;
+    c.width = 1400;
+    c.height = 860;
     const ctx = c.getContext('2d');
 
     // Deep cosmic background
-    const bg = ctx.createLinearGradient(0, 0, 1200, 720);
-    bg.addColorStop(0, '#050811');
-    bg.addColorStop(0.55, '#0b1429');
-    bg.addColorStop(1, '#111d3a');
+    const bg = ctx.createLinearGradient(0, 0, 1400, 860);
+    bg.addColorStop(0, '#040710');
+    bg.addColorStop(0.5, '#0a1328');
+    bg.addColorStop(1, '#101c38');
     ctx.fillStyle = bg;
-    ctx.fillRect(0, 0, 1200, 720);
+    ctx.fillRect(0, 0, 1400, 860);
+
+    // Subtle cosmic starfield
+    for (let i = 0; i < 95; i++) {
+      const sx = ((i * 197 + 43) % 1340) + 30;
+      const sy = ((i * 313 + 71) % 800) + 30;
+      const sr = (i % 3 === 0) ? 1.5 : 0.85;
+      ctx.fillStyle = `rgba(254, 243, 199, ${0.12 + (i % 5) * 0.06})`;
+      ctx.beginPath();
+      ctx.arc(sx, sy, sr, 0, Math.PI * 2);
+      ctx.fill();
+    }
 
     // Dual cosmic glow halos (Amber & Cyan)
-    const gAmber = ctx.createRadialGradient(960, 160, 20, 960, 160, 420);
+    const gAmber = ctx.createRadialGradient(1236, 132, 20, 1236, 132, 460);
     gAmber.addColorStop(0, 'rgba(245, 158, 11, 0.22)');
     gAmber.addColorStop(1, 'rgba(245, 158, 11, 0)');
     ctx.fillStyle = gAmber;
-    ctx.fillRect(0, 0, 1200, 720);
+    ctx.fillRect(0, 0, 1400, 860);
 
-    const gCyan = ctx.createRadialGradient(220, 560, 20, 220, 560, 380);
+    const gCyan = ctx.createRadialGradient(240, 680, 20, 240, 680, 440);
     gCyan.addColorStop(0, 'rgba(56, 189, 248, 0.14)');
     gCyan.addColorStop(1, 'rgba(56, 189, 248, 0)');
     ctx.fillStyle = gCyan;
-    ctx.fillRect(0, 0, 1200, 720);
+    ctx.fillRect(0, 0, 1400, 860);
 
-    // Outer & Inner gold borders
+    // Faint orbital arcs behind header
+    ctx.save();
+    ctx.strokeStyle = 'rgba(56, 189, 248, 0.08)';
+    ctx.lineWidth = 1.2;
+    ctx.beginPath();
+    ctx.arc(1236, 132, 135, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(1236, 132, 210, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.restore();
+
+    // Outer & Inner gold borders + corner aerospace brackets
     ctx.strokeStyle = 'rgba(245, 158, 11, 0.65)';
-    ctx.lineWidth = 3;
-    ctx.strokeRect(28, 28, 1144, 664);
-    ctx.strokeStyle = 'rgba(254, 243, 199, 0.16)';
+    ctx.lineWidth = 2.5;
+    ctx.strokeRect(32, 32, 1336, 796);
+    ctx.strokeStyle = 'rgba(254, 243, 199, 0.14)';
     ctx.lineWidth = 1;
-    ctx.strokeRect(42, 42, 1116, 636);
+    ctx.strokeRect(46, 46, 1308, 768);
 
-    // Header
-    ctx.fillStyle = '#fcd34d';
-    ctx.font = '600 18px "JetBrains Mono", monospace';
-    ctx.fillText('NASA SPACE APPS CHALLENGE // TEAM VANTALUMEN', 74, 98);
+    const drawBracket = (bx, by, dx, dy) => {
+      ctx.strokeStyle = '#fcd34d';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(bx + dx * 26, by);
+      ctx.lineTo(bx, by);
+      ctx.lineTo(bx, by + dy * 26);
+      ctx.stroke();
+    };
+    drawBracket(32, 32, 1, 1);
+    drawBracket(1368, 32, -1, 1);
+    drawBracket(32, 828, 1, -1);
+    drawBracket(1368, 828, -1, -1);
+
+    // Header (Left column, plenty of clearance from top-right emblem)
+    ctx.fillStyle = '#38bdf8';
+    ctx.font = '600 16px "JetBrains Mono", monospace';
+    ctx.fillText('NASA SPACE APPS CHALLENGE // OFFICIAL ANTHOLOGY CERTIFICATE', 84, 102);
 
     ctx.fillStyle = '#fef3c7';
-    ctx.font = '600 48px Georgia, serif';
-    ctx.fillText('ECHOES IN THE DUST — MISSION ARCHIVE', 74, 158);
+    ctx.font = '600 46px Georgia, serif';
+    ctx.fillText('ECHOES IN THE DUST', 84, 160);
 
-    ctx.fillStyle = '#94a3b8';
-    ctx.font = '500 21px Inter, sans-serif';
-    ctx.fillText('Hồ sơ chứng nhận trải nghiệm phần cứng & tri thức thám hiểm không gian NASA', 74, 198);
+    ctx.fillStyle = '#cbd5e1';
+    ctx.font = '500 20px Inter, sans-serif';
+    ctx.fillText('Chứng nhận Hoàn thành Trải nghiệm Phần cứng & Tri thức Thám hiểm NASA', 84, 198);
 
-    // Rank & Telemetry Box
+    // Gold gradient accent line under header
+    const lineGrad = ctx.createLinearGradient(84, 0, 1090, 0);
+    lineGrad.addColorStop(0, '#f59e0b');
+    lineGrad.addColorStop(0.6, 'rgba(245, 158, 11, 0.35)');
+    lineGrad.addColorStop(1, 'rgba(245, 158, 11, 0)');
+    ctx.strokeStyle = lineGrad;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(84, 224);
+    ctx.lineTo(1090, 224);
+    ctx.stroke();
+
+    // Rank & Telemetry Banner (x: 84 -> 1316, w: 1232)
     const unlockedCount = this.unlockedShards.size;
     const totalShards = window.MEMORY_SHARDS.length;
     const solvedCount = this.solvedQuizzes.size;
     const totalQuizzes = (window.VANTALUMEN_QUIZZES || []).length;
     const rank = this._getMissionRank();
 
-    ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
-    ctx.fillRect(74, 236, 1052, 120);
-    ctx.strokeStyle = 'rgba(245, 158, 11, 0.4)';
+    ctx.fillStyle = 'rgba(13, 21, 42, 0.88)';
+    ctx.fillRect(84, 256, 1232, 138);
+    ctx.strokeStyle = 'rgba(245, 158, 11, 0.38)';
     ctx.lineWidth = 1.5;
-    ctx.strokeRect(74, 236, 1052, 120);
+    ctx.strokeRect(84, 256, 1232, 138);
+
+    // Vertical dividers
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(640, 278);
+    ctx.lineTo(640, 372);
+    ctx.moveTo(975, 278);
+    ctx.lineTo(975, 372);
+    ctx.stroke();
 
     ctx.fillStyle = '#94a3b8';
-    ctx.font = '600 14px "JetBrains Mono", monospace';
-    ctx.fillText('DANH HIỆU SỨ MỆNH', 106, 274);
-    ctx.fillText('MẢNH VỠ KÝ ỨC', 560, 274);
-    ctx.fillText('CÂU HỎI VANTALUMEN', 850, 274);
+    ctx.font = '600 13px "JetBrains Mono", monospace';
+    ctx.fillText('DANH HIỆU SỨ MỆNH', 118, 294);
+    ctx.fillText('MẢNH VỠ KÝ ỨC', 674, 294);
+    ctx.fillText('TRI THỨC VANTALUMEN', 1009, 294);
 
     ctx.fillStyle = '#fef3c7';
-    ctx.font = '600 30px Georgia, serif';
-    ctx.fillText(rank, 106, 322);
+    ctx.font = '600 28px Georgia, serif';
+    ctx.fillText(rank, 118, 344);
 
     ctx.fillStyle = '#fcd34d';
-    ctx.font = '600 34px "JetBrains Mono", monospace';
-    ctx.fillText(`${unlockedCount} / ${totalShards}`, 560, 324);
+    ctx.font = '600 32px "JetBrains Mono", monospace';
+    ctx.fillText(`${unlockedCount} / ${totalShards}`, 674, 342);
 
     ctx.fillStyle = '#38bdf8';
-    ctx.fillText(`${solvedCount} / ${totalQuizzes}`, 850, 324);
+    ctx.fillText(`${solvedCount} / ${totalQuizzes}`, 1009, 342);
 
-    // 6 NASA Hardware Mission Seals
+    // Mini progress bars inside telemetry banner
+    ctx.fillStyle = 'rgba(148, 163, 184, 0.2)';
+    ctx.fillRect(674, 360, 260, 6);
+    ctx.fillRect(1009, 360, 260, 6);
+
+    ctx.fillStyle = '#f59e0b';
+    ctx.fillRect(674, 360, Math.round(260 * (unlockedCount / Math.max(1, totalShards))), 6);
+    ctx.fillStyle = '#38bdf8';
+    ctx.fillRect(1009, 360, Math.round(260 * (solvedCount / Math.max(1, totalQuizzes))), 6);
+
+    // 6 NASA Hardware Mission Seals (3x2 grid, total w = 1232)
     ctx.fillStyle = '#94a3b8';
     ctx.font = '600 14px "JetBrains Mono", monospace';
-    ctx.fillText('SÁU THIẾT BỊ NASA TRONG BỘ SƯU TẬP', 74, 405);
+    ctx.fillText('SÁU THIẾT BỊ NASA TRONG BỘ SƯU TẬP', 84, 438);
 
     window.MEMORY_SHARDS.forEach((shard, idx) => {
       const col = idx % 3;
       const row = Math.floor(idx / 3);
-      const bx = 74 + col * 356;
-      const by = 425 + row * 94;
+      const bx = 84 + col * 419;
+      const by = 460 + row * 128;
+      const bw = 394;
+      const bh = 108;
       const unlocked = this.unlockedShards.has(shard.id);
 
-      ctx.fillStyle = unlocked ? 'rgba(245, 158, 11, 0.12)' : 'rgba(15, 23, 42, 0.7)';
-      ctx.fillRect(bx, by, 338, 76);
-      ctx.strokeStyle = unlocked ? '#f59e0b' : 'rgba(148, 163, 184, 0.25)';
-      ctx.lineWidth = 1.2;
-      ctx.strokeRect(bx, by, 338, 76);
+      ctx.fillStyle = unlocked ? 'rgba(245, 158, 11, 0.1)' : 'rgba(15, 23, 42, 0.72)';
+      ctx.fillRect(bx, by, bw, bh);
+      ctx.strokeStyle = unlocked ? 'rgba(245, 158, 11, 0.72)' : 'rgba(148, 163, 184, 0.22)';
+      ctx.lineWidth = 1.4;
+      ctx.strokeRect(bx, by, bw, bh);
+
+      // Status dot
+      ctx.fillStyle = unlocked ? '#fcd34d' : '#475569';
+      ctx.beginPath();
+      ctx.arc(bx + 22, by + 27, 4.5, 0, Math.PI * 2);
+      ctx.fill();
 
       ctx.fillStyle = unlocked ? '#fcd34d' : '#64748b';
-      ctx.font = '600 13px "JetBrains Mono", monospace';
-      ctx.fillText(`${shard.number} • ${unlocked ? 'ĐÃ ĐÁNH THỨC' : 'CHƯA KHÁM PHÁ'}`, bx + 16, by + 28);
+      ctx.font = '600 12.5px "JetBrains Mono", monospace';
+      ctx.fillText(`${shard.number} • ${unlocked ? 'ĐÃ ĐÁNH THỨC' : 'CHƯA KHÁM PHÁ'}`, bx + 36, by + 31);
 
       ctx.fillStyle = unlocked ? '#fef3c7' : '#94a3b8';
-      ctx.font = '600 17px Georgia, serif';
+      ctx.font = '600 20px Georgia, serif';
       const shortTitle = shard.title.split('—')[0].trim();
-      ctx.fillText(shortTitle, bx + 16, by + 56);
+      ctx.fillText(shortTitle, bx + 18, by + 63);
+
+      ctx.fillStyle = unlocked ? '#cbd5e1' : '#64748b';
+      ctx.font = '13px Inter, sans-serif';
+      const shortSub = shard.subtitle.length > 46 ? shard.subtitle.slice(0, 44) + '…' : shard.subtitle;
+      ctx.fillText(shortSub, bx + 18, by + 88);
     });
 
-    // Footer signature
+    // Footer
     const dateStr = new Date().toLocaleDateString('vi-VN');
-    ctx.fillStyle = '#64748b';
-    ctx.font = '14px "JetBrains Mono", monospace';
-    ctx.fillText(`VANTALUMEN • KEEPING SPACE EXPLORATION STORIES ALIVE • ${dateStr}`, 74, 654);
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(84, 738);
+    ctx.lineTo(1316, 738);
+    ctx.stroke();
+
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '600 14px "JetBrains Mono", monospace';
+    ctx.fillText('TEAM VANTALUMEN • KEEPING SPACE EXPLORATION STORIES ALIVE', 84, 774);
+
+    ctx.save();
+    ctx.textAlign = 'right';
+    ctx.fillStyle = '#fcd34d';
+    ctx.fillText(`NASA OPEN DATA VERIFIED • ${dateStr}`, 1316, 774);
+    ctx.restore();
 
     const download = () => {
       const link = document.createElement('a');
@@ -1062,20 +1157,45 @@ class EchoesApp {
       link.click();
     };
 
+    const drawMedallion = img => {
+      ctx.save();
+      // Outer golden orbital ring
+      ctx.strokeStyle = 'rgba(245, 158, 11, 0.75)';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(1236, 132, 66, 0, Math.PI * 2);
+      ctx.stroke();
+
+      ctx.setLineDash([5, 5]);
+      ctx.strokeStyle = 'rgba(56, 189, 248, 0.55)';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.arc(1236, 132, 58, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.96)';
+      ctx.beginPath();
+      ctx.arc(1236, 132, 48, 0, Math.PI * 2);
+      ctx.fill();
+
+      if (img) {
+        ctx.drawImage(img, 1236 - 36, 132 - 36, 72, 72);
+      }
+      ctx.restore();
+    };
+
     const logo = new Image();
     logo.onload = () => {
       try {
-        ctx.save();
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.94)';
-        ctx.beginPath();
-        ctx.arc(1078, 118, 46, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.drawImage(logo, 1044, 84, 68, 68);
-        ctx.restore();
+        drawMedallion(logo);
       } catch {}
       download();
     };
-    logo.onerror = download;
+    logo.onerror = () => {
+      drawMedallion(null);
+      download();
+    };
     logo.src = 'assets/vantalumen_logo.png';
   }
 
