@@ -171,15 +171,13 @@ html, body {
   z-index: 1;
 }
 
-/* Film grain & vignette overlay */
+/* Subtle optical vignette overlay (no artificial CRT scanlines) */
 .vignette-overlay {
   position: fixed;
   inset: 0;
   pointer-events: none;
   z-index: 2;
-  background:
-    radial-gradient(circle at center, transparent 40%, rgba(3, 6, 14, 0.85) 100%),
-    repeating-linear-gradient(0deg, rgba(255,255,255,0.012) 0px, rgba(255,255,255,0.012) 1px, transparent 1px, transparent 2px);
+  background: radial-gradient(circle at center, transparent 48%, rgba(3, 6, 14, 0.78) 100%);
 }
 
 /* Subtle Cinematic Letterbox Framing */
@@ -286,7 +284,7 @@ html, body {
   opacity: 1;
 }
 
-/* Top Constellation Navigation (Wordless Dots) */
+/* Top Constellation Navigation (Compact Astrometric Dots) */
 #constellation-nav {
   position: fixed;
   top: 20px;
@@ -295,28 +293,26 @@ html, body {
   z-index: 10;
   display: flex;
   align-items: center;
-  gap: 24px;
-  padding: 10px 24px;
+  gap: 14px;
+  padding: 8px 16px;
   border-radius: 999px;
-  background: rgba(8, 13, 28, 0.72);
-  backdrop-filter: blur(14px) saturate(125%);
-  -webkit-backdrop-filter: blur(14px) saturate(125%);
+  background: rgba(7, 11, 22, 0.84);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
   border: 1px solid rgba(255, 255, 255, 0.12);
-  box-shadow:
-    0 8px 26px rgba(0, 0, 0, 0.48),
-    inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
   transition: opacity 0.6s ease;
 }
 
 .nav-star {
   position: relative;
-  width: 13px;
-  height: 13px;
+  width: 9px;
+  height: 9px;
   border-radius: 50%;
   background: rgba(148, 163, 184, 0.22);
   border: 1.5px solid rgba(148, 163, 184, 0.52);
   cursor: pointer;
-  transition: all 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+  transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .nav-star::after {
@@ -324,9 +320,9 @@ html, body {
   position: absolute;
   top: 50%;
   left: 100%;
-  width: 24px;
+  width: 14px;
   height: 1px;
-  background: rgba(148, 163, 184, 0.24);
+  background: rgba(148, 163, 184, 0.22);
   transform: translateY(-50%);
   pointer-events: none;
 }
@@ -502,12 +498,12 @@ html, body {
   align-items: center;
   justify-content: center;
   padding: 20px;
-  background: rgba(3, 6, 16, 0.22);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
+  background: rgba(3, 6, 14, 0.76);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
   opacity: 0;
   pointer-events: none;
-  transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: opacity 0.45s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 #memory-modal.visible {
@@ -520,22 +516,15 @@ html, body {
   max-width: 960px;
   max-height: 90vh;
   overflow-y: auto;
-  background:
-    radial-gradient(120% 80% at 12% 0%, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.025) 52%, transparent 75%),
-    radial-gradient(80% 60% at 88% 100%, rgba(56, 189, 248, 0.09) 0%, transparent 65%),
-    linear-gradient(160deg, rgba(255, 255, 255, 0.09) 0%, rgba(16, 26, 52, 0.32) 55%, rgba(8, 14, 30, 0.42) 100%);
-  backdrop-filter: blur(36px) saturate(195%) brightness(1.08);
-  -webkit-backdrop-filter: blur(36px) saturate(195%) brightness(1.08);
-  border: 1px solid rgba(255, 255, 255, 0.24);
-  border-radius: 28px;
-  padding: 24px 30px;
+  background: rgba(8, 12, 22, 0.96);
+  border: 1px solid rgba(255, 255, 255, 0.13);
+  border-radius: 12px;
+  padding: 26px 32px;
   box-shadow:
-    0 32px 90px rgba(0, 0, 0, 0.48),
-    0 0 0 1px rgba(255, 255, 255, 0.06),
-    inset 0 1.5px 1px rgba(255, 255, 255, 0.36),
-    inset 0 -1px 1px rgba(255, 255, 255, 0.08);
-  transform: translateY(24px) scale(0.96);
-  transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+    0 32px 90px rgba(0, 0, 0, 0.72),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  transform: translateY(16px) scale(0.98);
+  transition: transform 0.45s cubic-bezier(0.16, 1, 0.3, 1);
   position: relative;
 }
 
@@ -544,13 +533,7 @@ html, body {
 }
 
 .shard-card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 3px;
-  background: linear-gradient(90deg, transparent, var(--amber), var(--amber-bright), var(--amber), transparent);
+  display: none;
 }
 
 .shard-header {
@@ -734,14 +717,16 @@ html, body {
 .shard-specs-grid {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 8px;
+  gap: 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.09);
 }
 
 .spec-box {
-  background: rgba(15, 23, 42, 0.72);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 10px;
-  padding: 8px 12px;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 0;
+  padding: 9px 4px;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -749,8 +734,9 @@ html, body {
 }
 
 .spec-box.live-stat {
-  border-color: rgba(245, 158, 11, 0.38);
-  background: rgba(245, 158, 11, 0.08);
+  border-bottom-color: rgba(245, 158, 11, 0.32);
+  background: rgba(245, 158, 11, 0.05);
+  padding: 9px 10px;
 }
 
 .spec-label {
@@ -880,9 +866,9 @@ html, body {
   position: fixed;
   inset: 0;
   z-index: 35;
-  background: rgba(3, 6, 16, 0.22);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
+  background: rgba(3, 6, 14, 0.76);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -903,20 +889,13 @@ html, body {
   max-width: 1000px;
   max-height: 90vh;
   overflow-y: auto;
-  background:
-    radial-gradient(120% 80% at 12% 0%, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.025) 52%, transparent 75%),
-    radial-gradient(80% 60% at 88% 100%, rgba(56, 189, 248, 0.09) 0%, transparent 65%),
-    linear-gradient(160deg, rgba(255, 255, 255, 0.09) 0%, rgba(16, 26, 52, 0.32) 55%, rgba(8, 14, 30, 0.42) 100%);
-  backdrop-filter: blur(36px) saturate(195%) brightness(1.08);
-  -webkit-backdrop-filter: blur(36px) saturate(195%) brightness(1.08);
-  border: 1px solid rgba(255, 255, 255, 0.24);
-  border-radius: 28px;
-  padding: 24px 28px;
+  background: rgba(8, 12, 22, 0.96);
+  border: 1px solid rgba(255, 255, 255, 0.13);
+  border-radius: 12px;
+  padding: 26px 30px;
   box-shadow:
-    0 32px 90px rgba(0, 0, 0, 0.48),
-    0 0 0 1px rgba(255, 255, 255, 0.06),
-    inset 0 1.5px 1px rgba(255, 255, 255, 0.36),
-    inset 0 -1px 1px rgba(255, 255, 255, 0.08);
+    0 32px 90px rgba(0, 0, 0, 0.72),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
 }
 
 .gallery-header {
@@ -1491,8 +1470,8 @@ html, body {
 
 .quiz-card-layout {
   display: grid;
-  grid-template-columns: 185px 1fr;
-  gap: 14px;
+  grid-template-columns: 1fr;
+  gap: 12px;
   align-items: center;
 }
 
@@ -1594,9 +1573,9 @@ html, body {
   position: fixed;
   inset: 0;
   z-index: 36;
-  background: rgba(3, 6, 16, 0.22);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
+  background: rgba(3, 6, 14, 0.76);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -1617,20 +1596,13 @@ html, body {
   max-width: 780px;
   max-height: 90vh;
   overflow-y: auto;
-  background:
-    radial-gradient(120% 80% at 12% 0%, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.025) 52%, transparent 75%),
-    radial-gradient(80% 60% at 88% 100%, rgba(56, 189, 248, 0.09) 0%, transparent 65%),
-    linear-gradient(160deg, rgba(255, 255, 255, 0.09) 0%, rgba(16, 26, 52, 0.32) 55%, rgba(8, 14, 30, 0.42) 100%);
-  backdrop-filter: blur(36px) saturate(195%) brightness(1.08);
-  -webkit-backdrop-filter: blur(36px) saturate(195%) brightness(1.08);
-  border: 1px solid rgba(255, 255, 255, 0.24);
-  border-radius: 28px;
+  background: rgba(8, 12, 22, 0.96);
+  border: 1px solid rgba(255, 255, 255, 0.13);
+  border-radius: 12px;
   padding: 24px 28px;
   box-shadow:
-    0 32px 90px rgba(0, 0, 0, 0.48),
-    0 0 0 1px rgba(255, 255, 255, 0.06),
-    inset 0 1.5px 1px rgba(255, 255, 255, 0.36),
-    inset 0 -1px 1px rgba(255, 255, 255, 0.08);
+    0 32px 90px rgba(0, 0, 0, 0.72),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
 }
 
 .deck-banner-wrap {

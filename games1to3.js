@@ -10,37 +10,32 @@ function drawGhostHand(ctx, x, y, alpha, scale = 1, isHolding = false) {
   ctx.save();
   ctx.translate(x, y);
   ctx.scale(scale, scale);
-  ctx.globalAlpha = alpha;
+  ctx.globalAlpha = alpha * 0.85;
 
-  const pulse = 0.86 + 0.14 * Math.sin(performance.now() * 0.006);
+  const pulse = 0.92 + 0.08 * Math.sin(performance.now() * 0.004);
+  const s = (isHolding ? 13 : 17) * pulse;
+  const arm = 5;
+
+  ctx.strokeStyle = 'rgba(248, 250, 252, 0.72)';
+  ctx.lineWidth = 1.2;
   ctx.beginPath();
-  ctx.arc(0, 0, (isHolding ? 18 : 26) * pulse, 0, Math.PI * 2);
-  ctx.strokeStyle = 'rgba(254, 243, 199, 0.85)';
-  ctx.lineWidth = 2;
+  // 4 precision corner brackets (zero curved tail!)
+  [
+    [-1, -1],
+    [1, -1],
+    [1, 1],
+    [-1, 1]
+  ].forEach(([dx, dy]) => {
+    ctx.moveTo(dx * s, dy * (s - arm));
+    ctx.lineTo(dx * s, dy * s);
+    ctx.lineTo(dx * (s - arm), dy * s);
+  });
   ctx.stroke();
 
-  if (isHolding) {
-    ctx.beginPath();
-    ctx.arc(0, 0, 36 * pulse, 0, Math.PI * 2);
-    ctx.strokeStyle = 'rgba(245, 158, 11, 0.52)';
-    ctx.lineWidth = 1.5;
-    ctx.stroke();
-  }
-
-  ctx.fillStyle = 'rgba(254, 243, 199, 0.95)';
-  ctx.shadowColor = 'rgba(245, 158, 11, 0.95)';
-  ctx.shadowBlur = 18;
+  ctx.fillStyle = 'rgba(253, 230, 138, 0.85)';
   ctx.beginPath();
-  ctx.arc(0, 0, 6.5, 0, Math.PI * 2);
+  ctx.arc(0, 0, 2.2, 0, Math.PI * 2);
   ctx.fill();
-
-  ctx.strokeStyle = 'rgba(254, 243, 199, 0.7)';
-  ctx.lineWidth = 2.4;
-  ctx.lineCap = 'round';
-  ctx.beginPath();
-  ctx.moveTo(0, 4);
-  ctx.quadraticCurveTo(6, 18, 17, 26);
-  ctx.stroke();
   ctx.restore();
 }
 
@@ -251,30 +246,28 @@ class UnderTheDustGame {
     pctx.fillText('JPL-NSY-04 // ♥ E.K.', radius * 0.16, radius * 0.42);
     pctx.fillText('SN-1805-INSIGHT', -radius * 0.58, radius * 0.31);
 
-    // Center Gimbal Hub
-    const hubR = radius * 0.15;
+    // Center Gimbal Spindle (machined dark titanium, no stove-burner yellow dots)
+    const hubR = radius * 0.13;
     const hubGrad = pctx.createRadialGradient(-hubR * 0.25, -hubR * 0.25, 2, 0, 0, hubR);
-    hubGrad.addColorStop(0, '#64748b');
-    hubGrad.addColorStop(0.7, '#1e293b');
+    hubGrad.addColorStop(0, '#475569');
+    hubGrad.addColorStop(0.65, '#1e293b');
     hubGrad.addColorStop(1, '#090d16');
     pctx.beginPath();
     pctx.arc(0, 0, hubR, 0, Math.PI * 2);
     pctx.fillStyle = hubGrad;
     pctx.fill();
-    pctx.strokeStyle = '#fcd34d';
-    pctx.lineWidth = 2.4;
+    pctx.strokeStyle = 'rgba(226, 232, 240, 0.45)';
+    pctx.lineWidth = 1.2;
     pctx.stroke();
 
-    for (let b = 0; b < 8; b++) {
-      const ba = (b / 8) * Math.PI * 2;
-      pctx.fillStyle = '#fcd34d';
-      pctx.beginPath();
-      pctx.arc(Math.cos(ba) * hubR * 0.68, Math.sin(ba) * hubR * 0.68, 2, 0, Math.PI * 2);
-      pctx.fill();
-    }
+    pctx.beginPath();
+    pctx.arc(0, 0, hubR * 0.42, 0, Math.PI * 2);
+    pctx.strokeStyle = 'rgba(148, 163, 184, 0.35)';
+    pctx.lineWidth = 0.9;
+    pctx.stroke();
     pctx.restore();
 
-    // Gold-Anodized Perimeter Frame
+    // Anodized Perimeter Frame
     pctx.save();
     pctx.translate(cx, cy);
     pctx.beginPath();
@@ -285,23 +278,22 @@ class UnderTheDustGame {
       if (i === 0) pctx.moveTo(px, py);
       else pctx.lineTo(px, py);
     }
-    pctx.strokeStyle = 'rgba(251, 191, 36, 0.85)';
-    pctx.lineWidth = 3.5;
+    pctx.strokeStyle = 'rgba(217, 119, 6, 0.55)';
+    pctx.lineWidth = 2.2;
     pctx.stroke();
     pctx.restore();
 
-    // 4. Sculpted Wind-Swept Martian Dust Mask (organic FBM drifts + granular regolith)
+    // 4. Sculpted Wind-Swept Martian Dust Mask (organic FBM drifts + fine matte silt)
     const mctx = this.maskCtx;
     mctx.globalCompositeOperation = 'source-over';
     const dustGrad = mctx.createLinearGradient(0, 0, w, h);
-    dustGrad.addColorStop(0, 'rgba(118, 54, 22, 0.94)');
-    dustGrad.addColorStop(0.5, 'rgba(82, 35, 15, 0.93)');
-    dustGrad.addColorStop(1, 'rgba(36, 16, 8, 0.96)');
+    dustGrad.addColorStop(0, 'rgba(92, 42, 20, 0.94)');
+    dustGrad.addColorStop(0.5, 'rgba(68, 30, 14, 0.94)');
+    dustGrad.addColorStop(1, 'rgba(32, 14, 8, 0.96)');
     mctx.fillStyle = dustGrad;
     mctx.fillRect(0, 0, w, h);
 
     if (window.VantaGfx) {
-      // Render organic FBM wind-drift ripples at 1/4 res and upscale smoothly
       const dw = Math.max(64, Math.floor(w * 0.25));
       const dh = Math.max(64, Math.floor(h * 0.25));
       const dc = document.createElement('canvas');
@@ -312,33 +304,22 @@ class UnderTheDustGame {
       const dd = img.data;
       for (let py = 0; py < dh; py++) {
         for (let px = 0; px < dw; px++) {
-          const n = window.VantaGfx.fbm(px * 0.045 + py * 0.015, py * 0.065, 3, 202);
-          const ridge = Math.sin(py * 0.28 + n * 7.5) * 0.5 + 0.5;
+          const n = window.VantaGfx.fbm(px * 0.04 + py * 0.012, py * 0.05, 4, 202);
           const idx = (py * dw + px) * 4;
-          dd[idx] = 175 + ridge * 45;
-          dd[idx + 1] = 85 + ridge * 35;
-          dd[idx + 2] = 35 + ridge * 18;
-          dd[idx + 3] = Math.floor(20 + ridge * 42);
+          dd[idx] = 148 + n * 42;
+          dd[idx + 1] = 68 + n * 24;
+          dd[idx + 2] = 32 + n * 14;
+          dd[idx + 3] = Math.floor(18 + n * 38);
         }
       }
       dctx.putImageData(img, 0, 0);
       mctx.drawImage(dc, 0, 0, w, h);
 
-      const dustGrain = window.VantaGfx.getGrainPattern(mctx, 0.11, true);
+      const dustGrain = window.VantaGfx.getGrainPattern(mctx, 0.08, true);
       if (dustGrain) {
         mctx.fillStyle = dustGrain;
         mctx.fillRect(0, 0, w, h);
       }
-    }
-
-    for (let i = 0; i < 1400; i++) {
-      const x = Math.random() * w;
-      const y = Math.random() * h;
-      const r = Math.random() * 1.8 + 0.4;
-      mctx.fillStyle = i % 3 === 0 ? 'rgba(245, 158, 11, 0.22)' : 'rgba(24, 10, 5, 0.32)';
-      mctx.beginPath();
-      mctx.arc(x, y, r, 0, Math.PI * 2);
-      mctx.fill();
     }
   }
 
@@ -1201,17 +1182,24 @@ class OneWheelLeftGame {
     ctx.arc(w * 0.22, h * 0.18, 3.2, 0, Math.PI * 2);
     ctx.fill();
 
-    // Setting Martian Sun (iconic cool-blue core halo)
+    // Setting Martian Sun (realistic small solar disc + wide soft Rayleigh/Mie atmospheric scatter)
     const travel = Math.min(1, (this.roverX - 120) / (this.goalX - 120));
-    const sunY = h * (0.42 + travel * 0.2);
-    const sunGrad = ctx.createRadialGradient(w * 0.74, sunY, 5, w * 0.74, sunY, 160);
-    sunGrad.addColorStop(0, '#f0f9ff');
-    sunGrad.addColorStop(0.18, '#bae6fd');
-    sunGrad.addColorStop(0.45, 'rgba(252, 211, 77, 0.45)');
-    sunGrad.addColorStop(1, 'rgba(245, 158, 11, 0)');
-    ctx.fillStyle = sunGrad;
+    const sunX = w * 0.74;
+    const sunY = h * (0.44 + travel * 0.18);
+
+    const atmoGlow = ctx.createRadialGradient(sunX, sunY, 4, sunX, sunY, Math.min(w, h) * 0.38);
+    atmoGlow.addColorStop(0, 'rgba(224, 242, 254, 0.65)');
+    atmoGlow.addColorStop(0.12, 'rgba(186, 230, 253, 0.28)');
+    atmoGlow.addColorStop(0.38, 'rgba(217, 119, 6, 0.12)');
+    atmoGlow.addColorStop(1, 'rgba(15, 23, 42, 0)');
+    ctx.fillStyle = atmoGlow;
     ctx.beginPath();
-    ctx.arc(w * 0.74, sunY, 160, 0, Math.PI * 2);
+    ctx.arc(sunX, sunY, Math.min(w, h) * 0.38, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = '#f8fafc';
+    ctx.beginPath();
+    ctx.arc(sunX, sunY, 9.5, 0, Math.PI * 2);
     ctx.fill();
 
     ctx.save();
@@ -1256,32 +1244,21 @@ class OneWheelLeftGame {
     ctx.closePath();
     ctx.fill();
 
-    // Foreground Terrain
+    // Foreground Terrain (no neon yellow stroke wire)
     const groundGrad = ctx.createLinearGradient(0, h * 0.65, 0, h * 1.2);
-    groundGrad.addColorStop(0, '#54261a');
-    groundGrad.addColorStop(0.35, '#331712');
-    groundGrad.addColorStop(1, '#12090a');
+    groundGrad.addColorStop(0, '#3d1c14');
+    groundGrad.addColorStop(0.35, '#24100d');
+    groundGrad.addColorStop(1, '#0c0607');
     ctx.fillStyle = groundGrad;
     ctx.beginPath();
     ctx.moveTo(-w * 0.5, h * 1.3);
-    for (let sx = -w * 0.5; sx <= w * 1.5; sx += 18) {
+    for (let sx = -w * 0.5; sx <= w * 1.5; sx += 14) {
       const wx = sx + camX;
       ctx.lineTo(sx, this._terrainHeight(wx, h));
     }
     ctx.lineTo(w * 1.5, h * 1.3);
     ctx.closePath();
     ctx.fill();
-
-    ctx.strokeStyle = 'rgba(251, 191, 36, 0.36)';
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    for (let sx = -w * 0.5; sx <= w * 1.5; sx += 18) {
-      const wx = sx + camX;
-      const py = this._terrainHeight(wx, h);
-      if (sx === -w * 0.5) ctx.moveTo(sx, py);
-      else ctx.lineTo(sx, py);
-    }
-    ctx.stroke();
 
     // Glowing Sunset Silica Beacon Crystal at Goal Crest (clear wordless destination!)
     const bx = this.goalX - camX;

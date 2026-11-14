@@ -23,25 +23,39 @@ window.MEMORY_SHARDS = [
     svgDiagram: `
       <svg viewBox="0 0 440 155" width="100%" height="100%">
         <defs>
-          <radialGradient id="g1" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stop-color="#f59e0b" stop-opacity="0.45"/>
-            <stop offset="100%" stop-color="#060913" stop-opacity="0"/>
-          </radialGradient>
+          <pattern id="cad-grid" width="22" height="22" patternUnits="userSpaceOnUse">
+            <path d="M 22 0 L 0 0 0 22" fill="none" stroke="rgba(148,163,184,0.07)" stroke-width="0.7"/>
+          </pattern>
         </defs>
-        <rect width="440" height="155" fill="#060913"/>
-        <circle cx="220" cy="75" r="72" fill="url(#g1)"/>
-        <!-- Left & Right Decagonal UltraFlex Solar Wings -->
-        <circle cx="125" cy="75" r="44" fill="#1e293b" stroke="#f59e0b" stroke-width="1.6"/>
-        <circle cx="315" cy="75" r="44" fill="#1e293b" stroke="#f59e0b" stroke-width="1.6"/>
-        <line x1="81" y1="75" x2="169" y2="75" stroke="#f59e0b" stroke-width="0.7" opacity="0.6"/>
-        <line x1="125" y1="31" x2="125" y2="119" stroke="#f59e0b" stroke-width="0.7" opacity="0.6"/>
-        <line x1="271" y1="75" x2="359" y2="75" stroke="#f59e0b" stroke-width="0.7" opacity="0.6"/>
-        <line x1="315" y1="31" x2="315" y2="119" stroke="#f59e0b" stroke-width="0.7" opacity="0.6"/>
-        <!-- Lander Deck, Robotic Arm IDA & SEIS Seismometer Pulse -->
-        <rect x="192" y="58" width="56" height="32" rx="4" fill="#334155" stroke="#fcd34d" stroke-width="1.6"/>
-        <path d="M 220 58 L 238 30 L 285 45" fill="none" stroke="#fcd34d" stroke-width="2"/>
-        <polyline points="165,132 195,132 204,112 212,144 220,116 228,136 236,132 275,132" fill="none" stroke="#fcd34d" stroke-width="2"/>
-        <text x="16" y="22" fill="#94a3b8" font-family="monospace" font-size="10">INSIGHT // ULTRA-FLEX 2.15m SOLAR ARRAY</text>
+        <rect width="440" height="155" fill="#060911"/>
+        <rect width="440" height="155" fill="url(#cad-grid)"/>
+        <line x1="12" y1="30" x2="428" y2="30" stroke="rgba(255,255,255,0.08)" stroke-width="0.8"/>
+        <text x="16" y="21" fill="#94a3b8" font-family="monospace" font-size="9.5" letter-spacing="1">CAD-01 // INSIGHT ULTRAFLEX 2.15M DECAGONAL ARRAY &amp; SEIS</text>
+        <!-- Left & Right Decagonal Solar Wings (Blueprint Wireframe) -->
+        <g transform="translate(118, 88)" fill="rgba(30,58,138,0.18)" stroke="#94a3b8" stroke-width="1">
+          <polygon points="0,-42 25,-34 40,-13 40,13 25,34 0,42 -25,34 -40,13 -40,-13 -25,-34"/>
+          <circle cx="0" cy="0" r="24" fill="none" stroke="rgba(148,163,184,0.35)" stroke-dasharray="2 2"/>
+          <line x1="-40" y1="0" x2="40" y2="0" stroke="rgba(251,191,36,0.45)" stroke-width="0.8"/>
+          <line x1="0" y1="-42" x2="0" y2="42" stroke="rgba(251,191,36,0.45)" stroke-width="0.8"/>
+          <line x1="-25" y1="-34" x2="25" y2="34" stroke="rgba(251,191,36,0.35)" stroke-width="0.7"/>
+          <line x1="25" y1="-34" x2="-25" y2="34" stroke="rgba(251,191,36,0.35)" stroke-width="0.7"/>
+          <circle cx="0" cy="0" r="6" fill="#0f172a" stroke="#fcd34d" stroke-width="1.2"/>
+        </g>
+        <g transform="translate(322, 88)" fill="rgba(30,58,138,0.18)" stroke="#94a3b8" stroke-width="1">
+          <polygon points="0,-42 25,-34 40,-13 40,13 25,34 0,42 -25,34 -40,13 -40,-13 -25,-34"/>
+          <circle cx="0" cy="0" r="24" fill="none" stroke="rgba(148,163,184,0.35)" stroke-dasharray="2 2"/>
+          <line x1="-40" y1="0" x2="40" y2="0" stroke="rgba(251,191,36,0.45)" stroke-width="0.8"/>
+          <line x1="0" y1="-42" x2="0" y2="42" stroke="rgba(251,191,36,0.45)" stroke-width="0.8"/>
+          <line x1="-25" y1="-34" x2="25" y2="34" stroke="rgba(251,191,36,0.35)" stroke-width="0.7"/>
+          <line x1="25" y1="-34" x2="-25" y2="34" stroke="rgba(251,191,36,0.35)" stroke-width="0.7"/>
+          <circle cx="0" cy="0" r="6" fill="#0f172a" stroke="#fcd34d" stroke-width="1.2"/>
+        </g>
+        <!-- Central Lander Bus & IDA Arm -->
+        <line x1="158" y1="88" x2="282" y2="88" stroke="#cbd5e1" stroke-width="1.5"/>
+        <rect x="192" y="72" width="56" height="32" fill="#0f172a" stroke="#e2e8f0" stroke-width="1.2"/>
+        <line x1="192" y1="82" x2="248" y2="82" stroke="rgba(255,255,255,0.2)" stroke-width="0.8"/>
+        <polyline points="172,138 198,138 205,122 211,146 218,118 225,142 232,134 240,138 268,138" fill="none" stroke="#fcd34d" stroke-width="1.2"/>
+        <text x="352" y="21" fill="#fcd34d" font-family="monospace" font-size="9">1,319 EVENTS</text>
       </svg>
     `
   },
@@ -63,15 +77,39 @@ window.MEMORY_SHARDS = [
     sourceUrl: 'https://science.nasa.gov/moon/lunar-highlights/',
     svgDiagram: `
       <svg viewBox="0 0 440 155" width="100%" height="100%">
-        <rect width="440" height="155" fill="#060913"/>
-        <circle cx="85" cy="112" r="30" fill="#1e3a8a" stroke="#38bdf8" stroke-width="1.6"/>
-        <circle cx="345" cy="48" r="24" fill="#334155" stroke="#fcd34d" stroke-width="1.6"/>
-        <line x1="112" y1="98" x2="323" y2="54" stroke="#fcd34d" stroke-width="1.8" stroke-dasharray="5 4"/>
-        <circle cx="324" cy="53" r="4.5" fill="#fcd34d"/>
-        <circle cx="342" cy="40" r="3.5" fill="#f59e0b"/>
-        <circle cx="338" cy="60" r="3.5" fill="#f59e0b"/>
-        <text x="172" y="66" fill="#fcd34d" font-family="monospace" font-size="11">2d / c = 2.562 sec</text>
-        <text x="16" y="22" fill="#94a3b8" font-family="monospace" font-size="10">APOLLO 11/14/15 // PASSIVE CORNER-CUBE ARRAY</text>
+        <defs>
+          <pattern id="cad-grid" width="22" height="22" patternUnits="userSpaceOnUse">
+            <path d="M 22 0 L 0 0 0 22" fill="none" stroke="rgba(148,163,184,0.07)" stroke-width="0.7"/>
+          </pattern>
+        </defs>
+        <rect width="440" height="155" fill="#060911"/>
+        <rect width="440" height="155" fill="url(#cad-grid)"/>
+        <line x1="12" y1="30" x2="428" y2="30" stroke="rgba(255,255,255,0.08)" stroke-width="0.8"/>
+        <text x="16" y="21" fill="#94a3b8" font-family="monospace" font-size="9.5" letter-spacing="1">CAD-02 // APOLLO LRRR CORNER-CUBE RETRO-REFLECTOR OPTICS</text>
+        <!-- Earth Observatory Dish -->
+        <g transform="translate(68, 108)" fill="none" stroke="#94a3b8" stroke-width="1.1">
+          <circle cx="0" cy="0" r="24" fill="rgba(15,23,42,0.8)"/>
+          <path d="M -18 -16 A 24 24 0 0 1 18 16" stroke="#7dd3fc" stroke-width="1.4"/>
+          <line x1="0" y1="0" x2="18" y2="-10" stroke="#7dd3fc"/>
+        </g>
+        <!-- Laser Pulse & Return Path -->
+        <line x1="92" y1="98" x2="318" y2="58" stroke="#34d399" stroke-width="1.1" stroke-dasharray="4 3"/>
+        <line x1="318" y1="64" x2="92" y2="104" stroke="#fcd34d" stroke-width="1.1" stroke-dasharray="2 3"/>
+        <text x="162" y="70" fill="#fcd34d" font-family="monospace" font-size="9.5">Δt = 2d/c = 2.562s (384,400 km)</text>
+        <!-- Lunar Surface & 100-Prism Array Schematic -->
+        <g transform="translate(348, 66)" fill="none" stroke="#cbd5e1" stroke-width="1">
+          <rect x="-26" y="-22" width="52" height="44" fill="#0f172a" stroke="#fcd34d" stroke-width="1.1"/>
+          <line x1="-26" y1="-7" x2="26" y2="-7" stroke="rgba(255,255,255,0.2)"/>
+          <line x1="-26" y1="7" x2="26" y2="7" stroke="rgba(255,255,255,0.2)"/>
+          <line x1="-9" y1="-22" x2="-9" y2="22" stroke="rgba(255,255,255,0.2)"/>
+          <line x1="9" y1="-22" x2="9" y2="22" stroke="rgba(255,255,255,0.2)"/>
+          <circle cx="-17" cy="-14" r="3" stroke="#7dd3fc"/>
+          <circle cx="0" cy="-14" r="3" stroke="#7dd3fc"/>
+          <circle cx="17" cy="-14" r="3" stroke="#7dd3fc"/>
+          <circle cx="-17" cy="0" r="3" stroke="#fcd34d"/>
+          <circle cx="0" cy="0" r="3" stroke="#fcd34d"/>
+          <circle cx="17" cy="0" r="3" stroke="#fcd34d"/>
+        </g>
       </svg>
     `
   },
@@ -93,18 +131,38 @@ window.MEMORY_SHARDS = [
     sourceUrl: 'https://science.nasa.gov/mission/mer-spirit/',
     svgDiagram: `
       <svg viewBox="0 0 440 155" width="100%" height="100%">
-        <rect width="440" height="155" fill="#060913"/>
-        <path d="M 20 118 Q 160 95 280 112 T 420 96" fill="none" stroke="#334155" stroke-width="3"/>
-        <path d="M 35 118 Q 160 96 265 110" fill="none" stroke="#67e8f9" stroke-width="4.5"/>
-        <g transform="translate(268, 85)">
-          <rect x="-24" y="-8" width="48" height="14" rx="3" fill="#f59e0b"/>
-          <line x1="6" y1="-8" x2="12" y2="-28" stroke="#fcd34d" stroke-width="2.5"/>
-          <rect x="5" y="-32" width="15" height="7" rx="2" fill="#fcd34d"/>
-          <circle cx="-18" cy="14" r="8.5" fill="#1e293b" stroke="#67e8f9" stroke-width="2" stroke-dasharray="3 2"/>
-          <circle cx="0" cy="14" r="8.5" fill="#1e293b" stroke="#f59e0b" stroke-width="2"/>
-          <circle cx="18" cy="14" r="8.5" fill="#1e293b" stroke="#f59e0b" stroke-width="2"/>
+        <defs>
+          <pattern id="cad-grid" width="22" height="22" patternUnits="userSpaceOnUse">
+            <path d="M 22 0 L 0 0 0 22" fill="none" stroke="rgba(148,163,184,0.07)" stroke-width="0.7"/>
+          </pattern>
+        </defs>
+        <rect width="440" height="155" fill="#060911"/>
+        <rect width="440" height="155" fill="url(#cad-grid)"/>
+        <line x1="12" y1="30" x2="428" y2="30" stroke="rgba(255,255,255,0.08)" stroke-width="0.8"/>
+        <text x="16" y="21" fill="#94a3b8" font-family="monospace" font-size="9.5" letter-spacing="1">CAD-03 // MER-A SPIRIT ROCKER-BOGIE &amp; SOL 1187 SILICA TRENCH</text>
+        <!-- Terrain Profile & Excavated Silica Horizon -->
+        <path d="M 18 126 Q 150 106 270 118 T 422 108" fill="none" stroke="#475569" stroke-width="1.2"/>
+        <path d="M 32 126 Q 150 107 248 117" fill="none" stroke="#7dd3fc" stroke-width="2.2"/>
+        <text x="42" y="106" fill="#7dd3fc" font-family="monospace" font-size="9">OPALINE SILICA (&gt;90% SiO₂)</text>
+        <!-- Technical CAD Side-Elevation of MER Rover -->
+        <g transform="translate(278, 102)" fill="none" stroke="#cbd5e1" stroke-width="1.2">
+          <!-- Rocker-bogie linkage -->
+          <polyline points="-34,12 -18,0 -2,12"/>
+          <polyline points="-18,0 8,-10 30,12"/>
+          <!-- WEB Chassis & Solar Deck -->
+          <polygon points="-24,-10 22,-10 19,-22 -27,-22" fill="#0f172a" stroke="#fcd34d" stroke-width="1.1"/>
+          <line x1="-32" y1="-22" x2="28" y2="-22" stroke="#e2e8f0" stroke-width="1.5"/>
+          <!-- PMA Mast & Pancam -->
+          <line x1="16" y1="-22" x2="18" y2="-44"/>
+          <rect x="12" y="-49" width="12" height="5" fill="#0f172a" stroke="#e2e8f0"/>
+          <!-- HGA Dish -->
+          <line x1="-16" y1="-22" x2="-20" y2="-32"/>
+          <ellipse cx="-21" cy="-33" rx="7" ry="2.2" transform="rotate(-20 -21 -33)" stroke="#fcd34d"/>
+          <!-- 3 Wheels (Left Rear Stuck Actuator highlighted) -->
+          <circle cx="-34" cy="12" r="8" fill="#090d16" stroke="#7dd3fc" stroke-width="1.4" stroke-dasharray="3 2"/>
+          <circle cx="-2" cy="12" r="8" fill="#090d16" stroke="#94a3b8"/>
+          <circle cx="30" cy="12" r="8" fill="#090d16" stroke="#94a3b8"/>
         </g>
-        <text x="16" y="22" fill="#94a3b8" font-family="monospace" font-size="10">MER-A SPIRIT // SOL 1187 SILICA TRENCH</text>
       </svg>
     `
   },
@@ -126,14 +184,35 @@ window.MEMORY_SHARDS = [
     sourceUrl: 'https://science.nasa.gov/mission/mer-opportunity/',
     svgDiagram: `
       <svg viewBox="0 0 440 155" width="100%" height="100%">
-        <rect width="440" height="155" fill="#060913"/>
-        <rect x="85" y="45" width="52" height="64" rx="4" fill="#0f172a" stroke="#475569" stroke-dasharray="4 3"/>
-        <rect x="162" y="36" width="56" height="68" rx="4" fill="#1e293b" stroke="#f59e0b" stroke-width="2"/>
-        <circle cx="190" cy="64" r="12" fill="#fcd34d" opacity="0.85"/>
-        <rect x="242" y="45" width="52" height="64" rx="4" fill="#0f172a" stroke="#475569" stroke-dasharray="4 3"/>
-        <path d="M 190 36 C 215 12, 285 14, 345 26" fill="none" stroke="#fcd34d" stroke-width="1.6" stroke-dasharray="3 3"/>
-        <circle cx="352" cy="26" r="5" fill="#fcd34d"/>
-        <text x="16" y="22" fill="#94a3b8" font-family="monospace" font-size="10">MER-B OPPORTUNITY // UHF RELAY TELEMETRY</text>
+        <defs>
+          <pattern id="cad-grid" width="22" height="22" patternUnits="userSpaceOnUse">
+            <path d="M 22 0 L 0 0 0 22" fill="none" stroke="rgba(148,163,184,0.07)" stroke-width="0.7"/>
+          </pattern>
+        </defs>
+        <rect width="440" height="155" fill="#060911"/>
+        <rect width="440" height="155" fill="url(#cad-grid)"/>
+        <line x1="12" y1="30" x2="428" y2="30" stroke="rgba(255,255,255,0.08)" stroke-width="0.8"/>
+        <text x="16" y="21" fill="#94a3b8" font-family="monospace" font-size="9.5" letter-spacing="1">CAD-04 // MER-B OPPORTUNITY VOLATILE RAM &amp; UHF MRO RELAY</text>
+        <!-- RAM Buffer Slots -->
+        <g transform="translate(46, 56)" font-family="monospace" font-size="8.5">
+          <rect x="0" y="0" width="44" height="54" fill="none" stroke="#475569" stroke-dasharray="3 2"/>
+          <text x="8" y="30" fill="#64748b">VOLATILE</text>
+          <rect x="56" y="-4" width="48" height="62" fill="rgba(245,158,11,0.08)" stroke="#fcd34d" stroke-width="1.2"/>
+          <text x="64" y="26" fill="#fcd34d">PACKET 01</text>
+          <text x="64" y="38" fill="#94a3b8">UHF TX</text>
+          <rect x="116" y="0" width="44" height="54" fill="none" stroke="#475569" stroke-dasharray="3 2"/>
+          <text x="124" y="30" fill="#64748b">VOLATILE</text>
+        </g>
+        <!-- UHF Telemetry Wavefront -->
+        <path d="M 225 78 C 260 78, 275 48, 318 48" fill="none" stroke="#fcd34d" stroke-width="1.2" stroke-dasharray="3 3"/>
+        <!-- MRO Relay Orbiter Schematic -->
+        <g transform="translate(358, 52)" fill="none" stroke="#cbd5e1" stroke-width="1.1">
+          <rect x="-34" y="-4" width="22" height="8" fill="rgba(56,189,248,0.18)" stroke="#7dd3fc"/>
+          <rect x="12" y="-4" width="22" height="8" fill="rgba(56,189,248,0.18)" stroke="#7dd3fc"/>
+          <rect x="-8" y="-7" width="16" height="14" fill="#0f172a" stroke="#fcd34d"/>
+          <ellipse cx="0" cy="-12" rx="11" ry="3.2" stroke="#e2e8f0"/>
+        </g>
+        <text x="296" y="118" fill="#94a3b8" font-family="monospace" font-size="9">SOL 5111 // TAU = 10.8 DUST OPACITY</text>
       </svg>
     `
   },
@@ -155,12 +234,31 @@ window.MEMORY_SHARDS = [
     sourceUrl: 'https://science.nasa.gov/moon/moonquakes/',
     svgDiagram: `
       <svg viewBox="0 0 440 155" width="100%" height="100%">
-        <rect width="440" height="155" fill="#060913"/>
-        <circle cx="220" cy="78" r="54" fill="none" stroke="#fcd34d" stroke-width="1.8"/>
-        <circle cx="220" cy="78" r="40" fill="none" stroke="#f59e0b" stroke-width="1.2" stroke-dasharray="4 3"/>
-        <circle cx="220" cy="78" r="24" fill="none" stroke="#f59e0b" stroke-width="1" opacity="0.6"/>
-        <circle cx="220" cy="24" r="4.5" fill="#fcd34d"/>
-        <text x="16" y="22" fill="#94a3b8" font-family="monospace" font-size="10">APOLLO 12 PSE // HIGH-Q LUNAR CRUST SCATTERING</text>
+        <defs>
+          <pattern id="cad-grid" width="22" height="22" patternUnits="userSpaceOnUse">
+            <path d="M 22 0 L 0 0 0 22" fill="none" stroke="rgba(148,163,184,0.07)" stroke-width="0.7"/>
+          </pattern>
+        </defs>
+        <rect width="440" height="155" fill="#060911"/>
+        <rect width="440" height="155" fill="url(#cad-grid)"/>
+        <line x1="12" y1="30" x2="428" y2="30" stroke="rgba(255,255,255,0.08)" stroke-width="0.8"/>
+        <text x="16" y="21" fill="#94a3b8" font-family="monospace" font-size="9.5" letter-spacing="1">CAD-05 // APOLLO 12 PASSIVE SEISMIC EXPERIMENT (HIGH-Q CRUST)</text>
+        <!-- Lunar Interior Cross-Section -->
+        <g transform="translate(135, 92)" fill="none">
+          <circle cx="0" cy="0" r="46" stroke="#cbd5e1" stroke-width="1.2"/>
+          <circle cx="0" cy="0" r="34" stroke="#f59e0b" stroke-width="0.9" stroke-dasharray="3 2"/>
+          <circle cx="0" cy="0" r="16" fill="rgba(245,158,11,0.15)" stroke="#fcd34d" stroke-width="1"/>
+          <!-- Scattered P/S seismic rays -->
+          <path d="M 0 -46 Q 14 -20 34 0 Q 12 18 -24 38" stroke="#7dd3fc" stroke-width="0.9" opacity="0.75"/>
+          <path d="M 0 -46 Q -18 -18 -34 4 Q -10 22 28 36" stroke="#fcd34d" stroke-width="0.9" opacity="0.75"/>
+          <circle cx="0" cy="-46" r="3" fill="#fcd34d"/>
+        </g>
+        <!-- Long-Decay Seismogram Envelope -->
+        <g transform="translate(222, 92)" fill="none">
+          <line x1="0" y1="0" x2="190" y2="0" stroke="rgba(255,255,255,0.15)"/>
+          <polyline points="0,0 10,-6 18,9 26,-18 34,24 42,-32 50,30 58,-26 66,23 74,-20 82,17 90,-15 98,13 106,-11 114,9 122,-8 130,6 138,-5 146,4 154,-3 162,2 175,-1 190,0" stroke="#fcd34d" stroke-width="1.1"/>
+          <text x="4" y="-36" fill="#94a3b8" font-family="monospace" font-size="8.5">Q-FACTOR &gt; 3000 (55 MIN RESONANCE)</text>
+        </g>
       </svg>
     `
   },
@@ -182,15 +280,31 @@ window.MEMORY_SHARDS = [
     sourceUrl: 'https://science.nasa.gov/mission/lro/',
     svgDiagram: `
       <svg viewBox="0 0 440 155" width="100%" height="100%">
-        <rect width="440" height="155" fill="#060913"/>
-        <g transform="translate(220, 78) rotate(-18)">
-          <rect x="-26" y="-44" width="52" height="88" rx="24" fill="#1e293b" stroke="#f59e0b" stroke-width="2"/>
-          <line x1="-20" y1="-26" x2="20" y2="-26" stroke="#fcd34d" stroke-width="3"/>
-          <line x1="-22" y1="-10" x2="22" y2="-10" stroke="#fcd34d" stroke-width="3"/>
-          <line x1="-22" y1="6" x2="22" y2="6" stroke="#fcd34d" stroke-width="3"/>
-          <line x1="-20" y1="22" x2="20" y2="22" stroke="#fcd34d" stroke-width="3"/>
+        <defs>
+          <pattern id="cad-grid" width="22" height="22" patternUnits="userSpaceOnUse">
+            <path d="M 22 0 L 0 0 0 22" fill="none" stroke="rgba(148,163,184,0.07)" stroke-width="0.7"/>
+          </pattern>
+        </defs>
+        <rect width="440" height="155" fill="#060911"/>
+        <rect width="440" height="155" fill="url(#cad-grid)"/>
+        <line x1="12" y1="30" x2="428" y2="30" stroke="rgba(255,255,255,0.08)" stroke-width="0.8"/>
+        <text x="16" y="21" fill="#94a3b8" font-family="monospace" font-size="9.5" letter-spacing="1">CAD-06 // APOLLO A7L OVERSHOE TREAD &amp; LRO NAC PHOTOMETRY</text>
+        <!-- A7L Lunar Bootprint Technical Top-View -->
+        <g transform="translate(132, 92) rotate(-14)" fill="none" stroke="#cbd5e1" stroke-width="1.1">
+          <rect x="-20" y="-36" width="40" height="72" rx="18" fill="#0f172a" stroke="#fcd34d" stroke-width="1.2"/>
+          <line x1="-16" y1="-22" x2="16" y2="-22" stroke="#94a3b8" stroke-width="2"/>
+          <line x1="-18" y1="-11" x2="18" y2="-11" stroke="#94a3b8" stroke-width="2"/>
+          <line x1="-18" y1="0" x2="18" y2="0" stroke="#94a3b8" stroke-width="2"/>
+          <line x1="-18" y1="11" x2="18" y2="11" stroke="#94a3b8" stroke-width="2"/>
+          <line x1="-16" y1="22" x2="16" y2="22" stroke="#94a3b8" stroke-width="2"/>
         </g>
-        <text x="16" y="22" fill="#94a3b8" font-family="monospace" font-size="10">LRO NAC // REGOLITH NORMAL-RELIEF IMAGING</text>
+        <!-- Incidence Angle Photometry Diagram -->
+        <g transform="translate(245, 118)" fill="none">
+          <polyline points="0,0 35,0 35,10 55,10 55,0 85,0 85,10 105,10 105,0 145,0" stroke="#cbd5e1" stroke-width="1.2"/>
+          <line x1="12" y1="-58" x2="52" y2="6" stroke="#fcd34d" stroke-width="1" stroke-dasharray="3 2"/>
+          <line x1="62" y1="-58" x2="102" y2="6" stroke="#fcd34d" stroke-width="1" stroke-dasharray="3 2"/>
+          <text x="8" y="-64" fill="#fcd34d" font-family="monospace" font-size="8.5">SOLAR INCIDENCE θ (SHADOW RELIEF)</text>
+        </g>
       </svg>
     `
   },
@@ -212,14 +326,32 @@ window.MEMORY_SHARDS = [
     sourceUrl: 'https://science.nasa.gov/mission/voyager/',
     svgDiagram: `
       <svg viewBox="0 0 440 155" width="100%" height="100%">
-        <rect width="440" height="155" fill="#060913"/>
-        <polygon points="180,0 245,0 325,155 245,155" fill="#f59e0b" opacity="0.18"/>
-        <circle cx="95" cy="52" r="14" fill="#d97706" stroke="#fcd34d" stroke-width="1.2"/>
-        <ellipse cx="190" cy="46" rx="22" ry="7" fill="none" stroke="#fef3c7" stroke-width="1.6" transform="rotate(-18 190 46)"/>
-        <circle cx="190" cy="46" r="10" fill="#fcd34d"/>
-        <circle cx="272" cy="82" r="12" fill="none" stroke="#38bdf8" stroke-width="1.4" opacity="0.7"/>
-        <circle cx="272" cy="82" r="3" fill="#7dd3fc"/>
-        <text x="16" y="22" fill="#94a3b8" font-family="monospace" font-size="10">VOYAGER 1 // 40.5 AU FAMILY PORTRAIT (0.12 PX EARTH)</text>
+        <defs>
+          <pattern id="cad-grid" width="22" height="22" patternUnits="userSpaceOnUse">
+            <path d="M 22 0 L 0 0 0 22" fill="none" stroke="rgba(148,163,184,0.07)" stroke-width="0.7"/>
+          </pattern>
+        </defs>
+        <rect width="440" height="155" fill="#060911"/>
+        <rect width="440" height="155" fill="url(#cad-grid)"/>
+        <line x1="12" y1="30" x2="428" y2="30" stroke="rgba(255,255,255,0.08)" stroke-width="0.8"/>
+        <text x="16" y="21" fill="#94a3b8" font-family="monospace" font-size="9.5" letter-spacing="1">CAD-07 // VOYAGER 1 ISS NARROW-ANGLE OPTICS AT 40.5 AU</text>
+        <!-- Scattered Sunlight Ray & Camera Field of View -->
+        <polygon points="195,30 235,30 305,155 255,155" fill="rgba(251,191,36,0.12)"/>
+        <line x1="195" y1="30" x2="255" y2="155" stroke="rgba(251,191,36,0.35)" stroke-width="0.8" stroke-dasharray="3 3"/>
+        <line x1="235" y1="30" x2="305" y2="155" stroke="rgba(251,191,36,0.35)" stroke-width="0.8" stroke-dasharray="3 3"/>
+        <!-- Voyager 1 HGA & ISS Camera Boom -->
+        <g transform="translate(76, 92)" fill="none" stroke="#cbd5e1" stroke-width="1.1">
+          <ellipse cx="0" cy="0" rx="8" ry="24" fill="#0f172a" stroke="#e2e8f0"/>
+          <line x1="8" y1="0" x2="48" y2="-18"/>
+          <rect x="46" y="-23" width="10" height="8" fill="#0f172a" stroke="#7dd3fc"/>
+        </g>
+        <line x1="134" y1="72" x2="242" y2="92" stroke="#7dd3fc" stroke-width="0.9" stroke-dasharray="2 3"/>
+        <!-- Earth Mote inside Narrow-Angle Reticle -->
+        <g transform="translate(248, 92)" fill="none">
+          <rect x="-14" y="-14" width="28" height="28" stroke="#7dd3fc" stroke-width="1"/>
+          <circle cx="0" cy="0" r="2.2" fill="#bae6fd"/>
+          <text x="20" y="4" fill="#7dd3fc" font-family="monospace" font-size="9">EARTH (0.12 PX // 6.05B KM)</text>
+        </g>
       </svg>
     `
   },
@@ -241,13 +373,29 @@ window.MEMORY_SHARDS = [
     sourceUrl: 'https://science.nasa.gov/mission/cassini/',
     svgDiagram: `
       <svg viewBox="0 0 440 155" width="100%" height="100%">
-        <rect width="440" height="155" fill="#060913"/>
-        <ellipse cx="145" cy="135" rx="220" ry="70" fill="none" stroke="#fcd34d" stroke-width="4" opacity="0.5"/>
-        <ellipse cx="145" cy="135" rx="195" ry="56" fill="none" stroke="#f59e0b" stroke-width="2.5" opacity="0.35"/>
-        <circle cx="355" cy="34" r="4" fill="#7dd3fc"/>
-        <line x1="215" y1="82" x2="355" y2="34" stroke="#38bdf8" stroke-width="1.6" stroke-dasharray="4 3"/>
-        <rect x="206" y="76" width="16" height="16" rx="2" fill="#d97706" stroke="#fcd34d" stroke-width="1.4"/>
-        <text x="16" y="22" fill="#94a3b8" font-family="monospace" font-size="10">CASSINI-HUYGENS // FINAL HGA LOCK AT 113,000 KM/H</text>
+        <defs>
+          <pattern id="cad-grid" width="22" height="22" patternUnits="userSpaceOnUse">
+            <path d="M 22 0 L 0 0 0 22" fill="none" stroke="rgba(148,163,184,0.07)" stroke-width="0.7"/>
+          </pattern>
+        </defs>
+        <rect width="440" height="155" fill="#060911"/>
+        <rect width="440" height="155" fill="url(#cad-grid)"/>
+        <line x1="12" y1="30" x2="428" y2="30" stroke="rgba(255,255,255,0.08)" stroke-width="0.8"/>
+        <text x="16" y="21" fill="#94a3b8" font-family="monospace" font-size="9.5" letter-spacing="1">CAD-08 // CASSINI PROXIMAL ORBIT &amp; HGA EARTH-LOCK GEOMETRY</text>
+        <!-- Saturn Limb & Ring Plane -->
+        <path d="M 12 155 A 180 95 0 0 1 255 155" fill="rgba(217,119,6,0.14)" stroke="#f59e0b" stroke-width="1.2"/>
+        <ellipse cx="132" cy="148" rx="195" ry="44" fill="none" stroke="rgba(253,230,138,0.45)" stroke-width="1.2" transform="rotate(-12 132 148)"/>
+        <ellipse cx="132" cy="148" rx="165" ry="36" fill="none" stroke="rgba(253,230,138,0.28)" stroke-width="1" transform="rotate(-12 132 148)"/>
+        <!-- Proximal Dive Trajectory & Cassini Spacecraft -->
+        <path d="M 165 36 Q 210 72 204 134" fill="none" stroke="#fcd34d" stroke-width="1.2" stroke-dasharray="3 2"/>
+        <g transform="translate(200, 84) rotate(-24)" fill="none" stroke="#e2e8f0" stroke-width="1.1">
+          <rect x="-6" y="-6" width="12" height="12" fill="#0f172a" stroke="#fcd34d"/>
+          <ellipse cx="8" cy="0" rx="3" ry="10" stroke="#7dd3fc"/>
+        </g>
+        <!-- HGA Telemetry Lock Line to Earth -->
+        <line x1="210" y1="80" x2="378" y2="46" stroke="#7dd3fc" stroke-width="1.1" stroke-dasharray="4 3"/>
+        <circle cx="382" cy="45" r="3" fill="#7dd3fc"/>
+        <text x="278" y="39" fill="#7dd3fc" font-family="monospace" font-size="8.5">EARTH DSN LOCK (83 MIN RTLT)</text>
       </svg>
     `
   }

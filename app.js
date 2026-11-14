@@ -664,11 +664,10 @@ class EchoesApp {
     const isSolved = this.solvedQuizzes.has(quiz.id);
     container.innerHTML = `
       <div class="quiz-header-bar">
-        <span class="quiz-tag">THỬ THÁCH TRÍ NHỚ VANTALUMEN ${isSolved ? '• ✓ ĐÃ GIẢI MÃ' : ''}</span>
-        <button type="button" class="quiz-deck-link" id="btn-expand-quiz-deck">Mở trọn bộ 7 câu hỏi minh họa ↗</button>
+        <span class="quiz-tag">KIỂM CHỨNG TRI THỨC ${isSolved ? '• ✓ ĐÃ GIẢI MÃ' : ''}</span>
+        <button type="button" class="quiz-deck-link" id="btn-expand-quiz-deck">Bộ 7 câu hỏi ↗</button>
       </div>
       <div class="quiz-card-layout">
-        <img src="${quiz.image}" alt="${quiz.questionEn}" class="quiz-art-thumb" id="shard-quiz-thumb" title="Bấm để phóng to thẻ câu hỏi VantaLumen" />
         <div>
           <div class="quiz-q-title">${quiz.questionEn}</div>
           <div class="quiz-q-sub">${quiz.questionVi}</div>
@@ -991,404 +990,473 @@ class EchoesApp {
     this.paused = false;
   }
 
-  exportShardCardPNG(index) {
-    window.soundEngine.playUIChime(7);
-    const shard = window.MEMORY_SHARDS[index];
-    const c = document.createElement('canvas');
-    c.width = 1280;
-    c.height = 760;
-    const ctx = c.getContext('2d');
-
-    const bg = ctx.createLinearGradient(0, 0, 1280, 760);
-    bg.addColorStop(0, '#050811');
-    bg.addColorStop(0.55, '#0b1429');
-    bg.addColorStop(1, '#111d3a');
-    ctx.fillStyle = bg;
-    ctx.fillRect(0, 0, 1280, 760);
-
-    // Subtle starfield
-    for (let i = 0; i < 65; i++) {
-      const sx = ((i * 193 + 37) % 1220) + 30;
-      const sy = ((i * 277 + 53) % 700) + 30;
-      ctx.fillStyle = `rgba(254, 243, 199, ${0.12 + (i % 4) * 0.06})`;
-      ctx.beginPath();
-      ctx.arc(sx, sy, i % 3 === 0 ? 1.4 : 0.85, 0, Math.PI * 2);
-      ctx.fill();
-    }
-
-    const glow = ctx.createRadialGradient(1120, 125, 20, 1120, 125, 420);
-    glow.addColorStop(0, 'rgba(245, 158, 11, 0.22)');
-    glow.addColorStop(1, 'rgba(245, 158, 11, 0)');
-    ctx.fillStyle = glow;
-    ctx.fillRect(0, 0, 1280, 760);
-
-    ctx.strokeStyle = 'rgba(245, 158, 11, 0.6)';
-    ctx.lineWidth = 2.5;
-    ctx.strokeRect(28, 28, 1224, 704);
-    ctx.strokeStyle = 'rgba(254, 243, 199, 0.14)';
-    ctx.lineWidth = 1;
-    ctx.strokeRect(42, 42, 1196, 676);
-
-    ctx.fillStyle = '#38bdf8';
-    ctx.font = '600 15px "JetBrains Mono", monospace';
-    ctx.fillText(`TEAM VANTALUMEN // NASA SPACE APPS • MẢNH VỠ KÝ ỨC ${shard.number}`, 74, 92);
-
-    ctx.fillStyle = '#94a3b8';
-    ctx.font = '15px "JetBrains Mono", monospace';
-    ctx.fillText(shard.mission, 74, 118);
-
-    ctx.fillStyle = '#fef3c7';
-    ctx.font = '600 34px Georgia, serif';
-    ctx.fillText(shard.title, 74, 168, 940);
-
-    ctx.fillStyle = '#f59e0b';
-    ctx.font = '500 19px Inter, sans-serif';
-    ctx.fillText(shard.subtitle, 74, 204, 940);
-
-    // Gold divider
-    ctx.strokeStyle = 'rgba(245, 158, 11, 0.35)';
-    ctx.lineWidth = 1.5;
-    ctx.beginPath();
-    ctx.moveTo(74, 228);
-    ctx.lineTo(1000, 228);
-    ctx.stroke();
-
-    // Story text with safe vertical bounds (y: 268..475)
-    ctx.fillStyle = '#e2e8f0';
-    ctx.font = '20px Inter, sans-serif';
-    const words = shard.story.split(' ');
+  _wrapCanvasText(ctx, text, x, y, maxWidth, lineHeight, maxLines = 4) {
+    const words = String(text || '').split(/\s+/);
     let line = '';
-    let y = 268;
-    const maxY = 468;
-    for (const w of words) {
-      const test = line + w + ' ';
-      if (ctx.measureText(test).width > 1120) {
-        if (y <= maxY) ctx.fillText(line.trim(), 74, y);
-        line = w + ' ';
-        y += 32;
+    let lineCount = 0;
+    let curY = y;
+    for (let i = 0; i < words.length; i++) {
+      const test = line ? `${line} ${words[i]}` : words[i];
+      if (ctx.measureText(test).width > maxWidth && line) {
+        lineCount++;
+        if (lineCount >= maxLines) {
+          ctx.fillText(line.trim() + '…', x, curY);
+          return curY + lineHeight;
+        }
+        ctx.fillText(line.trim(), x, curY);
+        line = words[i];
+        curY += lineHeight;
       } else {
         line = test;
       }
     }
-    if (line && y <= maxY) ctx.fillText(line.trim(), 74, y);
+    if (line) {
+      ctx.fillText(line.trim(), x, curY);
+      curY += lineHeight;
+    }
+    return curY;
+  }
 
-    // Session Telemetry + Live Ephemeris Box
-    const metric =
-      this.currentGame && this.currentGame.getSessionMetric
-        ? this.currentGame.getSessionMetric()
-        : 'Đã ghi nhận';
-    const eph = window.NASA_TELEMETRY ? window.NASA_TELEMETRY.getLiveMissionTelemetry(shard.id) : null;
+  _drawArchiveGridBackdrop(ctx, w, h) {
+    const bg = ctx.createLinearGradient(0, 0, w, h);
+    bg.addColorStop(0, '#05070d');
+    bg.addColorStop(0.55, '#080c16');
+    bg.addColorStop(1, '#0b101e');
+    ctx.fillStyle = bg;
+    ctx.fillRect(0, 0, w, h);
 
-    ctx.fillStyle = 'rgba(13, 21, 42, 0.88)';
-    ctx.fillRect(74, 510, 1132, 134);
-    ctx.strokeStyle = 'rgba(245, 158, 11, 0.5)';
-    ctx.lineWidth = 1.5;
-    ctx.strokeRect(74, 510, 1132, 134);
+    if (window.vantaNebulaGL) {
+      window.vantaNebulaGL.drawBackdrop(ctx, w, h, {
+        alpha: 0.38,
+        lumen: 0.72,
+        cyan: 0.38,
+        stars: 0.58
+      });
+    }
 
-    ctx.fillStyle = '#fcd34d';
-    ctx.font = '600 17px "JetBrains Mono", monospace';
-    ctx.fillText(`DỮ LIỆU LƯỢT CHƠI: ${metric}`, 100, 548, 1080);
+    if (window.VantaGfx) {
+      const grain = window.VantaGfx.getGrainPattern(ctx, 0.035, false);
+      if (grain) {
+        ctx.fillStyle = grain;
+        ctx.fillRect(0, 0, w, h);
+      }
+    }
 
-    if (eph) {
-      ctx.fillStyle = '#38bdf8';
-      ctx.font = '15px "JetBrains Mono", monospace';
-      ctx.fillText(eph.line, 100, 582, 1080);
+    ctx.save();
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.024)';
+    ctx.lineWidth = 1;
+    for (let gx = 80; gx < w; gx += 80) {
+      ctx.beginPath();
+      ctx.moveTo(gx, 0);
+      ctx.lineTo(gx, h);
+      ctx.stroke();
+    }
+    for (let gy = 80; gy < h; gy += 80) {
+      ctx.beginPath();
+      ctx.moveTo(0, gy);
+      ctx.lineTo(w, gy);
+      ctx.stroke();
+    }
+
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.04)';
+    [130, 210, 300].forEach(r => {
+      ctx.beginPath();
+      ctx.arc(w - 140, 140, r, 0, Math.PI * 2);
+      ctx.stroke();
+    });
+    ctx.restore();
+
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.12)';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(40.5, 40.5, w - 81, h - 81);
+  }
+
+  _drawMissionSealIcon(ctx, id, cx, cy, unlocked) {
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.strokeStyle = unlocked ? 'rgba(251, 191, 36, 0.75)' : 'rgba(148, 163, 184, 0.28)';
+    ctx.fillStyle = unlocked ? 'rgba(251, 191, 36, 0.75)' : 'rgba(148, 163, 184, 0.28)';
+    ctx.lineWidth = 1.3;
+
+    if (id === 'under-the-dust') {
+      ctx.beginPath();
+      for (let i = 0; i <= 10; i++) {
+        const a = (i / 10) * Math.PI * 2;
+        const px = Math.cos(a) * 11;
+        const py = Math.sin(a) * 11;
+        if (i === 0) ctx.moveTo(px, py);
+        else ctx.lineTo(px, py);
+      }
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(0, 0, 3, 0, Math.PI * 2);
+      ctx.stroke();
+    } else if (id === 'still-there') {
+      ctx.beginPath();
+      ctx.moveTo(0, -11);
+      ctx.lineTo(10, 7);
+      ctx.lineTo(-10, 7);
+      ctx.closePath();
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(0, 1, 2.2, 0, Math.PI * 2);
+      ctx.fill();
+    } else if (id === 'one-wheel-left') {
+      [-8, 0, 8].forEach(wx => {
+        ctx.beginPath();
+        ctx.arc(wx, 4, 3.2, 0, Math.PI * 2);
+        ctx.stroke();
+      });
+      ctx.beginPath();
+      ctx.moveTo(-8, 0);
+      ctx.lineTo(0, -5);
+      ctx.lineTo(8, 0);
+      ctx.stroke();
+    } else if (id === 'unsent') {
+      ctx.beginPath();
+      ctx.arc(0, 5, 5, Math.PI, 0);
+      ctx.stroke();
+      [8, 12].forEach(r => {
+        ctx.beginPath();
+        ctx.arc(0, 4, r, -Math.PI * 0.75, -Math.PI * 0.25);
+        ctx.stroke();
+      });
+    } else if (id === 'moon-still-rings') {
+      [4, 8, 12].forEach(r => {
+        ctx.beginPath();
+        ctx.arc(0, 0, r, 0, Math.PI * 2);
+        ctx.stroke();
+      });
+    } else if (id === 'eternal-footprint') {
+      ctx.beginPath();
+      ctx.roundRect(-5.5, -10, 11, 20, 5);
+      ctx.stroke();
+      [-5, 0, 5].forEach(ry => {
+        ctx.beginPath();
+        ctx.moveTo(-3.5, ry);
+        ctx.lineTo(3.5, ry);
+        ctx.stroke();
+      });
+    } else if (id === 'pale-blue-dot') {
+      ctx.beginPath();
+      ctx.moveTo(-9, -9);
+      ctx.lineTo(9, 9);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(0, 0, 2.5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeRect(-7, -7, 14, 14);
+    } else {
+      ctx.rotate(-0.3);
+      ctx.beginPath();
+      ctx.ellipse(0, 0, 13, 4.5, 0, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(0, 0, 4.2, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  async exportShardCardPNG(index) {
+    window.soundEngine.playUIChime(7);
+    if (document.fonts && document.fonts.ready) {
+      try { await document.fonts.ready; } catch {}
+    }
+    const shard = window.MEMORY_SHARDS[index];
+    const w = 1400;
+    const h = 820;
+    const c = document.createElement('canvas');
+    c.width = w;
+    c.height = h;
+    const ctx = c.getContext('2d');
+
+    this._drawArchiveGridBackdrop(ctx, w, h);
+
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '500 13px "JetBrains Mono", monospace';
+    ctx.fillText(`NASA SPACE APPS ARCHIVE  //  SHARD ${shard.number}  //  ${shard.mission.toUpperCase()}`, 84, 96);
+
+    const parts = shard.title.split('—');
+    const enTitle = (parts[0] || shard.title).trim();
+    const viTitle = (parts[1] || '').trim();
+
+    ctx.fillStyle = '#f8fafc';
+    ctx.font = '700 44px "Space Grotesk", "Be Vietnam Pro", sans-serif';
+    ctx.fillText(enTitle, 84, 154);
+
+    if (viTitle) {
+      ctx.fillStyle = '#fcd34d';
+      ctx.font = '600 22px "Be Vietnam Pro", sans-serif';
+      ctx.fillText(viTitle, 84, 190);
     }
 
     ctx.fillStyle = '#94a3b8';
-    ctx.font = '14px "JetBrains Mono", monospace';
-    ctx.fillText(`Nguồn NASA: ${shard.sourceUrl}`, 100, 618, 1080);
+    ctx.font = '400 17px "Be Vietnam Pro", sans-serif';
+    ctx.fillText(shard.subtitle, 84, 222);
 
-    ctx.fillStyle = '#64748b';
-    ctx.font = '13px "JetBrains Mono", monospace';
-    ctx.fillText('VANTALUMEN • KEEPING SPACE EXPLORATION STORIES ALIVE', 74, 686);
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(84, 248);
+    ctx.lineTo(w - 84, 248);
+    ctx.stroke();
 
-    const download = () => {
-      const link = document.createElement('a');
-      link.download = `Vantalumen-${shard.id}.png`;
-      link.href = c.toDataURL('image/png');
-      link.click();
-    };
+    ctx.fillStyle = '#e2e8f0';
+    ctx.font = '400 20px "Be Vietnam Pro", sans-serif';
+    this._wrapCanvasText(ctx, shard.story, 84, 294, w - 168, 34, 6);
 
-    const logo = new Image();
-    logo.onload = () => {
-      try {
-        ctx.save();
-        ctx.strokeStyle = 'rgba(245, 158, 11, 0.7)';
-        ctx.lineWidth = 2;
+    const tableY = 520;
+    const tableW = w - 168;
+    const tableH = 112;
+    ctx.fillStyle = 'rgba(10, 15, 28, 0.78)';
+    ctx.fillRect(84, tableY, tableW, tableH);
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.12)';
+    ctx.strokeRect(84.5, tableY + 0.5, tableW - 1, tableH - 1);
+
+    const metric =
+      this.currentGame && this.currentGame.getSessionMetric
+        ? this.currentGame.getSessionMetric()
+        : (shard.specs && shard.specs[2] ? shard.specs[2].value : 'Đã đồng bộ');
+
+    const cols = [
+      { label: shard.specs?.[0]?.label || 'PHẦN CỨNG', val: shard.specs?.[0]?.value || '—', accent: '#f8fafc' },
+      { label: shard.specs?.[1]?.label || 'THÔNG SỐ', val: shard.specs?.[1]?.value || '—', accent: '#7dd3fc' },
+      { label: shard.defaultStatLabel || 'DỮ LIỆU PHIÊN', val: metric, accent: '#fcd34d' }
+    ];
+
+    const colW = tableW / 3;
+    cols.forEach((col, i) => {
+      const cx = 84 + i * colW;
+      if (i > 0) {
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
         ctx.beginPath();
-        ctx.arc(1140, 126, 56, 0, Math.PI * 2);
+        ctx.moveTo(cx, tableY + 18);
+        ctx.lineTo(cx, tableY + tableH - 18);
         ctx.stroke();
+      }
+      ctx.fillStyle = '#64748b';
+      ctx.font = '500 12px "JetBrains Mono", monospace';
+      ctx.fillText(col.label.toUpperCase(), cx + 24, tableY + 40);
 
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.96)';
-        ctx.beginPath();
-        ctx.arc(1140, 126, 44, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.drawImage(logo, 1140 - 33, 126 - 33, 66, 66);
-        ctx.restore();
-      } catch {}
-      download();
-    };
-    logo.onerror = download;
-    logo.src = 'assets/vantalumen_logo.png';
-  }
+      ctx.fillStyle = col.accent;
+      ctx.font = '600 20px "Be Vietnam Pro", sans-serif';
+      ctx.fillText(col.val, cx + 24, tableY + 76, colW - 48);
+    });
 
-  exportCertificatePNG() {
-    window.soundEngine.playSuccessBloom();
-    const c = document.createElement('canvas');
-    c.width = 1400;
-    c.height = 860;
-    const ctx = c.getContext('2d');
-
-    // Deep cosmic background
-    const bg = ctx.createLinearGradient(0, 0, 1400, 860);
-    bg.addColorStop(0, '#040710');
-    bg.addColorStop(0.5, '#0a1328');
-    bg.addColorStop(1, '#101c38');
-    ctx.fillStyle = bg;
-    ctx.fillRect(0, 0, 1400, 860);
-
-    // Subtle cosmic starfield
-    for (let i = 0; i < 95; i++) {
-      const sx = ((i * 197 + 43) % 1340) + 30;
-      const sy = ((i * 313 + 71) % 800) + 30;
-      const sr = (i % 3 === 0) ? 1.5 : 0.85;
-      ctx.fillStyle = `rgba(254, 243, 199, ${0.12 + (i % 5) * 0.06})`;
-      ctx.beginPath();
-      ctx.arc(sx, sy, sr, 0, Math.PI * 2);
-      ctx.fill();
+    const eph = window.NASA_TELEMETRY ? window.NASA_TELEMETRY.getLiveMissionTelemetry(shard.id) : null;
+    if (eph) {
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = '400 14px "JetBrains Mono", monospace';
+      ctx.fillText(`${eph.badge}: ${eph.line}`, 84, 676);
     }
 
-    // Dual cosmic glow halos (Amber & Cyan)
-    const gAmber = ctx.createRadialGradient(1236, 132, 20, 1236, 132, 460);
-    gAmber.addColorStop(0, 'rgba(245, 158, 11, 0.22)');
-    gAmber.addColorStop(1, 'rgba(245, 158, 11, 0)');
-    ctx.fillStyle = gAmber;
-    ctx.fillRect(0, 0, 1400, 860);
-
-    const gCyan = ctx.createRadialGradient(240, 680, 20, 240, 680, 440);
-    gCyan.addColorStop(0, 'rgba(56, 189, 248, 0.14)');
-    gCyan.addColorStop(1, 'rgba(56, 189, 248, 0)');
-    ctx.fillStyle = gCyan;
-    ctx.fillRect(0, 0, 1400, 860);
-
-    // Faint orbital arcs behind header
-    ctx.save();
-    ctx.strokeStyle = 'rgba(56, 189, 248, 0.08)';
-    ctx.lineWidth = 1.2;
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
     ctx.beginPath();
-    ctx.arc(1236, 132, 135, 0, Math.PI * 2);
+    ctx.moveTo(84, 712);
+    ctx.lineTo(w - 84, 712);
     ctx.stroke();
-    ctx.beginPath();
-    ctx.arc(1236, 132, 210, 0, Math.PI * 2);
-    ctx.stroke();
-    ctx.restore();
 
-    // Outer & Inner gold borders + corner aerospace brackets
-    ctx.strokeStyle = 'rgba(245, 158, 11, 0.65)';
-    ctx.lineWidth = 2.5;
-    ctx.strokeRect(32, 32, 1336, 796);
-    ctx.strokeStyle = 'rgba(254, 243, 199, 0.14)';
-    ctx.lineWidth = 1;
-    ctx.strokeRect(46, 46, 1308, 768);
+    ctx.fillStyle = '#64748b';
+    ctx.font = '500 13px "JetBrains Mono", monospace';
+    ctx.fillText(`VANTALUMEN ARCHIVE  //  SOURCE: ${shard.sourceUrl}`, 84, 748);
 
-    const drawBracket = (bx, by, dx, dy) => {
-      ctx.strokeStyle = '#fcd34d';
-      ctx.lineWidth = 3;
-      ctx.beginPath();
-      ctx.moveTo(bx + dx * 26, by);
-      ctx.lineTo(bx, by);
-      ctx.lineTo(bx, by + dy * 26);
-      ctx.stroke();
-    };
-    drawBracket(32, 32, 1, 1);
-    drawBracket(1368, 32, -1, 1);
-    drawBracket(32, 828, 1, -1);
-    drawBracket(1368, 828, -1, -1);
+    const link = document.createElement('a');
+    link.download = `Vantalumen-${shard.id}.png`;
+    link.href = c.toDataURL('image/png');
+    link.click();
+  }
 
-    // Header (Left column, plenty of clearance from top-right emblem)
-    ctx.fillStyle = '#38bdf8';
-    ctx.font = '600 16px "JetBrains Mono", monospace';
-    ctx.fillText('NASA SPACE APPS CHALLENGE // OFFICIAL ANTHOLOGY CERTIFICATE', 84, 102);
+  async exportCertificatePNG() {
+    window.soundEngine.playSuccessBloom();
+    if (document.fonts && document.fonts.ready) {
+      try { await document.fonts.ready; } catch {}
+    }
 
-    ctx.fillStyle = '#fef3c7';
-    ctx.font = '600 46px Georgia, serif';
-    ctx.fillText('ECHOES IN THE DUST', 84, 160);
+    const w = 1600;
+    const h = 1000;
+    const c = document.createElement('canvas');
+    c.width = w;
+    c.height = h;
+    const ctx = c.getContext('2d');
+
+    this._drawArchiveGridBackdrop(ctx, w, h);
+
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '500 13px "JetBrains Mono", monospace';
+    ctx.fillText('NASA SPACE APPS CHALLENGE  //  VANTALUMEN MISSION TELEMETRY DOSSIER', 88, 98);
+
+    ctx.fillStyle = '#f8fafc';
+    ctx.font = '700 48px "Space Grotesk", "Be Vietnam Pro", sans-serif';
+    ctx.fillText('ECHOES IN THE DUST', 88, 156);
 
     ctx.fillStyle = '#cbd5e1';
-    ctx.font = '500 20px Inter, sans-serif';
-    ctx.fillText('Chứng nhận Hoàn thành Trải nghiệm Phần cứng & Tri thức Thám hiểm NASA', 84, 198);
+    ctx.font = '400 19px "Be Vietnam Pro", sans-serif';
+    ctx.fillText('Hồ sơ Chứng nhận Hoàn thành Tương tác Phần cứng & Lưu trữ Tri thức Vũ trụ NASA', 88, 192);
 
-    // Gold gradient accent line under header
-    const lineGrad = ctx.createLinearGradient(84, 0, 1090, 0);
-    lineGrad.addColorStop(0, '#f59e0b');
-    lineGrad.addColorStop(0.6, 'rgba(245, 158, 11, 0.35)');
-    lineGrad.addColorStop(1, 'rgba(245, 158, 11, 0)');
-    ctx.strokeStyle = lineGrad;
-    ctx.lineWidth = 2;
+    ctx.save();
+    ctx.textAlign = 'right';
+    ctx.fillStyle = '#fcd34d';
+    ctx.font = '600 13px "JetBrains Mono", monospace';
+    ctx.fillText('DOC-ID // VL-8M-2026', w - 88, 98);
+    ctx.fillStyle = '#64748b';
+    ctx.font = '400 12px "JetBrains Mono", monospace';
+    ctx.fillText('TELEMETRY VERIFIED • JPL / APOLLO / VOYAGER', w - 88, 120);
+    ctx.restore();
+
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+    ctx.lineWidth = 1;
     ctx.beginPath();
-    ctx.moveTo(84, 224);
-    ctx.lineTo(1090, 224);
+    ctx.moveTo(88, 222);
+    ctx.lineTo(w - 88, 222);
     ctx.stroke();
 
-    // Rank & Telemetry Banner (x: 84 -> 1316, w: 1232)
     const unlockedCount = this.unlockedShards.size;
     const totalShards = window.MEMORY_SHARDS.length;
     const solvedCount = this.solvedQuizzes.size;
     const totalQuizzes = (window.VANTALUMEN_QUIZZES || []).length;
     const rank = this._getMissionRank();
 
-    ctx.fillStyle = 'rgba(13, 21, 42, 0.88)';
-    ctx.fillRect(84, 256, 1232, 138);
-    ctx.strokeStyle = 'rgba(245, 158, 11, 0.38)';
-    ctx.lineWidth = 1.5;
-    ctx.strokeRect(84, 256, 1232, 138);
+    const stripX = 88;
+    const stripY = 248;
+    const stripW = w - 176;
+    const stripH = 122;
 
-    // Vertical dividers
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+    ctx.fillStyle = 'rgba(10, 15, 28, 0.76)';
+    ctx.fillRect(stripX, stripY, stripW, stripH);
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.12)';
     ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.moveTo(640, 278);
-    ctx.lineTo(640, 372);
-    ctx.moveTo(975, 278);
-    ctx.lineTo(975, 372);
-    ctx.stroke();
-
-    ctx.fillStyle = '#94a3b8';
-    ctx.font = '600 13px "JetBrains Mono", monospace';
-    ctx.fillText('DANH HIỆU SỨ MỆNH', 118, 294);
-    ctx.fillText('MẢNH VỠ KÝ ỨC', 674, 294);
-    ctx.fillText('TRI THỨC VANTALUMEN', 1009, 294);
-
-    ctx.fillStyle = '#fef3c7';
-    ctx.font = '600 28px Georgia, serif';
-    ctx.fillText(rank, 118, 344);
-
-    ctx.fillStyle = '#fcd34d';
-    ctx.font = '600 32px "JetBrains Mono", monospace';
-    ctx.fillText(`${unlockedCount} / ${totalShards}`, 674, 342);
-
-    ctx.fillStyle = '#38bdf8';
-    ctx.fillText(`${solvedCount} / ${totalQuizzes}`, 1009, 342);
-
-    // Mini progress bars inside telemetry banner
-    ctx.fillStyle = 'rgba(148, 163, 184, 0.2)';
-    ctx.fillRect(674, 360, 260, 6);
-    ctx.fillRect(1009, 360, 260, 6);
+    ctx.strokeRect(stripX + 0.5, stripY + 0.5, stripW - 1, stripH - 1);
 
     ctx.fillStyle = '#f59e0b';
-    ctx.fillRect(674, 360, Math.round(260 * (unlockedCount / Math.max(1, totalShards))), 6);
-    ctx.fillStyle = '#38bdf8';
-    ctx.fillRect(1009, 360, Math.round(260 * (solvedCount / Math.max(1, totalQuizzes))), 6);
+    ctx.fillRect(stripX, stripY, 3, stripH);
 
-    // 8 NASA Hardware Mission Seals (4x2 grid, total w = 1232)
-    ctx.fillStyle = '#94a3b8';
-    ctx.font = '600 14px "JetBrains Mono", monospace';
-    ctx.fillText('TÁM THIẾT BỊ NASA TRONG BỘ SƯU TẬP', 84, 438);
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
+    ctx.beginPath();
+    ctx.moveTo(760, stripY + 20);
+    ctx.lineTo(760, stripY + stripH - 20);
+    ctx.moveTo(1140, stripY + 20);
+    ctx.lineTo(1140, stripY + stripH - 20);
+    ctx.stroke();
+
+    ctx.fillStyle = '#64748b';
+    ctx.font = '500 12px "JetBrains Mono", monospace';
+    ctx.fillText('DANH HIỆU SỨ MỆNH', 118, stripY + 38);
+    ctx.fillText('MẢNH VỠ KÝ ỨC ĐÃ ĐÁNH THỨC', 792, stripY + 38);
+    ctx.fillText('TRI THỨC VŨ TRỤ VANTALUMEN', 1172, stripY + 38);
+
+    ctx.fillStyle = '#f8fafc';
+    ctx.font = '600 28px "Be Vietnam Pro", sans-serif';
+    ctx.fillText(rank, 118, stripY + 84);
+
+    ctx.fillStyle = '#fcd34d';
+    ctx.font = '600 30px "JetBrains Mono", monospace';
+    ctx.fillText(`${String(unlockedCount).padStart(2, '0')} / ${String(totalShards).padStart(2, '0')}`, 792, stripY + 82);
+
+    ctx.fillStyle = '#7dd3fc';
+    ctx.fillText(`${String(solvedCount).padStart(2, '0')} / ${String(totalQuizzes).padStart(2, '0')}`, 1172, stripY + 82);
+
+    for (let s = 0; s < totalShards; s++) {
+      ctx.fillStyle = s < unlockedCount ? '#f59e0b' : 'rgba(148, 163, 184, 0.16)';
+      ctx.fillRect(792 + s * 34, stripY + 98, 28, 4);
+    }
+    for (let q = 0; q < totalQuizzes; q++) {
+      ctx.fillStyle = q < solvedCount ? '#38bdf8' : 'rgba(148, 163, 184, 0.16)';
+      ctx.fillRect(1172 + q * 38, stripY + 98, 32, 4);
+    }
+
+    ctx.fillStyle = '#64748b';
+    ctx.font = '500 12.5px "JetBrains Mono", monospace';
+    ctx.fillText('HỒ SƠ 08 SỨ MỆNH PHẦN CỨNG NASA TRONG BỘ SƯU TẬP', 88, 412);
+
+    const gridX = 88;
+    const gridY = 432;
+    const gapX = 20;
+    const gapY = 20;
+    const cardW = (stripW - gapX * 3) / 4;
+    const cardH = 200;
 
     window.MEMORY_SHARDS.forEach((shard, idx) => {
       const col = idx % 4;
       const row = Math.floor(idx / 4);
-      const bw = 293;
-      const gap = 20;
-      const bx = 84 + col * (bw + gap);
-      const by = 460 + row * 128;
-      const bh = 108;
+      const bx = gridX + col * (cardW + gapX);
+      const by = gridY + row * (cardH + gapY);
       const unlocked = this.unlockedShards.has(shard.id);
 
-      ctx.fillStyle = unlocked ? 'rgba(245, 158, 11, 0.1)' : 'rgba(15, 23, 42, 0.72)';
-      ctx.fillRect(bx, by, bw, bh);
-      ctx.strokeStyle = unlocked ? 'rgba(245, 158, 11, 0.72)' : 'rgba(148, 163, 184, 0.22)';
-      ctx.lineWidth = 1.4;
-      ctx.strokeRect(bx, by, bw, bh);
+      ctx.fillStyle = unlocked ? 'rgba(16, 23, 42, 0.86)' : 'rgba(9, 13, 24, 0.72)';
+      ctx.fillRect(bx, by, cardW, cardH);
 
-      // Status dot
+      ctx.strokeStyle = unlocked ? 'rgba(245, 158, 11, 0.48)' : 'rgba(255, 255, 255, 0.08)';
+      ctx.lineWidth = 1;
+      ctx.strokeRect(bx + 0.5, by + 0.5, cardW - 1, cardH - 1);
+
+      if (unlocked) {
+        ctx.fillStyle = '#f59e0b';
+        ctx.fillRect(bx, by, cardW, 2);
+      }
+
       ctx.fillStyle = unlocked ? '#fcd34d' : '#475569';
       ctx.beginPath();
-      ctx.arc(bx + 20, by + 27, 4.5, 0, Math.PI * 2);
+      ctx.arc(bx + 20, by + 26, 3.5, 0, Math.PI * 2);
       ctx.fill();
 
       ctx.fillStyle = unlocked ? '#fcd34d' : '#64748b';
-      ctx.font = '600 11.5px "JetBrains Mono", monospace';
-      ctx.fillText(`${shard.number} • ${unlocked ? 'ĐÃ ĐÁNH THỨC' : 'CHƯA KHÁM PHÁ'}`, bx + 33, by + 31);
+      ctx.font = '500 11px "JetBrains Mono", monospace';
+      ctx.fillText(`${shard.number}  •  ${unlocked ? 'ĐÃ ĐÁNH THỨC' : 'CHƯA KHÁM PHÁ'}`, bx + 31, by + 30);
 
-      ctx.fillStyle = unlocked ? '#fef3c7' : '#94a3b8';
-      ctx.font = '600 18px Georgia, serif';
-      const shortTitle = shard.title.split('—')[0].trim();
-      ctx.fillText(shortTitle, bx + 16, by + 63);
+      this._drawMissionSealIcon(ctx, shard.id, bx + cardW - 26, by + 28, unlocked);
 
-      ctx.fillStyle = unlocked ? '#cbd5e1' : '#64748b';
-      ctx.font = '12px Inter, sans-serif';
-      const shortSub = shard.subtitle.length > 34 ? shard.subtitle.slice(0, 32) + '…' : shard.subtitle;
-      ctx.fillText(shortSub, bx + 16, by + 88);
+      const parts = shard.title.split('—');
+      const enTitle = (parts[0] || shard.title).trim();
+      const viTitle = (parts[1] || '').trim();
+
+      ctx.fillStyle = unlocked ? '#f8fafc' : '#94a3b8';
+      ctx.font = '700 18px "Space Grotesk", "Be Vietnam Pro", sans-serif';
+      ctx.fillText(enTitle, bx + 18, by + 62);
+
+      ctx.fillStyle = unlocked ? '#eab308' : '#64748b';
+      ctx.font = '500 13.5px "Be Vietnam Pro", sans-serif';
+      ctx.fillText(viTitle, bx + 18, by + 84);
+
+      ctx.fillStyle = unlocked ? '#cbd5e1' : '#475569';
+      ctx.font = '400 12.5px "Be Vietnam Pro", sans-serif';
+      this._wrapCanvasText(ctx, shard.subtitle, bx + 18, by + 112, cardW - 36, 18, 2);
+
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.06)';
+      ctx.beginPath();
+      ctx.moveTo(bx + 18, by + 158);
+      ctx.lineTo(bx + cardW - 18, by + 158);
+      ctx.stroke();
+
+      const keySpec = shard.specs && shard.specs[1] ? shard.specs[1].value : shard.mission;
+      ctx.fillStyle = unlocked ? '#7dd3fc' : '#475569';
+      ctx.font = '500 11.5px "JetBrains Mono", monospace';
+      ctx.fillText(keySpec, bx + 18, by + 180, cardW - 36);
     });
 
-    // Footer
     const dateStr = new Date().toLocaleDateString('vi-VN');
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
     ctx.lineWidth = 1;
     ctx.beginPath();
-    ctx.moveTo(84, 738);
-    ctx.lineTo(1316, 738);
+    ctx.moveTo(88, 888);
+    ctx.lineTo(w - 88, 888);
     ctx.stroke();
 
     ctx.fillStyle = '#94a3b8';
-    ctx.font = '600 14px "JetBrains Mono", monospace';
-    ctx.fillText('TEAM VANTALUMEN • KEEPING SPACE EXPLORATION STORIES ALIVE', 84, 774);
+    ctx.font = '500 13px "JetBrains Mono", monospace';
+    ctx.fillText('TEAM VANTALUMEN  •  KEEPING SPACE EXPLORATION STORIES ALIVE', 88, 924);
 
     ctx.save();
     ctx.textAlign = 'right';
     ctx.fillStyle = '#fcd34d';
-    ctx.fillText(`NASA OPEN DATA VERIFIED • ${dateStr}`, 1316, 774);
+    ctx.font = '500 13px "JetBrains Mono", monospace';
+    ctx.fillText(`NASA OPEN DATA ARCHIVE  •  ${dateStr}`, w - 88, 924);
     ctx.restore();
 
-    const download = () => {
-      const link = document.createElement('a');
-      link.download = 'Vantalumen-SpaceApps-Certificate.png';
-      link.href = c.toDataURL('image/png');
-      link.click();
-    };
-
-    const drawMedallion = img => {
-      ctx.save();
-      // Outer golden orbital ring
-      ctx.strokeStyle = 'rgba(245, 158, 11, 0.75)';
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.arc(1236, 132, 66, 0, Math.PI * 2);
-      ctx.stroke();
-
-      ctx.setLineDash([5, 5]);
-      ctx.strokeStyle = 'rgba(56, 189, 248, 0.55)';
-      ctx.lineWidth = 1.5;
-      ctx.beginPath();
-      ctx.arc(1236, 132, 58, 0, Math.PI * 2);
-      ctx.stroke();
-      ctx.setLineDash([]);
-
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.96)';
-      ctx.beginPath();
-      ctx.arc(1236, 132, 48, 0, Math.PI * 2);
-      ctx.fill();
-
-      if (img) {
-        ctx.drawImage(img, 1236 - 36, 132 - 36, 72, 72);
-      }
-      ctx.restore();
-    };
-
-    const logo = new Image();
-    logo.onload = () => {
-      try {
-        drawMedallion(logo);
-      } catch {}
-      download();
-    };
-    logo.onerror = () => {
-      drawMedallion(null);
-      download();
-    };
-    logo.src = 'assets/vantalumen_logo.png';
+    const link = document.createElement('a');
+    link.download = 'Vantalumen-SpaceApps-Certificate.png';
+    link.href = c.toDataURL('image/png');
+    link.click();
   }
 
   _loop(now) {
