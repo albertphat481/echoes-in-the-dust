@@ -229,24 +229,23 @@ html, body {
   gap: 10px;
   padding: 5px 12px 5px 5px;
   border-radius: 999px;
-  background: linear-gradient(155deg, rgba(22, 34, 66, 0.36) 0%, rgba(10, 16, 36, 0.46) 100%);
-  backdrop-filter: blur(24px) saturate(175%);
-  -webkit-backdrop-filter: blur(24px) saturate(175%);
-  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(8, 13, 28, 0.72);
+  backdrop-filter: blur(14px) saturate(125%);
+  -webkit-backdrop-filter: blur(14px) saturate(125%);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   box-shadow:
-    0 10px 28px rgba(0, 0, 0, 0.36),
-    inset 0 1px 1px rgba(255, 255, 255, 0.24),
-    inset 0 -1px 0 rgba(255, 255, 255, 0.04);
+    0 8px 24px rgba(0, 0, 0, 0.48),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12);
   cursor: pointer;
-  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   opacity: 0.88;
 }
 
 #brand-emblem:hover {
   opacity: 1;
-  border-color: var(--amber);
-  background: linear-gradient(180deg, rgba(22, 34, 66, 0.9) 0%, rgba(10, 16, 34, 0.95) 100%);
-  box-shadow: 0 0 24px var(--amber-glow), inset 0 1px 0 rgba(255, 255, 255, 0.14);
+  border-color: rgba(245, 158, 11, 0.65);
+  background: rgba(10, 16, 34, 0.92);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.56), inset 0 1px 0 rgba(255, 255, 255, 0.16);
 }
 
 .emblem-mark {
@@ -297,16 +296,15 @@ html, body {
   display: flex;
   align-items: center;
   gap: 24px;
-  padding: 11px 26px;
+  padding: 10px 24px;
   border-radius: 999px;
-  background: linear-gradient(155deg, rgba(22, 34, 66, 0.36) 0%, rgba(10, 16, 36, 0.46) 100%);
-  backdrop-filter: blur(24px) saturate(175%);
-  -webkit-backdrop-filter: blur(24px) saturate(175%);
-  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(8, 13, 28, 0.72);
+  backdrop-filter: blur(14px) saturate(125%);
+  -webkit-backdrop-filter: blur(14px) saturate(125%);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   box-shadow:
-    0 10px 30px rgba(0, 0, 0, 0.36),
-    inset 0 1px 1px rgba(255, 255, 255, 0.24),
-    inset 0 -1px 0 rgba(255, 255, 255, 0.04);
+    0 8px 26px rgba(0, 0, 0, 0.48),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12);
   transition: opacity 0.6s ease;
 }
 
@@ -414,31 +412,30 @@ html, body {
 
 .icon-btn {
   position: relative;
-  width: 40px;
-  height: 40px;
+  width: 38px;
+  height: 38px;
   border-radius: 50%;
-  background: linear-gradient(155deg, rgba(22, 34, 66, 0.36) 0%, rgba(10, 16, 36, 0.46) 100%);
-  backdrop-filter: blur(24px) saturate(175%);
-  -webkit-backdrop-filter: blur(24px) saturate(175%);
-  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(8, 13, 28, 0.72);
+  backdrop-filter: blur(14px) saturate(125%);
+  -webkit-backdrop-filter: blur(14px) saturate(125%);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   box-shadow:
-    0 8px 24px rgba(0, 0, 0, 0.36),
-    inset 0 1px 1px rgba(255, 255, 255, 0.24),
-    inset 0 -1px 0 rgba(255, 255, 255, 0.04);
-  color: rgba(254, 243, 199, 0.88);
+    0 6px 18px rgba(0, 0, 0, 0.44),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  color: rgba(248, 250, 252, 0.84);
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+  transition: all 0.25s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .icon-btn:hover {
-  background: rgba(245, 158, 11, 0.22);
-  border-color: var(--amber);
+  background: rgba(245, 158, 11, 0.16);
+  border-color: rgba(245, 158, 11, 0.65);
   color: var(--ivory);
-  box-shadow: 0 0 18px var(--amber-glow);
-  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5);
+  transform: translateY(-1px);
 }
 
 .icon-btn[data-tooltip]::after {

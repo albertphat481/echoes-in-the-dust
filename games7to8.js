@@ -232,28 +232,36 @@ class PaleBlueDotGame {
     ctx.fillStyle = bg;
     ctx.fillRect(0, 0, w, h);
 
-    // 2. Stars
-    this.stars.forEach(s => {
-      const a = 0.25 + 0.45 * Math.sin(this.elapsed * 1.4 + s.twinkle);
-      ctx.fillStyle = `rgba(226, 232, 240, ${Math.max(0.1, a)})`;
-      ctx.beginPath();
-      ctx.arc(s.x * w, s.y * h, s.r, 0, Math.PI * 2);
-      ctx.fill();
-    });
+    if (window.vantaNebulaGL) {
+      window.vantaNebulaGL.drawBackdrop(ctx, w, h, {
+        alpha: 0.75,
+        lumen: 0.88,
+        cyan: 0.65,
+        stars: 0.72
+      });
+    }
 
-    // 3. Iconic diagonal scattered-sunlight ray intersecting the Pale Blue Dot
+    // 2. Spectral Stars
+    if (window.VantaGfx) {
+      if (!this._spectralStars) this._spectralStars = window.VantaGfx.createStarfield(145, 0.94);
+      window.VantaGfx.drawStarfield(ctx, this._spectralStars, w, h, this.elapsed, 0.95);
+    }
+
+    // 3. Iconic diagonal scattered-sunlight ray intersecting the Pale Blue Dot (optical lens flare)
     const earth = this.targets[2];
     ctx.save();
     ctx.translate(earth.x, earth.y);
     ctx.rotate(-0.42);
-    const beamGrad = ctx.createLinearGradient(-46, 0, 46, 0);
+    const beamGrad = ctx.createLinearGradient(-56, 0, 56, 0);
     beamGrad.addColorStop(0, 'rgba(245, 158, 11, 0)');
-    beamGrad.addColorStop(0.32, 'rgba(245, 158, 11, 0.09)');
-    beamGrad.addColorStop(0.5, 'rgba(254, 243, 199, 0.16)');
-    beamGrad.addColorStop(0.68, 'rgba(245, 158, 11, 0.09)');
-    beamGrad.addColorStop(1, 'rgba(245, 158, 11, 0)');
+    beamGrad.addColorStop(0.22, 'rgba(217, 119, 6, 0.06)');
+    beamGrad.addColorStop(0.42, 'rgba(251, 146, 60, 0.13)');
+    beamGrad.addColorStop(0.5, 'rgba(254, 243, 199, 0.19)');
+    beamGrad.addColorStop(0.58, 'rgba(244, 114, 182, 0.08)');
+    beamGrad.addColorStop(0.78, 'rgba(56, 189, 248, 0.04)');
+    beamGrad.addColorStop(1, 'rgba(56, 189, 248, 0)');
     ctx.fillStyle = beamGrad;
-    ctx.fillRect(-46, -h, 92, h * 2);
+    ctx.fillRect(-56, -h, 112, h * 2);
     ctx.restore();
 
     // 4. Constellation capture lines connecting captured frames
@@ -299,30 +307,50 @@ class PaleBlueDotGame {
         ctx.stroke();
       }
 
-      // Saturn ring silhouette
+      // Saturn multi-band ring silhouette with Cassini Division
       if (t.hasRing) {
         ctx.save();
         ctx.translate(t.x, t.y);
         ctx.rotate(-0.35);
-        ctx.strokeStyle = 'rgba(254, 243, 199, 0.72)';
-        ctx.lineWidth = 2.6;
+        ctx.strokeStyle = 'rgba(254, 243, 199, 0.65)';
+        ctx.lineWidth = 2.2;
         ctx.beginPath();
-        ctx.ellipse(0, 0, t.radius * 2.1, t.radius * 0.62, 0, 0, Math.PI * 2);
+        ctx.ellipse(0, 0, t.radius * 2.25, t.radius * 0.66, 0, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.strokeStyle = 'rgba(253, 230, 138, 0.36)';
+        ctx.lineWidth = 1.4;
+        ctx.beginPath();
+        ctx.ellipse(0, 0, t.radius * 1.65, t.radius * 0.48, 0, 0, Math.PI * 2);
         ctx.stroke();
         ctx.restore();
       }
 
-      // Planet disc
-      ctx.fillStyle = t.core;
+      // Spherical shaded planet disc (clipped for zonal bands)
+      ctx.save();
       ctx.beginPath();
       ctx.arc(t.x, t.y, t.radius, 0, Math.PI * 2);
-      ctx.fill();
+      ctx.clip();
+
+      const pGrad = ctx.createRadialGradient(
+        t.x - t.radius * 0.35, t.y - t.radius * 0.35, t.radius * 0.1,
+        t.x, t.y, t.radius * 1.1
+      );
+      pGrad.addColorStop(0, '#ffffff');
+      pGrad.addColorStop(0.25, t.core);
+      pGrad.addColorStop(1, '#090d16');
+      ctx.fillStyle = pGrad;
+      ctx.fillRect(t.x - t.radius, t.y - t.radius, t.radius * 2, t.radius * 2);
 
       if (t.id === 'jupiter') {
-        ctx.fillStyle = 'rgba(217, 119, 6, 0.55)';
-        ctx.fillRect(t.x - t.radius * 0.85, t.y - 3, t.radius * 1.7, 3);
-        ctx.fillRect(t.x - t.radius * 0.72, t.y + 4, t.radius * 1.44, 2.5);
+        ctx.fillStyle = 'rgba(180, 83, 9, 0.55)';
+        ctx.fillRect(t.x - t.radius, t.y - t.radius * 0.35, t.radius * 2, t.radius * 0.25);
+        ctx.fillRect(t.x - t.radius, t.y + t.radius * 0.15, t.radius * 2, t.radius * 0.2);
+        ctx.fillStyle = 'rgba(234, 88, 12, 0.72)';
+        ctx.beginPath();
+        ctx.ellipse(t.x + t.radius * 0.28, t.y + t.radius * 0.24, t.radius * 0.22, t.radius * 0.14, 0, 0, Math.PI * 2);
+        ctx.fill();
       }
+      ctx.restore();
     });
 
     // 6. Shockwaves
@@ -646,26 +674,52 @@ class CassiniGrandFinaleGame {
     ctx.fillStyle = sky;
     ctx.fillRect(0, 0, w, h);
 
-    // 2. Sweeping Saturnian Ice Rings across upper-left horizon
+    if (window.vantaNebulaGL) {
+      window.vantaNebulaGL.drawBackdrop(ctx, w, h * 0.78, {
+        alpha: 0.64,
+        lumen: 1.05,
+        cyan: 0.38,
+        stars: 0.6
+      });
+    }
+
+    // 1b. Upper-sky spectral stars above Saturn limb
+    if (window.VantaGfx) {
+      if (!this._stars) this._stars = window.VantaGfx.createStarfield(120, 0.58);
+      window.VantaGfx.drawStarfield(ctx, this._stars, w, h, this.elapsed, 0.85);
+    }
+
+    // 2. Sweeping Saturnian Ice Rings across upper-left horizon (with Cassini Division)
     ctx.save();
-    for (let r = 0; r < 6; r++) {
-      const lit = r < this.packetsSent + 1;
+    for (let r = 0; r < 8; r++) {
+      if (r === 4) continue; // Cassini Division dark gap
+      const lit = r < this.packetsSent + 2;
       ctx.strokeStyle = lit
-        ? `rgba(253, 230, 138, ${0.14 + (r === this.packetsSent ? 0.16 : 0.08)})`
-        : 'rgba(148, 163, 184, 0.08)';
-      ctx.lineWidth = 10 - r * 1.1;
+        ? `rgba(253, 230, 138, ${0.12 + (r === this.packetsSent ? 0.16 : 0.07)})`
+        : 'rgba(148, 163, 184, 0.06)';
+      ctx.lineWidth = 8 - r * 0.7;
       ctx.beginPath();
-      ctx.ellipse(w * 0.12, h * 0.86, w * (0.62 + r * 0.075), h * (0.48 + r * 0.055), -0.24, -Math.PI * 0.72, -0.05);
+      ctx.ellipse(w * 0.12, h * 0.86, w * (0.58 + r * 0.058), h * (0.45 + r * 0.044), -0.24, -Math.PI * 0.72, -0.05);
       ctx.stroke();
     }
     ctx.restore();
 
-    // 3. Saturn atmospheric cloud bands
-    for (let b = 0; b < 5; b++) {
-      const y = h * (0.76 + b * 0.055);
-      ctx.fillStyle = `rgba(245, 158, 11, ${0.06 + b * 0.02})`;
-      ctx.fillRect(0, y, w, 18);
+    // 3. Saturn curved atmospheric cloud bands & golden limb haze
+    ctx.save();
+    for (let b = 0; b < 6; b++) {
+      const yBase = h * (0.72 + b * 0.052);
+      ctx.fillStyle = b % 2 === 0
+        ? `rgba(245, 158, 11, ${0.05 + b * 0.018})`
+        : `rgba(180, 83, 9, ${0.06 + b * 0.02})`;
+      ctx.beginPath();
+      ctx.moveTo(0, yBase);
+      ctx.quadraticCurveTo(w * 0.5, yBase - 18, w, yBase + 6);
+      ctx.lineTo(w, h);
+      ctx.lineTo(0, h);
+      ctx.closePath();
+      ctx.fill();
     }
+    ctx.restore();
 
     // 4. Distant Earth Star Beacon in upper-right sky
     const earthGlow = ctx.createRadialGradient(this.earth.x, this.earth.y, 2, this.earth.x, this.earth.y, 58);

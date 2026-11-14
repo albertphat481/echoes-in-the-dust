@@ -95,35 +95,62 @@ class UnderTheDustGame {
     const radius = Math.min(w, h) * 0.37;
     this.panelGeometry = { cx, cy, radius };
 
-    // 1. Elysium Planitia Twilight Ground
+    // 1. Elysium Planitia Twilight Ground with Regolith Micro-Grain
     const bgGrad = pctx.createRadialGradient(cx, cy, radius * 0.2, cx, cy, Math.max(w, h) * 0.85);
-    bgGrad.addColorStop(0, '#361e14');
-    bgGrad.addColorStop(0.55, '#180f0e');
+    bgGrad.addColorStop(0, '#3a1f15');
+    bgGrad.addColorStop(0.55, '#190f0e');
     bgGrad.addColorStop(1, '#050812');
     pctx.fillStyle = bgGrad;
     pctx.fillRect(0, 0, w, h);
 
-    // Martian basalt rocks & shadows outside solar wing
-    for (let i = 0; i < 85; i++) {
+    if (window.VantaGfx) {
+      const grain = window.VantaGfx.getGrainPattern(pctx, 0.08, true);
+      if (grain) {
+        pctx.fillStyle = grain;
+        pctx.fillRect(0, 0, w, h);
+      }
+    }
+
+    // Weathered Martian basalt rocks & wind-eroded dust tails
+    for (let i = 0; i < 72; i++) {
       const ang = Math.random() * Math.PI * 2;
-      const dist = radius * (1.06 + Math.random() * 0.85);
+      const dist = radius * (1.07 + Math.random() * 0.85);
       const rx = cx + Math.cos(ang) * dist;
       const ry = cy + Math.sin(ang) * dist;
-      const rw = 3 + Math.random() * 13;
-      const rh = rw * (0.55 + Math.random() * 0.35);
+      const rw = 4 + Math.random() * 14;
+      const rh = rw * (0.52 + Math.random() * 0.35);
 
-      pctx.fillStyle = 'rgba(0, 0, 0, 0.52)';
+      // Wind-tail drift shadow
+      pctx.fillStyle = 'rgba(0, 0, 0, 0.48)';
       pctx.beginPath();
-      pctx.ellipse(rx + 4, ry + 3, rw, rh, ang, 0, Math.PI * 2);
+      pctx.ellipse(rx + rw * 0.45, ry + rh * 0.3, rw * 1.15, rh * 0.85, 0.2, 0, Math.PI * 2);
       pctx.fill();
 
-      const rGrad = pctx.createLinearGradient(rx - rw, ry - rh, rx + rw, ry + rh);
-      rGrad.addColorStop(0, '#7c4328');
-      rGrad.addColorStop(1, '#1c100c');
+      // Faceted rock polygon
+      pctx.save();
+      pctx.translate(rx, ry);
+      pctx.rotate(ang);
+      const rGrad = pctx.createLinearGradient(-rw, -rh, rw, rh);
+      rGrad.addColorStop(0, '#9a5233');
+      rGrad.addColorStop(0.5, '#562b1a');
+      rGrad.addColorStop(1, '#1a0e0b');
       pctx.fillStyle = rGrad;
       pctx.beginPath();
-      pctx.ellipse(rx, ry, rw, rh, ang, 0, Math.PI * 2);
+      const pts = 7;
+      for (let k = 0; k < pts; k++) {
+        const ka = (k / pts) * Math.PI * 2;
+        const kr = 0.78 + 0.32 * (window.VantaGfx ? window.VantaGfx.hash2(i, k, 51) : Math.random());
+        const px = Math.cos(ka) * rw * kr;
+        const py = Math.sin(ka) * rh * kr;
+        if (k === 0) pctx.moveTo(px, py);
+        else pctx.lineTo(px, py);
+      }
+      pctx.closePath();
       pctx.fill();
+      pctx.strokeStyle = 'rgba(253, 186, 116, 0.16)';
+      pctx.lineWidth = 0.8;
+      pctx.stroke();
+      pctx.restore();
     }
 
     // 2. Solar Wing Drop Shadow
@@ -263,33 +290,52 @@ class UnderTheDustGame {
     pctx.stroke();
     pctx.restore();
 
-    // 4. Sculpted Wind-Swept Martian Dust Mask (semi-translucent so user immediately recognizes silhouette!)
+    // 4. Sculpted Wind-Swept Martian Dust Mask (organic FBM drifts + granular regolith)
     const mctx = this.maskCtx;
     mctx.globalCompositeOperation = 'source-over';
     const dustGrad = mctx.createLinearGradient(0, 0, w, h);
-    dustGrad.addColorStop(0, 'rgba(116, 52, 20, 0.94)');
-    dustGrad.addColorStop(0.5, 'rgba(84, 36, 15, 0.93)');
-    dustGrad.addColorStop(1, 'rgba(38, 17, 8, 0.96)');
+    dustGrad.addColorStop(0, 'rgba(118, 54, 22, 0.94)');
+    dustGrad.addColorStop(0.5, 'rgba(82, 35, 15, 0.93)');
+    dustGrad.addColorStop(1, 'rgba(36, 16, 8, 0.96)');
     mctx.fillStyle = dustGrad;
     mctx.fillRect(0, 0, w, h);
 
-    for (let y = -40; y < h + 40; y += 22) {
-      mctx.strokeStyle = y % 44 === 0 ? 'rgba(217, 119, 6, 0.24)' : 'rgba(20, 9, 4, 0.28)';
-      mctx.lineWidth = 10;
-      mctx.beginPath();
-      for (let x = 0; x <= w; x += 40) {
-        const wy = y + Math.sin(x * 0.012 + y * 0.04) * 9;
-        if (x === 0) mctx.moveTo(x, wy);
-        else mctx.lineTo(x, wy);
+    if (window.VantaGfx) {
+      // Render organic FBM wind-drift ripples at 1/4 res and upscale smoothly
+      const dw = Math.max(64, Math.floor(w * 0.25));
+      const dh = Math.max(64, Math.floor(h * 0.25));
+      const dc = document.createElement('canvas');
+      dc.width = dw;
+      dc.height = dh;
+      const dctx = dc.getContext('2d');
+      const img = dctx.createImageData(dw, dh);
+      const dd = img.data;
+      for (let py = 0; py < dh; py++) {
+        for (let px = 0; px < dw; px++) {
+          const n = window.VantaGfx.fbm(px * 0.045 + py * 0.015, py * 0.065, 3, 202);
+          const ridge = Math.sin(py * 0.28 + n * 7.5) * 0.5 + 0.5;
+          const idx = (py * dw + px) * 4;
+          dd[idx] = 175 + ridge * 45;
+          dd[idx + 1] = 85 + ridge * 35;
+          dd[idx + 2] = 35 + ridge * 18;
+          dd[idx + 3] = Math.floor(20 + ridge * 42);
+        }
       }
-      mctx.stroke();
+      dctx.putImageData(img, 0, 0);
+      mctx.drawImage(dc, 0, 0, w, h);
+
+      const dustGrain = window.VantaGfx.getGrainPattern(mctx, 0.11, true);
+      if (dustGrain) {
+        mctx.fillStyle = dustGrain;
+        mctx.fillRect(0, 0, w, h);
+      }
     }
 
-    for (let i = 0; i < 2600; i++) {
+    for (let i = 0; i < 1400; i++) {
       const x = Math.random() * w;
       const y = Math.random() * h;
-      const r = Math.random() * 2.2 + 0.4;
-      mctx.fillStyle = i % 3 === 0 ? 'rgba(245, 158, 11, 0.26)' : 'rgba(28, 12, 6, 0.34)';
+      const r = Math.random() * 1.8 + 0.4;
+      mctx.fillStyle = i % 3 === 0 ? 'rgba(245, 158, 11, 0.22)' : 'rgba(24, 10, 5, 0.32)';
       mctx.beginPath();
       mctx.arc(x, y, r, 0, Math.PI * 2);
       mctx.fill();
@@ -620,84 +666,17 @@ class StillThereGame {
     this.photonOrbs = [];
     this.echoRipples = [];
 
-    this.stars = Array.from({ length: 220 }, () => ({
-      x: Math.random(),
-      y: Math.random() * 0.88,
-      s: Math.random() * 1.9 + 0.35,
-      p: Math.random() * Math.PI * 2,
-      hue: Math.random() > 0.7 ? '#fcd34d' : (Math.random() > 0.5 ? '#bae6fd' : '#f8fafc')
-    }));
+    this.stars = window.VantaGfx
+      ? window.VantaGfx.createStarfield(210, 0.9)
+      : [];
 
     this._renderProceduralMoon();
   }
 
   _renderProceduralMoon() {
-    const size = 512;
-    this.moonCanvas.width = size;
-    this.moonCanvas.height = size;
-    const mctx = this.moonCtx;
-    const c = size * 0.5;
-    const r = size * 0.46;
-
-    mctx.clearRect(0, 0, size, size);
-    mctx.save();
-    mctx.beginPath();
-    mctx.arc(c, c, r, 0, Math.PI * 2);
-    mctx.clip();
-
-    const base = mctx.createRadialGradient(c - r * 0.35, c - r * 0.35, r * 0.08, c, c, r * 1.2);
-    base.addColorStop(0, '#cbd5e1');
-    base.addColorStop(0.55, '#64748b');
-    base.addColorStop(0.88, '#1e293b');
-    base.addColorStop(1, '#0b1120');
-    mctx.fillStyle = base;
-    mctx.fillRect(0, 0, size, size);
-
-    const maria = [
-      { x: 0.25, y: 0.04, rx: 0.28, ry: 0.22, rot: 0.2 },
-      { x: -0.26, y: -0.18, rx: 0.32, ry: 0.28, rot: -0.4 },
-      { x: -0.14, y: 0.22, rx: 0.22, ry: 0.16, rot: 0.5 },
-      { x: 0.06, y: -0.26, rx: 0.24, ry: 0.18, rot: 0.1 }
-    ];
-    for (const m of maria) {
-      mctx.save();
-      mctx.translate(c + m.x * r, c + m.y * r);
-      mctx.rotate(m.rot);
-      const mg = mctx.createRadialGradient(0, 0, 2, 0, 0, m.rx * r);
-      mg.addColorStop(0, 'rgba(15, 23, 42, 0.55)');
-      mg.addColorStop(1, 'rgba(15, 23, 42, 0)');
-      mctx.fillStyle = mg;
-      mctx.beginPath();
-      mctx.ellipse(0, 0, m.rx * r, m.ry * r, 0, 0, Math.PI * 2);
-      mctx.fill();
-      mctx.restore();
+    if (window.VantaGfx) {
+      window.VantaGfx.renderMoonGlobe(this.moonCanvas, 512);
     }
-
-    for (let i = 0; i < 75; i++) {
-      const ang = Math.random() * Math.PI * 2;
-      const d = Math.sqrt(Math.random()) * r * 0.92;
-      const cx = c + Math.cos(ang) * d;
-      const cy = c + Math.sin(ang) * d;
-      const cr = 3 + Math.pow(Math.random(), 2.2) * 24;
-
-      mctx.fillStyle = 'rgba(10, 15, 28, 0.34)';
-      mctx.beginPath();
-      mctx.arc(cx, cy, cr, 0, Math.PI * 2);
-      mctx.fill();
-
-      mctx.strokeStyle = 'rgba(241, 245, 249, 0.3)';
-      mctx.lineWidth = Math.max(0.8, cr * 0.12);
-      mctx.beginPath();
-      mctx.arc(cx, cy, cr, -Math.PI * 0.9, -Math.PI * 0.1);
-      mctx.stroke();
-    }
-
-    mctx.strokeStyle = 'rgba(252, 211, 77, 0.58)';
-    mctx.lineWidth = 4;
-    mctx.beginPath();
-    mctx.arc(c, c, r - 1, -Math.PI * 0.85, Math.PI * 0.15);
-    mctx.stroke();
-    mctx.restore();
   }
 
   onResize() {}
@@ -855,28 +834,33 @@ class StillThereGame {
     ctx.fillStyle = sky;
     ctx.fillRect(0, 0, w, h);
 
-    // Milky Way band glow
+    if (window.vantaNebulaGL) {
+      window.vantaNebulaGL.drawBackdrop(ctx, w, h, {
+        alpha: 0.72,
+        lumen: 0.85,
+        cyan: 0.55,
+        stars: 0.65
+      });
+    }
+
+    // Milky Way dust nebula band
     ctx.save();
     ctx.translate(w * 0.5, h * 0.35);
     ctx.rotate(-0.38);
-    const mw = ctx.createLinearGradient(0, -140, 0, 140);
-    mw.addColorStop(0, 'rgba(56, 189, 248, 0)');
-    mw.addColorStop(0.5, 'rgba(148, 163, 184, 0.08)');
+    const mw = ctx.createLinearGradient(0, -170, 0, 170);
+    mw.addColorStop(0, 'rgba(30, 58, 138, 0)');
+    mw.addColorStop(0.32, 'rgba(148, 163, 184, 0.055)');
+    mw.addColorStop(0.48, 'rgba(15, 23, 42, 0.14)'); // dark dust rift
+    mw.addColorStop(0.65, 'rgba(226, 232, 240, 0.065)');
     mw.addColorStop(1, 'rgba(56, 189, 248, 0)');
     ctx.fillStyle = mw;
-    ctx.fillRect(-w, -140, w * 2, 280);
+    ctx.fillRect(-w, -170, w * 2, 340);
     ctx.restore();
 
     const now = performance.now() * 0.002;
-    for (const st of this.stars) {
-      const a = 0.28 + 0.68 * (0.5 + 0.5 * Math.sin(now + st.p));
-      ctx.globalAlpha = a;
-      ctx.fillStyle = st.hue;
-      ctx.beginPath();
-      ctx.arc(st.x * w, st.y * h, st.s, 0, Math.PI * 2);
-      ctx.fill();
+    if (window.VantaGfx) {
+      window.VantaGfx.drawStarfield(ctx, this.stars, w, h, now * 0.6, 1);
     }
-    ctx.globalAlpha = 1;
 
     const { cx, cy, r } = this._getMoonGeometry(w, h);
 
@@ -1202,6 +1186,15 @@ class OneWheelLeftGame {
     ctx.fillStyle = sky;
     ctx.fillRect(0, 0, w, h);
 
+    if (window.vantaNebulaGL) {
+      window.vantaNebulaGL.drawBackdrop(ctx, w, h * 0.48, {
+        alpha: 0.34,
+        lumen: 0.65,
+        cyan: 0.25,
+        stars: 0.42
+      });
+    }
+
     // Phobos + Twilight Glow
     ctx.fillStyle = 'rgba(254, 243, 199, 0.5)';
     ctx.beginPath();
@@ -1229,26 +1222,34 @@ class OneWheelLeftGame {
 
     const camX = this.roverX - w * 0.42;
 
-    // Far Mesas
-    ctx.fillStyle = '#241727';
+    // Far Mesas (FBM ridge + atmospheric dust haze)
+    const mesaGrad = ctx.createLinearGradient(0, h * 0.4, 0, h * 0.68);
+    mesaGrad.addColorStop(0, '#3a222d');
+    mesaGrad.addColorStop(1, '#1a1019');
+    ctx.fillStyle = mesaGrad;
     ctx.beginPath();
-    ctx.moveTo(-w, h);
-    for (let sx = -w * 0.5; sx <= w * 1.5; sx += 55) {
+    ctx.moveTo(-w * 0.5, h);
+    for (let sx = -w * 0.5; sx <= w * 1.5; sx += 28) {
       const wx = sx + camX * 0.12;
-      const py = h * 0.49 + Math.sin(wx * 0.0015) * 48 + Math.cos(wx * 0.004) * 15;
+      const fbmVal = window.VantaGfx ? window.VantaGfx.fbm(wx * 0.0018, 1.4, 3, 41) : 0.5;
+      const py = h * 0.45 + Math.sin(wx * 0.0014) * 38 + (fbmVal - 0.5) * 65;
       ctx.lineTo(sx, py);
     }
     ctx.lineTo(w * 1.5, h);
     ctx.closePath();
     ctx.fill();
 
-    // Mid Dunes
-    ctx.fillStyle = '#361a24';
+    // Mid Dunes with Mie dust scattering
+    const midGrad = ctx.createLinearGradient(0, h * 0.52, 0, h * 0.78);
+    midGrad.addColorStop(0, '#4f2428');
+    midGrad.addColorStop(1, '#231115');
+    ctx.fillStyle = midGrad;
     ctx.beginPath();
-    ctx.moveTo(-w, h);
-    for (let sx = -w * 0.5; sx <= w * 1.5; sx += 40) {
+    ctx.moveTo(-w * 0.5, h);
+    for (let sx = -w * 0.5; sx <= w * 1.5; sx += 22) {
       const wx = sx + camX * 0.3;
-      const py = h * 0.58 + Math.sin(wx * 0.0024) * 34 + Math.cos(wx * 0.006) * 14;
+      const fbmVal = window.VantaGfx ? window.VantaGfx.fbm(wx * 0.0026, 3.8, 3, 73) : 0.5;
+      const py = h * 0.56 + Math.sin(wx * 0.0022) * 28 + (fbmVal - 0.5) * 44;
       ctx.lineTo(sx, py);
     }
     ctx.lineTo(w * 1.5, h);
@@ -1331,7 +1332,7 @@ class OneWheelLeftGame {
       ctx.fill();
     }
 
-    // NASA Spirit Rover (MER-A)
+    // NASA Spirit Rover (MER-A) — High-craft Kapton Foil & Rocker-Bogie
     const rx = this.roverX - camX;
     const ry = this._terrainHeight(this.roverX, h);
     const nextY = this._terrainHeight(this.roverX + 10, h);
@@ -1341,78 +1342,12 @@ class OneWheelLeftGame {
     ctx.translate(rx, ry);
     ctx.rotate(slopeAngle);
 
-    ctx.fillStyle = 'rgba(8, 5, 10, 0.65)';
-    ctx.beginPath();
-    ctx.ellipse(-20, 4, 52, 8, 0, 0, Math.PI * 2);
-    ctx.fill();
-
-    ctx.strokeStyle = '#e2e8f0';
-    ctx.lineWidth = 2.4;
-    ctx.beginPath();
-    ctx.moveTo(-28, -6); ctx.lineTo(-15, -20); ctx.lineTo(0, -10);
-    ctx.moveTo(-15, -20); ctx.lineTo(18, -20); ctx.lineTo(28, -6);
-    ctx.stroke();
-
-    ctx.fillStyle = '#b45309';
-    ctx.fillRect(-20, -30, 40, 12);
-    ctx.strokeStyle = '#fcd34d';
-    ctx.lineWidth = 1.8;
-    ctx.strokeRect(-20, -30, 40, 12);
-
-    ctx.fillStyle = '#0f2942';
-    ctx.beginPath();
-    ctx.moveTo(-30, -31); ctx.lineTo(30, -31); ctx.lineTo(24, -27); ctx.lineTo(-24, -27);
-    ctx.closePath();
-    ctx.fill();
-    ctx.strokeStyle = '#f59e0b';
-    ctx.lineWidth = 1.6;
-    ctx.stroke();
-
-    ctx.strokeStyle = '#cbd5e1';
-    ctx.lineWidth = 1.8;
-    ctx.beginPath();
-    ctx.moveTo(-14, -31); ctx.lineTo(-20, -45);
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.arc(-22, -46, 8, -Math.PI * 0.75, Math.PI * 0.25);
-    ctx.stroke();
-
-    ctx.strokeStyle = '#fcd34d';
-    ctx.lineWidth = 2.5;
-    ctx.beginPath();
-    ctx.moveTo(14, -31); ctx.lineTo(18, -56);
-    ctx.stroke();
-    ctx.fillStyle = '#f8fafc';
-    ctx.fillRect(10, -63, 17, 9);
-    ctx.fillStyle = '#38bdf8';
-    ctx.beginPath();
-    ctx.arc(13, -58.5, 2.2, 0, Math.PI * 2);
-    ctx.arc(21, -58.5, 2.2, 0, Math.PI * 2);
-    ctx.fill();
-
-    const wheelRot = this.roverX * 0.08;
-    const wheels = [{ x: -28, broken: true }, { x: 0, broken: false }, { x: 28, broken: false }];
-    for (const wh of wheels) {
-      ctx.save();
-      ctx.translate(wh.x, -4);
-      if (!wh.broken) ctx.rotate(wheelRot);
-      ctx.beginPath();
-      ctx.arc(0, 0, 10, 0, Math.PI * 2);
-      ctx.fillStyle = '#090d16';
-      ctx.fill();
-      ctx.strokeStyle = wh.broken ? '#67e8f9' : '#fcd34d';
-      ctx.lineWidth = 2.2;
-      ctx.stroke();
-
-      ctx.lineWidth = 1.4;
-      for (let sp = 0; sp < 4; sp++) {
-        const a = (sp / 4) * Math.PI;
-        ctx.beginPath();
-        ctx.moveTo(Math.cos(a) * -8, Math.sin(a) * -8);
-        ctx.lineTo(Math.cos(a) * 8, Math.sin(a) * 8);
-        ctx.stroke();
-      }
-      ctx.restore();
+    if (window.VantaGfx) {
+      window.VantaGfx.drawMERRover(ctx, {
+        wheelRot: this.roverX * 0.08,
+        stuckWheel: true,
+        scale: 0.96
+      });
     }
 
     if (Math.abs(this.roverSpeed) > 18) {

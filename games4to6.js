@@ -371,15 +371,22 @@ class UnsentGame {
     ctx.fillStyle = bg;
     ctx.fillRect(0, 0, w, h);
 
-    const now = performance.now() * 0.001;
-    for (const st of this.stars) {
-      ctx.fillStyle = `rgba(226, 232, 240, ${0.35 + 0.45 * Math.sin(now * 2 + st.p)})`;
-      ctx.beginPath();
-      ctx.arc(st.x * w, st.y * h, st.s, 0, Math.PI * 2);
-      ctx.fill();
+    if (window.vantaNebulaGL) {
+      window.vantaNebulaGL.drawBackdrop(ctx, w, h, {
+        alpha: 0.62,
+        lumen: 0.95,
+        cyan: 0.35,
+        stars: 0.55
+      });
     }
 
-    // Orbiting Relay Orbiter (MRO)
+    const now = performance.now() * 0.001;
+    if (window.VantaGfx) {
+      if (!this._spectralStars) this._spectralStars = window.VantaGfx.createStarfield(110, 0.78);
+      window.VantaGfx.drawStarfield(ctx, this._spectralStars, w, h, now, 0.9);
+    }
+
+    // Orbiting Relay Orbiter (MRO — Detailed Solar Wings + High-Gain Dish)
     const satProgress = Math.min(1, this.elapsed / this.satelliteDuration);
     const satX = w * (0.14 + satProgress * 0.72);
     const satY = h * 0.1;
@@ -395,11 +402,28 @@ class UnsentGame {
 
       ctx.save();
       ctx.translate(satX, satY);
-      ctx.fillStyle = '#38bdf8';
-      ctx.fillRect(-20, -4, 13, 8);
-      ctx.fillRect(7, -4, 13, 8);
-      ctx.fillStyle = '#f8fafc';
+      // Solar wings
+      const wingG = ctx.createLinearGradient(-28, -5, 28, 5);
+      wingG.addColorStop(0, '#0284c7');
+      wingG.addColorStop(0.5, '#38bdf8');
+      wingG.addColorStop(1, '#0369a1');
+      ctx.fillStyle = wingG;
+      ctx.fillRect(-26, -4.5, 17, 9);
+      ctx.fillRect(9, -4.5, 17, 9);
+      ctx.strokeStyle = 'rgba(254, 243, 199, 0.45)';
+      ctx.lineWidth = 0.8;
+      ctx.strokeRect(-26, -4.5, 17, 9);
+      ctx.strokeRect(9, -4.5, 17, 9);
+      // Gold Kapton spacecraft bus
+      ctx.fillStyle = '#d97706';
       ctx.fillRect(-5, -5, 10, 10);
+      ctx.strokeStyle = '#fde68a';
+      ctx.strokeRect(-5, -5, 10, 10);
+      // Parabolic HGA dish
+      ctx.fillStyle = '#f1f5f9';
+      ctx.beginPath();
+      ctx.ellipse(0, -8, 7, 2.6, 0, 0, Math.PI * 2);
+      ctx.fill();
       ctx.restore();
     }
 
@@ -458,25 +482,19 @@ class UnsentGame {
       ctx.shadowBlur = 0;
     }
 
-    // Opportunity Rover silhouette
-    const roverY = h * 0.91;
+    // Opportunity Rover silhouette (MER-B)
+    const roverY = h * 0.94;
     ctx.save();
     ctx.translate(w * 0.5, roverY);
-    ctx.fillStyle = '#090d16';
-    ctx.strokeStyle = '#f59e0b';
-    ctx.lineWidth = 1.8;
-    ctx.fillRect(-32, -13, 64, 15);
-    ctx.strokeRect(-32, -13, 64, 15);
-    ctx.beginPath();
-    ctx.moveTo(10, -13); ctx.lineTo(15, -40);
-    ctx.stroke();
-
+    if (window.VantaGfx) {
+      window.VantaGfx.drawMERRover(ctx, { silhouette: true, scale: 0.72 });
+    }
     const lampPulse = 0.4 + 0.6 * Math.sin(performance.now() * 0.006);
     ctx.fillStyle = `rgba(252, 211, 77, ${lampPulse})`;
     ctx.shadowColor = '#f59e0b';
-    ctx.shadowBlur = 16;
+    ctx.shadowBlur = 14;
     ctx.beginPath();
-    ctx.arc(15, -42, 4.5, 0, Math.PI * 2);
+    ctx.arc(16, -55, 3.8, 0, Math.PI * 2);
     ctx.fill();
     ctx.restore();
 
@@ -703,8 +721,26 @@ class MoonStillRingsGame {
   }
 
   render(ctx, w, h) {
-    ctx.fillStyle = '#050814';
+    const bg = ctx.createRadialGradient(w * 0.5, h * 0.45, 20, w * 0.5, h * 0.5, Math.max(w, h) * 0.8);
+    bg.addColorStop(0, '#0a1022');
+    bg.addColorStop(0.65, '#050814');
+    bg.addColorStop(1, '#02040a');
+    ctx.fillStyle = bg;
     ctx.fillRect(0, 0, w, h);
+
+    if (window.vantaNebulaGL) {
+      window.vantaNebulaGL.drawBackdrop(ctx, w, h, {
+        alpha: 0.62,
+        lumen: 0.95,
+        cyan: 0.35,
+        stars: 0.55
+      });
+    }
+
+    if (window.VantaGfx) {
+      if (!this._stars) this._stars = window.VantaGfx.createStarfield(130, 0.95);
+      window.VantaGfx.drawStarfield(ctx, this._stars, w, h, performance.now() * 0.001, 0.82);
+    }
 
     const { cx, cy, r } = this._getBowlGeometry(w, h);
     const activeWaves = this.isEarthMode ? this.earthWaves : this.moonWaves;
@@ -1107,7 +1143,7 @@ class EternalFootprintGame {
     ctx.fill();
     ctx.restore();
 
-    // Lunar Regolith Horizon
+    // Lunar Regolith Horizon with Micro-Grain
     const noonBrightness = 1 - Math.abs(this.sunAngle - 0.5) * 1.1;
     const regGrad = ctx.createLinearGradient(0, horizonY, 0, h);
     regGrad.addColorStop(0, '#1e293b');
@@ -1121,6 +1157,23 @@ class EternalFootprintGame {
     ctx.lineTo(0, h);
     ctx.closePath();
     ctx.fill();
+
+    if (window.VantaGfx) {
+      ctx.save();
+      ctx.beginPath();
+      ctx.moveTo(0, horizonY);
+      ctx.quadraticCurveTo(w * 0.5, horizonY - 20, w, horizonY);
+      ctx.lineTo(w, h);
+      ctx.lineTo(0, h);
+      ctx.closePath();
+      ctx.clip();
+      const grain = window.VantaGfx.getGrainPattern(ctx, 0.08, false);
+      if (grain) {
+        ctx.fillStyle = grain;
+        ctx.fillRect(0, horizonY - 24, w, h - horizonY + 24);
+      }
+      ctx.restore();
+    }
 
     // Dynamic normal-lit micro-craters
     const sunDir = (this.sunAngle - 0.5) * 2;
@@ -1140,24 +1193,9 @@ class EternalFootprintGame {
     }
 
     // Gold-Foil Apollo Lunar Module Descent Stage
-    ctx.save();
-    ctx.translate(w * 0.25, horizonY - 4);
-    ctx.fillStyle = 'rgba(0,0,0,0.6)';
-    ctx.beginPath();
-    ctx.ellipse(-sunDir * 16, 10, 28, 5, 0, 0, Math.PI * 2);
-    ctx.fill();
-
-    ctx.fillStyle = '#d97706';
-    ctx.strokeStyle = '#fcd34d';
-    ctx.lineWidth = 1.4;
-    ctx.fillRect(-14, -12, 28, 12);
-    ctx.strokeRect(-14, -12, 28, 12);
-    ctx.beginPath();
-    ctx.moveTo(-14, -2); ctx.lineTo(-24, 10);
-    ctx.moveTo(14, -2); ctx.lineTo(24, 10);
-    ctx.moveTo(0, 0); ctx.lineTo(0, 10);
-    ctx.stroke();
-    ctx.restore();
+    if (window.VantaGfx) {
+      window.VantaGfx.drawApolloLMDescent(ctx, w * 0.25, horizonY - 4, sunDir, 1.05);
+    }
 
     // Footprints Field Camera Zoom
     const cx = w * 0.5;
