@@ -288,59 +288,94 @@ html, body {
   opacity: 1;
 }
 
-/* Rise Zero-G Plushie Mascot Easter Egg Launcher (Bottom-Left) */
-#btn-rise-mascot {
+/* Two Circular Mascot Launchers (Bottom-Left: Rise & Spirit) */
+#mascot-dock {
   position: fixed;
   bottom: 24px;
   left: 24px;
   z-index: 10;
   display: flex;
   align-items: center;
-  gap: 9px;
-  padding: 5px 14px 5px 6px;
-  border-radius: 999px;
-  background: rgba(8, 13, 26, 0.86);
+  gap: 12px;
+}
+
+.mascot-circle-btn {
+  position: relative;
+  width: 50px;
+  height: 50px;
+  padding: 0;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(8, 13, 26, 0.88);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
-  border: 1px solid rgba(244, 114, 182, 0.38);
+  border: 1.5px solid rgba(244, 114, 182, 0.42);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.55);
   color: var(--ivory);
   cursor: pointer;
   transition: all 0.28s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-#btn-rise-mascot:hover,
-#btn-rise-mascot.active {
-  border-color: var(--amber-bright);
-  background: rgba(14, 22, 42, 0.95);
-  transform: translateY(-2px);
-  box-shadow: 0 10px 28px rgba(244, 114, 182, 0.28);
+#btn-spirit-mascot {
+  border-color: rgba(251, 146, 60, 0.45);
 }
 
-.rise-mascot-avatar {
-  width: 30px;
-  height: 30px;
+.mascot-circle-btn:hover,
+.mascot-circle-btn.active {
+  border-color: var(--amber-bright);
+  background: rgba(14, 22, 42, 0.96);
+  transform: translateY(-2px) scale(1.06);
+  box-shadow: 0 10px 28px rgba(244, 114, 182, 0.32);
+}
+
+#btn-spirit-mascot:hover,
+#btn-spirit-mascot.active {
+  border-color: #38bdf8;
+  box-shadow: 0 10px 28px rgba(56, 189, 248, 0.32);
+}
+
+.mascot-circle-btn[data-tooltip]::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  left: 0;
+  bottom: calc(100% + 10px);
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: rgba(8, 13, 26, 0.94);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  color: var(--ivory);
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(4px);
+  transition: opacity 0.2s, transform 0.2s;
+}
+
+.mascot-circle-btn:hover[data-tooltip]::after {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.mascot-avatar {
+  width: 38px;
+  height: 38px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: radial-gradient(circle, rgba(56, 189, 248, 0.25), rgba(15, 23, 42, 0.9));
+  background: radial-gradient(circle, rgba(56, 189, 248, 0.22), rgba(15, 23, 42, 0.92));
   overflow: hidden;
 }
 
-.rise-mascot-avatar svg {
-  width: 28px;
-  height: 28px;
+.mascot-avatar svg {
+  width: 34px;
+  height: 34px;
   display: block;
-}
-
-.rise-mascot-label {
-  font-family: var(--font-mono);
-  font-size: 10.5px;
-  letter-spacing: 0.12em;
-  color: #fdf2f8;
-  font-weight: 600;
-  white-space: nowrap;
 }
 
 /* Top Constellation Navigation (Compact Astrometric Dots + Touch Prev/Next Controls) */
@@ -2106,23 +2141,22 @@ html, body {
     width: 28px;
     height: 28px;
   }
-  #btn-rise-mascot {
+  #mascot-dock {
     bottom: calc(14px + env(safe-area-inset-bottom, 0px));
     left: calc(10px + env(safe-area-inset-left, 0px));
-    padding: 4px 11px 4px 5px;
-    gap: 6px;
+    gap: 10px;
   }
-  .rise-mascot-avatar {
-    width: 26px;
-    height: 26px;
+  .mascot-circle-btn {
+    width: 44px;
+    height: 44px;
   }
-  .rise-mascot-avatar svg {
-    width: 24px;
-    height: 24px;
+  .mascot-avatar {
+    width: 34px;
+    height: 34px;
   }
-  .rise-mascot-label {
-    font-size: 9.5px;
-    letter-spacing: 0.08em;
+  .mascot-avatar svg {
+    width: 30px;
+    height: 30px;
   }
   #intro-whisper {
     bottom: calc(62px + env(safe-area-inset-bottom, 0px));
@@ -2156,7 +2190,7 @@ html, body {
     width: 34px;
     height: 34px;
   }
-  #btn-rise-mascot {
+  #mascot-dock {
     bottom: calc(10px + env(safe-area-inset-bottom, 0px));
     left: calc(12px + env(safe-area-inset-left, 0px));
   }
@@ -2171,6 +2205,7 @@ html, body {
 
 @media (hover: none) {
   .icon-btn[data-tooltip]::after,
+  .mascot-circle-btn[data-tooltip]::after,
   .nav-star-tip {
     display: none;
   }

@@ -228,23 +228,24 @@ class EchoesApp {
         this.currentGame.onPointerDown(window.innerWidth * 0.5, window.innerHeight * 0.5);
       } else if (e.key === 'ArrowRight' && !this.paused) {
         this._dismissIntroWhisper();
-        this.mountGame((this.currentIndex + 1) % this.gameClasses.length);
+        this.mountGame(this.currentIndex >= this.coreGameCount ? 0 : (this.currentIndex + 1) % this.coreGameCount);
       } else if (e.key === 'ArrowLeft' && !this.paused) {
         this._dismissIntroWhisper();
-        this.mountGame((this.currentIndex - 1 + this.gameClasses.length) % this.gameClasses.length);
-      } else if (e.key >= '1' && e.key <= '9') {
+        this.mountGame(this.currentIndex >= this.coreGameCount ? this.coreGameCount - 1 : (this.currentIndex - 1 + this.coreGameCount) % this.coreGameCount);
+      } else if (e.key >= '1' && e.key <= '8') {
         this._dismissIntroWhisper();
         this.hideModals();
         this.mountGame(Number(e.key) - 1);
-      } else if (e.key === '0') {
-        this._dismissIntroWhisper();
-        this.hideModals();
-        this.mountGame(9);
-      } else if (e.key === 'r' || e.key === 'R') {
+      } else if (e.key === '9' || e.key === 'r' || e.key === 'R') {
         this._dismissIntroWhisper();
         this.hideModals();
         const riseIdx = this.gameClasses.indexOf(window.RiseZeroGGame);
-        this.mountGame(riseIdx >= 0 ? riseIdx : this.gameClasses.length - 1);
+        this.mountGame(riseIdx >= 0 ? riseIdx : 8);
+      } else if (e.key === '0' || e.key === 's' || e.key === 'S') {
+        this._dismissIntroWhisper();
+        this.hideModals();
+        const spiritIdx = this.gameClasses.indexOf(window.SpiritRescueGame);
+        this.mountGame(spiritIdx >= 0 ? spiritIdx : 9);
       } else if (e.key === 'i' || e.key === 'I') {
         if (this.memoryModal.classList.contains('visible')) {
           this.hideModals();
@@ -307,7 +308,8 @@ class EchoesApp {
     this.guideModal = document.getElementById('guide-modal');
     this.lightboxModal = document.getElementById('img-lightbox');
 
-    // Build 9 wordless constellation dots + Prev/Next touch buttons for tablets & phones
+    // Build 8 core constellation dots + Prev/Next touch buttons (Rise & Spirit live in bottom-left circular buttons)
+    this.coreGameCount = 8;
     this.navStars = [];
     const navCodes = [
       '01 · InSight',
@@ -317,9 +319,7 @@ class EchoesApp {
       '05 · Apollo 12',
       '06 · Tranquility',
       '07 · Voyager 1',
-      '08 · Cassini',
-      '09 · Rise Zero-G ★',
-      '10 · Spirit Rescue 🚀'
+      '08 · Cassini'
     ];
 
     const prevBtn = document.createElement('button');
@@ -333,14 +333,17 @@ class EchoesApp {
       window.soundEngine.unlock();
       this._dismissIntroWhisper();
       this.hideModals();
-      this.mountGame((this.currentIndex - 1 + this.gameClasses.length) % this.gameClasses.length);
+      const target = this.currentIndex >= this.coreGameCount
+        ? this.coreGameCount - 1
+        : (this.currentIndex - 1 + this.coreGameCount) % this.coreGameCount;
+      this.mountGame(target);
     });
     this.navContainer.appendChild(prevBtn);
 
-    window.MEMORY_SHARDS.forEach((shard, idx) => {
+    window.MEMORY_SHARDS.slice(0, this.coreGameCount).forEach((shard, idx) => {
       const dot = document.createElement('button');
       dot.type = 'button';
-      dot.className = 'nav-star' + (idx === window.MEMORY_SHARDS.length - 1 ? ' last-star' : '');
+      dot.className = 'nav-star' + (idx === this.coreGameCount - 1 ? ' last-star' : '');
       dot.setAttribute('aria-label', shard.title);
       const tip = document.createElement('span');
       tip.className = 'nav-star-tip';
@@ -368,7 +371,10 @@ class EchoesApp {
       window.soundEngine.unlock();
       this._dismissIntroWhisper();
       this.hideModals();
-      this.mountGame((this.currentIndex + 1) % this.gameClasses.length);
+      const target = this.currentIndex >= this.coreGameCount
+        ? 0
+        : (this.currentIndex + 1) % this.coreGameCount;
+      this.mountGame(target);
     });
     this.navContainer.appendChild(nextBtn);
 
@@ -378,7 +384,7 @@ class EchoesApp {
       this.openDossier();
     });
 
-    // Rise Zero-G Plushie Easter Egg Button (Bottom-Left)
+    // Two Circular Mascot Launchers (Bottom-Left: Rise & Spirit)
     const btnRise = document.getElementById('btn-rise-mascot');
     if (btnRise) {
       btnRise.addEventListener('click', e => {
@@ -387,7 +393,19 @@ class EchoesApp {
         this._dismissIntroWhisper();
         this.hideModals();
         const riseIdx = this.gameClasses.indexOf(window.RiseZeroGGame);
-        this.mountGame(riseIdx >= 0 ? riseIdx : this.gameClasses.length - 1);
+        this.mountGame(riseIdx >= 0 ? riseIdx : 8);
+      });
+    }
+
+    const btnSpirit = document.getElementById('btn-spirit-mascot');
+    if (btnSpirit) {
+      btnSpirit.addEventListener('click', e => {
+        e.currentTarget.blur();
+        window.soundEngine.unlock();
+        this._dismissIntroWhisper();
+        this.hideModals();
+        const spiritIdx = this.gameClasses.indexOf(window.SpiritRescueGame);
+        this.mountGame(spiritIdx >= 0 ? spiritIdx : 9);
       });
     }
 
@@ -604,6 +622,11 @@ class EchoesApp {
     if (btnRise) {
       const riseIdx = this.gameClasses.indexOf(window.RiseZeroGGame);
       btnRise.classList.toggle('active', this.currentIndex === riseIdx);
+    }
+    const btnSpirit = document.getElementById('btn-spirit-mascot');
+    if (btnSpirit) {
+      const spiritIdx = this.gameClasses.indexOf(window.SpiritRescueGame);
+      btnSpirit.classList.toggle('active', this.currentIndex === spiritIdx);
     }
   }
 

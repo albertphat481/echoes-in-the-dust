@@ -42,34 +42,51 @@
     <span class="emblem-label">VANTALUMEN // NASA SPACE APPS</span>
   </div>
 
-  <!-- Rise Zero-G Plushie Mascot Easter Egg Launcher (Bottom-Left) -->
-  <button id="btn-rise-mascot" type="button" title="Khám phá RISE — NASA Artemis II Zero-G Indicator (Phím tắt: R hoặc 9)">
-    <span class="rise-mascot-avatar">
-      <svg viewBox="0 0 36 36" aria-hidden="true">
-        <circle cx="18" cy="20" r="12.5" fill="#f7f1e1" stroke="#38bdf8" stroke-width="1.2"/>
-        <!-- Earth Cap (Blue Ocean + Green Continents) -->
-        <path d="M6.5 15.5 A12 10.5 0 0 1 29.5 15.5 Z" fill="#0284c7"/>
-        <path d="M11 10.5 Q15 8.5 18 12 Q14 14 11 10.5 Z" fill="#22c55e"/>
-        <path d="M20 10 Q24 9.5 26 13 Q22 14 20 10 Z" fill="#22c55e"/>
-        <!-- Cap Brim with Stars -->
-        <ellipse cx="18" cy="14.2" rx="10.5" ry="3.4" fill="#18181b" stroke="#fcd34d" stroke-width="0.6"/>
-        <circle cx="13" cy="14" r="0.8" fill="#fcd34d"/>
-        <circle cx="16" cy="13.6" r="0.8" fill="#fcd34d"/>
-        <circle cx="18" cy="13.5" r="0.9" fill="#fcd34d"/>
-        <circle cx="20" cy="13.6" r="0.8" fill="#fcd34d"/>
-        <circle cx="23" cy="14" r="0.8" fill="#fcd34d"/>
-        <!-- Eyes, Cheeks & Smile -->
-        <circle cx="13.5" cy="20" r="2.1" fill="#18181b"/>
-        <circle cx="22.5" cy="20" r="2.1" fill="#18181b"/>
-        <circle cx="12.9" cy="19.3" r="0.8" fill="#ffffff"/>
-        <circle cx="21.9" cy="19.3" r="0.8" fill="#ffffff"/>
-        <circle cx="10" cy="22.5" r="2" fill="#f472b6" opacity="0.85"/>
-        <circle cx="26" cy="22.5" r="2" fill="#f472b6" opacity="0.85"/>
-        <path d="M15 23 Q18 25.6 21 23" fill="none" stroke="#18181b" stroke-width="1.5" stroke-linecap="round"/>
-      </svg>
-    </span>
-    <span class="rise-mascot-label">RISE • ARTEMIS II 0-G ★</span>
-  </button>
+  <!-- Two Circular Mascot Launchers (Bottom-Left: Rise & Spirit) -->
+  <div id="mascot-dock" aria-label="Nhân vật đặc biệt">
+    <button id="btn-rise-mascot" class="mascot-circle-btn" type="button" data-tooltip="RISE • Artemis II 0-G (R)" aria-label="Khám phá RISE — NASA Artemis II Zero-G Indicator">
+      <span class="mascot-avatar">
+        <svg viewBox="0 0 36 36" aria-hidden="true">
+          <circle cx="18" cy="20" r="12.5" fill="#f7f1e1" stroke="#38bdf8" stroke-width="1.2"/>
+          <path d="M6.5 15.5 A12 10.5 0 0 1 29.5 15.5 Z" fill="#0284c7"/>
+          <path d="M11 10.5 Q15 8.5 18 12 Q14 14 11 10.5 Z" fill="#22c55e"/>
+          <path d="M20 10 Q24 9.5 26 13 Q22 14 20 10 Z" fill="#22c55e"/>
+          <ellipse cx="18" cy="14.2" rx="10.5" ry="3.4" fill="#18181b" stroke="#fcd34d" stroke-width="0.6"/>
+          <circle cx="13" cy="14" r="0.8" fill="#fcd34d"/>
+          <circle cx="16" cy="13.6" r="0.8" fill="#fcd34d"/>
+          <circle cx="18" cy="13.5" r="0.9" fill="#fcd34d"/>
+          <circle cx="20" cy="13.6" r="0.8" fill="#fcd34d"/>
+          <circle cx="23" cy="14" r="0.8" fill="#fcd34d"/>
+          <circle cx="13.5" cy="20" r="2.1" fill="#18181b"/>
+          <circle cx="22.5" cy="20" r="2.1" fill="#18181b"/>
+          <circle cx="12.9" cy="19.3" r="0.8" fill="#ffffff"/>
+          <circle cx="21.9" cy="19.3" r="0.8" fill="#ffffff"/>
+          <circle cx="10" cy="22.5" r="2" fill="#f472b6" opacity="0.85"/>
+          <circle cx="26" cy="22.5" r="2" fill="#f472b6" opacity="0.85"/>
+          <path d="M15 23 Q18 25.6 21 23" fill="none" stroke="#18181b" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+      </span>
+    </button>
+    <button id="btn-spirit-mascot" class="mascot-circle-btn" type="button" data-tooltip="SPIRIT • Giải Cứu Sao Hỏa (S)" aria-label="Giải cứu Rover Spirit bằng tàu SpaceX">
+      <span class="mascot-avatar">
+        <svg viewBox="0 0 36 36" aria-hidden="true">
+          <!-- Rover Spirit Solar Deck & Mast -->
+          <polygon points="7,17 29,17 26,14 10,14" fill="#0f172a" stroke="#fcd34d" stroke-width="1"/>
+          <rect x="11" y="17" width="14" height="5.5" rx="1" fill="#92400e" stroke="#f59e0b" stroke-width="0.9"/>
+          <!-- Mastcam Head -->
+          <line x1="22" y1="14" x2="23.5" y2="7.5" stroke="#cbd5e1" stroke-width="1.5" stroke-linecap="round"/>
+          <rect x="19.5" y="5" width="7.5" height="3.5" rx="1" fill="#1e293b" stroke="#bae6fd" stroke-width="0.8"/>
+          <circle cx="21.5" cy="6.8" r="0.9" fill="#38bdf8"/>
+          <circle cx="25" cy="6.8" r="0.9" fill="#38bdf8"/>
+          <!-- Rocker-bogie & 3 Wheels -->
+          <polyline points="9,26 14,21 20,21 27,26" fill="none" stroke="#94a3b8" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+          <circle cx="9" cy="27" r="3.2" fill="#090d16" stroke="#38bdf8" stroke-width="1.3"/>
+          <circle cx="18" cy="27" r="3.2" fill="#090d16" stroke="#94a3b8" stroke-width="1.2"/>
+          <circle cx="27" cy="27" r="3.2" fill="#090d16" stroke="#94a3b8" stroke-width="1.2"/>
+        </svg>
+      </span>
+    </button>
+  </div>
 
   <!-- Wordless Constellation Navigation (6 Minigames) -->
   <nav id="constellation-nav" aria-label="Constellation Navigation"></nav>
