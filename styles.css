@@ -227,10 +227,14 @@ html, body {
   gap: 10px;
   padding: 5px 12px 5px 5px;
   border-radius: 999px;
-  background: linear-gradient(180deg, rgba(16, 24, 48, 0.72) 0%, rgba(6, 10, 22, 0.8) 100%);
-  backdrop-filter: blur(14px);
-  border: 1px solid rgba(245, 158, 11, 0.24);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  background: linear-gradient(155deg, rgba(22, 34, 66, 0.36) 0%, rgba(10, 16, 36, 0.46) 100%);
+  backdrop-filter: blur(24px) saturate(175%);
+  -webkit-backdrop-filter: blur(24px) saturate(175%);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow:
+    0 10px 28px rgba(0, 0, 0, 0.36),
+    inset 0 1px 1px rgba(255, 255, 255, 0.24),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.04);
   cursor: pointer;
   transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
   opacity: 0.88;
@@ -293,10 +297,14 @@ html, body {
   gap: 24px;
   padding: 11px 26px;
   border-radius: 999px;
-  background: linear-gradient(180deg, rgba(16, 24, 48, 0.7) 0%, rgba(6, 10, 22, 0.78) 100%);
-  backdrop-filter: blur(16px);
-  border: 1px solid rgba(254, 243, 199, 0.16);
-  box-shadow: 0 10px 32px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  background: linear-gradient(155deg, rgba(22, 34, 66, 0.36) 0%, rgba(10, 16, 36, 0.46) 100%);
+  backdrop-filter: blur(24px) saturate(175%);
+  -webkit-backdrop-filter: blur(24px) saturate(175%);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow:
+    0 10px 30px rgba(0, 0, 0, 0.36),
+    inset 0 1px 1px rgba(255, 255, 255, 0.24),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.04);
   transition: opacity 0.6s ease;
 }
 
@@ -380,11 +388,15 @@ html, body {
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  background: linear-gradient(180deg, rgba(16, 24, 48, 0.7) 0%, rgba(6, 10, 22, 0.78) 100%);
-  backdrop-filter: blur(14px);
-  border: 1px solid rgba(254, 243, 199, 0.16);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.08);
-  color: rgba(254, 243, 199, 0.85);
+  background: linear-gradient(155deg, rgba(22, 34, 66, 0.36) 0%, rgba(10, 16, 36, 0.46) 100%);
+  backdrop-filter: blur(24px) saturate(175%);
+  -webkit-backdrop-filter: blur(24px) saturate(175%);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow:
+    0 8px 24px rgba(0, 0, 0, 0.36),
+    inset 0 1px 1px rgba(255, 255, 255, 0.24),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.04);
+  color: rgba(254, 243, 199, 0.88);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -446,8 +458,9 @@ html, body {
   align-items: center;
   justify-content: center;
   padding: 20px;
-  background: rgba(3, 6, 14, 0.78);
-  backdrop-filter: blur(16px);
+  background: rgba(4, 8, 20, 0.44);
+  backdrop-filter: blur(12px) saturate(135%);
+  -webkit-backdrop-filter: blur(12px) saturate(135%);
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1);
@@ -463,14 +476,17 @@ html, body {
   max-width: 960px;
   max-height: 90vh;
   overflow-y: auto;
-  background: linear-gradient(160deg, rgba(16, 24, 46, 0.96) 0%, rgba(7, 11, 22, 0.99) 100%);
-  border: 1px solid rgba(245, 158, 11, 0.36);
-  border-radius: 24px;
-  padding: 26px 32px;
+  background: linear-gradient(155deg, rgba(20, 32, 62, 0.46) 0%, rgba(8, 14, 30, 0.56) 100%);
+  backdrop-filter: blur(28px) saturate(175%);
+  -webkit-backdrop-filter: blur(28px) saturate(175%);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 26px;
+  padding: 24px 30px;
   box-shadow:
-    0 32px 90px rgba(0, 0, 0, 0.88),
-    0 0 55px rgba(245, 158, 11, 0.14),
-    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    0 28px 80px rgba(0, 0, 0, 0.52),
+    0 0 48px rgba(56, 189, 248, 0.08),
+    inset 0 1px 1px rgba(255, 255, 255, 0.24),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.05);
   transform: translateY(24px) scale(0.96);
   transition: transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
   position: relative;
@@ -809,13 +825,14 @@ html, body {
   position: fixed;
   inset: 0;
   z-index: 35;
-  background: rgba(4, 7, 15, 0.9);
-  backdrop-filter: blur(18px);
+  background: rgba(4, 8, 20, 0.44);
+  backdrop-filter: blur(12px) saturate(135%);
+  -webkit-backdrop-filter: blur(12px) saturate(135%);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 28px 20px;
+  padding: 24px 20px;
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.4s ease;
@@ -828,10 +845,20 @@ html, body {
 
 .gallery-container {
   width: 100%;
-  max-width: 960px;
+  max-width: 980px;
   max-height: 88vh;
   overflow-y: auto;
-  padding-right: 6px;
+  background: linear-gradient(155deg, rgba(20, 32, 62, 0.46) 0%, rgba(8, 14, 30, 0.56) 100%);
+  backdrop-filter: blur(28px) saturate(175%);
+  -webkit-backdrop-filter: blur(28px) saturate(175%);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 26px;
+  padding: 26px 30px;
+  box-shadow:
+    0 28px 80px rgba(0, 0, 0, 0.52),
+    0 0 48px rgba(56, 189, 248, 0.08),
+    inset 0 1px 1px rgba(255, 255, 255, 0.24),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.05);
 }
 
 .gallery-header {
@@ -884,10 +911,14 @@ html, body {
   text-align: center;
   padding: 12px 24px;
   border-radius: 18px;
-  background: linear-gradient(180deg, rgba(12, 19, 38, 0.72), rgba(5, 8, 17, 0.82));
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(245, 158, 11, 0.25);
-  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.55);
+  background: linear-gradient(155deg, rgba(22, 34, 66, 0.36) 0%, rgba(10, 16, 36, 0.46) 100%);
+  backdrop-filter: blur(24px) saturate(175%);
+  -webkit-backdrop-filter: blur(24px) saturate(175%);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow:
+    0 12px 36px rgba(0, 0, 0, 0.42),
+    inset 0 1px 1px rgba(255, 255, 255, 0.24),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.04);
   transition: opacity 0.75s ease, transform 0.75s ease;
   max-width: 90vw;
 }
@@ -928,8 +959,9 @@ html, body {
   margin-bottom: 20px;
   padding: 14px 18px;
   border-radius: 16px;
-  background: linear-gradient(135deg, rgba(16, 26, 52, 0.85), rgba(8, 12, 24, 0.92));
-  border: 1px solid rgba(245, 158, 11, 0.28);
+  background: rgba(255, 255, 255, 0.055);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14);
 }
 
 .telemetry-metric {
@@ -1001,8 +1033,9 @@ html, body {
 }
 
 .gallery-item {
-  background: rgba(15, 23, 42, 0.78);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.045);
+  border: 1px solid rgba(255, 255, 255, 0.13);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12);
   border-radius: 16px;
   padding: 16px;
   cursor: pointer;
@@ -1014,8 +1047,9 @@ html, body {
 }
 
 .gallery-item.unlocked {
-  border-color: rgba(245, 158, 11, 0.42);
-  background: linear-gradient(145deg, rgba(22, 32, 56, 0.9), rgba(9, 14, 28, 0.96));
+  border-color: rgba(245, 158, 11, 0.38);
+  background: linear-gradient(150deg, rgba(255, 255, 255, 0.085), rgba(245, 158, 11, 0.055));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18);
 }
 
 .gallery-item:hover {
@@ -1121,10 +1155,11 @@ html, body {
 }
 
 .dossier-card {
-  background: rgba(15, 23, 42, 0.78);
-  border: 1px solid rgba(245, 158, 11, 0.22);
-  border-radius: 14px;
-  padding: 20px;
+  background: rgba(255, 255, 255, 0.045);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  border-radius: 16px;
+  padding: 18px 20px;
 }
 
 .dossier-card h3 {
@@ -1153,10 +1188,11 @@ html, body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: rgba(245, 158, 11, 0.1);
-  border: 1px solid rgba(245, 158, 11, 0.35);
-  border-radius: 14px;
-  padding: 16px 20px;
+  background: linear-gradient(145deg, rgba(245, 158, 11, 0.12), rgba(255, 255, 255, 0.04));
+  border: 1px solid rgba(245, 158, 11, 0.34);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.16);
+  border-radius: 16px;
+  padding: 15px 20px;
   flex-wrap: wrap;
   gap: 12px;
 }
@@ -1174,12 +1210,12 @@ html, body {
 
 /* VantaLumen Interactive Quiz Block inside Memory Shard ("Tell After" Verification) */
 .shard-quiz-section {
-  margin: 16px 0 18px;
+  margin: 14px 0 16px;
   padding: 16px;
-  border-radius: 14px;
-  background: linear-gradient(155deg, rgba(12, 20, 38, 0.92), rgba(7, 11, 22, 0.96));
-  border: 1px solid rgba(56, 189, 248, 0.28);
-  box-shadow: inset 0 0 25px rgba(56, 189, 248, 0.06);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.045);
+  border: 1px solid rgba(56, 189, 248, 0.26);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14), inset 0 0 24px rgba(56, 189, 248, 0.05);
 }
 
 .quiz-header-bar {
@@ -1318,13 +1354,14 @@ html, body {
   position: fixed;
   inset: 0;
   z-index: 36;
-  background: rgba(4, 7, 15, 0.92);
-  backdrop-filter: blur(18px);
+  background: rgba(4, 8, 20, 0.44);
+  backdrop-filter: blur(12px) saturate(135%);
+  -webkit-backdrop-filter: blur(12px) saturate(135%);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 24px 18px;
+  padding: 20px 18px;
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.4s ease;
@@ -1338,11 +1375,19 @@ html, body {
 .deck-stage {
   width: 100%;
   max-width: 780px;
-  background: linear-gradient(160deg, rgba(16, 24, 45, 0.97), rgba(7, 11, 22, 0.99));
-  border: 1px solid rgba(245, 158, 11, 0.4);
-  border-radius: 20px;
+  max-height: 90vh;
+  overflow-y: auto;
+  background: linear-gradient(155deg, rgba(20, 32, 62, 0.46) 0%, rgba(8, 14, 30, 0.56) 100%);
+  backdrop-filter: blur(28px) saturate(175%);
+  -webkit-backdrop-filter: blur(28px) saturate(175%);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 24px;
   padding: 24px 28px;
-  box-shadow: 0 28px 80px rgba(0, 0, 0, 0.85);
+  box-shadow:
+    0 28px 80px rgba(0, 0, 0, 0.52),
+    0 0 48px rgba(56, 189, 248, 0.08),
+    inset 0 1px 1px rgba(255, 255, 255, 0.24),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.05);
 }
 
 .deck-banner-wrap {
@@ -1350,9 +1395,9 @@ html, body {
   width: 100%;
   border-radius: 14px;
   overflow: hidden;
-  border: 1px solid rgba(245, 158, 11, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.16);
   margin-bottom: 16px;
-  background: #040711;
+  background: rgba(4, 7, 17, 0.55);
 }
 
 .deck-banner-img {
@@ -1394,13 +1439,14 @@ html, body {
   position: fixed;
   inset: 0;
   z-index: 36;
-  background: rgba(4, 7, 15, 0.92);
-  backdrop-filter: blur(18px);
+  background: rgba(4, 8, 20, 0.44);
+  backdrop-filter: blur(12px) saturate(135%);
+  -webkit-backdrop-filter: blur(12px) saturate(135%);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 24px 18px;
+  padding: 20px 18px;
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.4s ease;
@@ -1421,8 +1467,9 @@ html, body {
 .guide-tab-btn {
   padding: 7px 13px;
   border-radius: 999px;
-  background: rgba(15, 23, 42, 0.8);
-  border: 1px solid rgba(148, 163, 184, 0.25);
+  background: rgba(255, 255, 255, 0.055);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12);
   color: #cbd5e1;
   font-family: var(--font-mono);
   font-size: 11.5px;
