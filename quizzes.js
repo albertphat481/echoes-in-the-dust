@@ -148,5 +148,21 @@ window.VANTALUMEN_QUIZZES = [
     correctKey: 'A',
     explanation:
       'Rise lấy cảm hứng từ bức ảnh Earthrise (Apollo 8, 1968), kết hợp 4 biểu tượng: thân Mặt Trăng, mũ Trái Đất, vành mũ 7 ngôi sao & 2 tên lửa, cùng dấu chân Apollo 11 (1969) phía sau lưng.'
+  },
+  {
+    id: 'q10-spirit-rescue',
+    linkedShardId: 'spirit-rescue', // Game 10: Fictional SpaceX Starship Spirit Rescue
+    image: 'assets/quiz/q6_mars_rover.jpg',
+    questionEn: 'In real history, which component on Mars rover Spirit seized in 2006 before its mission ended?',
+    questionVi: 'Trong lịch sử thật, bộ phận nào của rover Spirit bị kẹt cứng năm 2006 trước khi kết thúc sứ mệnh?',
+    options: [
+      { key: 'A', label: 'A) Right-front wheel motor', vi: 'Motor bánh trước bên phải' },
+      { key: 'B', label: 'B) Parachute cord', vi: 'Dây dù hạ cánh' },
+      { key: 'C', label: 'C) Nuclear RTG core', vi: 'Lõi hạt nhân RTG' },
+      { key: 'D', label: 'D) Heat shield', vi: 'Khiên chắn nhiệt' }
+    ],
+    correctKey: 'A',
+    explanation:
+      'Motor bánh trước bên phải (Wheel #1) của Spirit bị kẹt từ năm 2006, buộc Spirit phải chạy lùi kéo lê bánh hỏng — nhưng lại vô tình cày lộ lớp đất giàu Silica (>90%) từng có suối nước nóng cổ đại!'
   }
 ];

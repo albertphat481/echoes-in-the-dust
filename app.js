@@ -17,7 +17,8 @@ class EchoesApp {
       window.EternalFootprintGame,
       window.PaleBlueDotGame,
       window.CassiniGrandFinaleGame,
-      window.RiseZeroGGame
+      window.RiseZeroGGame,
+      window.SpiritRescueGame
     ];
 
     this.currentIndex = 0;
@@ -235,10 +236,15 @@ class EchoesApp {
         this._dismissIntroWhisper();
         this.hideModals();
         this.mountGame(Number(e.key) - 1);
+      } else if (e.key === '0') {
+        this._dismissIntroWhisper();
+        this.hideModals();
+        this.mountGame(9);
       } else if (e.key === 'r' || e.key === 'R') {
         this._dismissIntroWhisper();
         this.hideModals();
-        this.mountGame(this.gameClasses.length - 1);
+        const riseIdx = this.gameClasses.indexOf(window.RiseZeroGGame);
+        this.mountGame(riseIdx >= 0 ? riseIdx : this.gameClasses.length - 1);
       } else if (e.key === 'i' || e.key === 'I') {
         if (this.memoryModal.classList.contains('visible')) {
           this.hideModals();
@@ -312,7 +318,8 @@ class EchoesApp {
       '06 · Tranquility',
       '07 · Voyager 1',
       '08 · Cassini',
-      '09 · Rise Zero-G ★'
+      '09 · Rise Zero-G ★',
+      '10 · Spirit Rescue 🚀'
     ];
 
     const prevBtn = document.createElement('button');
@@ -379,7 +386,8 @@ class EchoesApp {
         window.soundEngine.unlock();
         this._dismissIntroWhisper();
         this.hideModals();
-        this.mountGame(this.gameClasses.length - 1);
+        const riseIdx = this.gameClasses.indexOf(window.RiseZeroGGame);
+        this.mountGame(riseIdx >= 0 ? riseIdx : this.gameClasses.length - 1);
       });
     }
 
@@ -594,7 +602,8 @@ class EchoesApp {
     });
     const btnRise = document.getElementById('btn-rise-mascot');
     if (btnRise) {
-      btnRise.classList.toggle('active', this.currentIndex === this.gameClasses.length - 1);
+      const riseIdx = this.gameClasses.indexOf(window.RiseZeroGGame);
+      btnRise.classList.toggle('active', this.currentIndex === riseIdx);
     }
   }
 
@@ -1303,6 +1312,18 @@ class EchoesApp {
       ctx.beginPath();
       ctx.arc(0, -4.5, 1.5, 0, Math.PI * 2);
       ctx.fill();
+    } else if (id === 'spirit-rescue') {
+      ctx.beginPath();
+      ctx.moveTo(0, -11);
+      ctx.lineTo(6, -2);
+      ctx.lineTo(6, 8);
+      ctx.lineTo(-6, 8);
+      ctx.lineTo(-6, -2);
+      ctx.closePath();
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(0, 11, 2.2, 0, Math.PI * 2);
+      ctx.fill();
     } else {
       ctx.rotate(-0.3);
       ctx.beginPath();
@@ -1524,19 +1545,19 @@ class EchoesApp {
 
     ctx.fillStyle = '#64748b';
     ctx.font = '500 12.5px "JetBrains Mono", monospace';
-    ctx.fillText('HỒ SƠ 09 SỨ MỆNH PHẦN CỨNG NASA & ARTEMIS II TRONG BỘ SƯU TẬP', 88, 408);
+    ctx.fillText('HỒ SƠ 10 SỨ MỆNH PHẦN CỨNG NASA, ARTEMIS II & SPACEX RESCUE', 88, 408);
 
     const gridX = 88;
     const gridY = 426;
     const gapX = 18;
-    const gapY = 14;
-    const cardW = (stripW - gapX * 2) / 3;
-    const cardH = 142;
+    const gapY = 10;
+    const cardW = (stripW - gapX) / 2;
+    const cardH = 84;
 
-    const coreShards = window.MEMORY_SHARDS.slice(0, 9);
+    const coreShards = window.MEMORY_SHARDS.slice(0, 10);
     coreShards.forEach((shard, idx) => {
-      const col = idx % 3;
-      const row = Math.floor(idx / 3);
+      const col = idx % 2;
+      const row = Math.floor(idx / 2);
       const bx = gridX + col * (cardW + gapX);
       const by = gridY + row * (cardH + gapY);
       const unlocked = this.unlockedShards.has(shard.id);

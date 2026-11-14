@@ -468,5 +468,57 @@ window.MEMORY_SHARDS = [
         </g>
       </svg>
     `
+  },
+  {
+    id: 'spirit-rescue',
+    number: '10 / 10 ★',
+    title: 'SPIRIT RESCUE — Giải Cứu Rover Spirit (Fictional)',
+    subtitle: 'SpaceX Starship Mars Rescue • Đưa Spirit về Trái Đất thay motor bánh xe & sạc pin 100%',
+    mission: 'Fictional SpaceX Starship × NASA MER-A Spirit',
+    specs: [
+      { label: 'Phương tiện giải cứu', value: 'SpaceX Starship (Raptor Methalox)' },
+      { label: 'Hạng mục sửa chữa', value: 'Thay Motor Bánh #1 & Sạc Pin 100%' },
+      { label: 'Kết quả sứ mệnh', value: '225M km × 2 • Spirit hồi sinh' }
+    ],
+    defaultStatLabel: 'Hành trình giải cứu & phục hồi Spirit',
+    story:
+      'Sứ mệnh giả tưởng đầy cảm hứng: tàu SpaceX Starship vượt 225 triệu km lên Hố Gusev trên Sao Hỏa để bế rover Spirit trở về Trái Đất. Tại xưởng phục hồi, bạn tháo motor bánh xe bị kẹt từ năm 2006, lắp motor titan mới và sạc đầy 100% pin để Spirit lăn bánh trở lại.',
+    sourceLabel: 'NASA Mars Exploration Rover Spirit & SpaceX Starship Concept',
+    sourceUrl: 'https://science.nasa.gov/mission/mer-spirit/',
+    svgDiagram: `
+      <svg viewBox="0 0 440 155" width="100%" height="100%">
+        <defs>
+          <pattern id="cad-grid" width="22" height="22" patternUnits="userSpaceOnUse">
+            <path d="M 22 0 L 0 0 0 22" fill="none" stroke="rgba(148,163,184,0.07)" stroke-width="0.7"/>
+          </pattern>
+        </defs>
+        <rect width="440" height="155" fill="#060911"/>
+        <rect width="440" height="155" fill="url(#cad-grid)"/>
+        <line x1="12" y1="30" x2="428" y2="30" stroke="rgba(255,255,255,0.08)" stroke-width="0.8"/>
+        <text x="16" y="21" fill="#94a3b8" font-family="monospace" font-size="9.2" letter-spacing="0.8">CAD-10 // FICTIONAL SPACEX STARSHIP RESCUE &amp; SPIRIT OVERHAUL</text>
+        <g transform="translate(76, 94)" fill="none" stroke="#cbd5e1" stroke-width="1.2">
+          <path d="M -12 24 L -12 -14 Q -12 -32 0 -40 Q 12 -32 12 -14 L 12 24 Z" fill="#0f172a" stroke="#e2e8f0"/>
+          <path d="M -12 8 L -22 22 L -12 24 Z" fill="#1e293b"/>
+          <path d="M 12 8 L 22 22 L 12 24 Z" fill="#1e293b"/>
+          <rect x="-5" y="-18" width="10" height="10" stroke="#38bdf8"/>
+          <path d="M -6 25 Q 0 42 6 25" stroke="#60a5fa" stroke-width="1.4"/>
+        </g>
+        <path d="M 106 86 Q 152 48 196 88" fill="none" stroke="#fcd34d" stroke-width="1.3" stroke-dasharray="4 3"/>
+        <g transform="translate(230, 102)" fill="none" stroke="#94a3b8" stroke-width="1.2">
+          <rect x="-24" y="-20" width="48" height="10" fill="#0f172a" stroke="#fcd34d"/>
+          <circle cx="-18" cy="4" r="7" stroke="#38bdf8" stroke-width="1.5"/>
+          <circle cx="0" cy="4" r="7"/>
+          <circle cx="18" cy="4" r="7"/>
+          <line x1="12" y1="-20" x2="14" y2="-34" stroke="#cbd5e1"/>
+          <rect x="9" y="-38" width="11" height="5" stroke="#38bdf8"/>
+        </g>
+        <g font-family="monospace" font-size="8.4" fill="#cbd5e1">
+          <text x="285" y="60" fill="#38bdf8">01. STARSHIP TRANSIT: 225M KM</text>
+          <text x="285" y="78" fill="#fcd34d">02. GUSEV CRATER PICKUP</text>
+          <text x="285" y="96" fill="#4ade80">03. NEW WHEEL MOTOR INSTALLED</text>
+          <text x="285" y="114" fill="#bae6fd">04. BATTERY SUPER-CHARGE: 100%</text>
+        </g>
+      </svg>
+    `
   }
 ];

@@ -81,6 +81,14 @@ window.NASA_TELEMETRY = (function () {
       date: '2026',
       imageUrl: 'assets/rise_infographic.jpg',
       center: 'NASA Artemis II / Space Apps 2026'
+    },
+    'spirit-rescue': {
+      query: 'PIA20276',
+      nasaId: 'PIA20276',
+      title: 'Mars Exploration Rover Spirit at Gusev Crater (Fictional SpaceX Rescue Tribute)',
+      date: '2004-01-04',
+      imageUrl: 'https://images-assets.nasa.gov/image/PIA20276/PIA20276~medium.jpg',
+      center: 'NASA/JPL-Caltech • SpaceX Rescue Concept'
     }
   };
 
@@ -205,6 +213,11 @@ window.NASA_TELEMETRY = (function () {
         return {
           badge: 'NASA ARTEMIS II // ORION ZERO-G INDICATOR "RISE" (2026)',
           line: 'Cảm hứng: Earthrise (Apollo 8, 1968) & Dấu chân Apollo 11 (1969) • Thiết kế bởi Lucas Ye (8 tuổi) • Tàu Orion bay vòng quanh Mặt Trăng'
+        };
+      case 'spirit-rescue':
+        return {
+          badge: 'FICTIONAL RESCUE // SPACEX STARSHIP × NASA SPIRIT',
+          line: `Quãng đường 2 chiều Trái Đất ↔ Sao Hỏa: ~${((marsDistKm * 2) / 1e6).toFixed(1)} triệu km • Sửa chữa: Motor bánh #1 & Sạc pin 100%`
         };
       default:
         return { badge: 'NASA TELEMETRY', line: '' };

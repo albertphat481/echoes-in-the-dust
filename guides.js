@@ -218,5 +218,29 @@ window.GAME_GUIDES = [
       'Thu thập đủ 7/7 ngôi sao để mở khóa Thẻ Ký Ức & Infographic chính thức của Rise.'
     ],
     tip: '4 biểu tượng của Rise: Thân Mặt Trăng • Mũ Trái Đất • 7 Sao & 2 Tên Lửa • Dấu chân Apollo 11.'
+  },
+  {
+    id: 'spirit-rescue',
+    number: '10 / 10 ★',
+    title: 'SPIRIT RESCUE — Giải Cứu Rover Spirit (Fictional)',
+    hardware: 'Tàu SpaceX Starship & Xe tự hành NASA Spirit (MER-A)',
+    goal: 'Bay tàu SpaceX lên Sao Hỏa bế rover Spirit về Trái Đất để thay motor bánh xe và sạc đầy 100% pin.',
+    controls: [
+      {
+        gesture: 'Nhấn giữ (hoặc Space)',
+        action: 'Đốt động cơ Raptor phóng tàu SpaceX lên Sao Hỏa, bế Spirit vào khoang và bay về Trái Đất.',
+        svg: `<svg viewBox="0 0 48 48"><path d="M24 8 L30 22 L30 34 L18 34 L18 22 Z" stroke="#e2e8f0" stroke-width="2" fill="rgba(56,189,248,0.18)"/><path d="M20 34 L24 42 L28 34" stroke="#60a5fa" stroke-width="2" fill="none"/></svg>`
+      },
+      {
+        gesture: 'Chạm để sửa chữa tại Trái Đất',
+        action: 'Chạm tháo motor cũ ở bánh xe hỏng, chạm lắp motor titan mới, rồi nhấn giữ nút tia sét để sạc pin 100%.',
+        svg: `<svg viewBox="0 0 48 48"><circle cx="24" cy="24" r="14" stroke="#fcd34d" stroke-width="2" fill="none"/><path d="M26 14 L18 25 H25 L22 34 L30 23 H23 Z" fill="#38bdf8"/></svg>`
+      }
+    ],
+    steps: [
+      'Giai đoạn 1–3: Nhấn giữ để bay lên Sao Hỏa, bế Spirit lên tàu SpaceX rồi bay về Trái Đất.',
+      'Giai đoạn 4–5: Chạm tháo motor cũ, lắp motor mới và nhấn giữ biểu tượng sét để sạc đầy 100% pin Spirit.'
+    ],
+    tip: 'Ngoài đời thật, bánh trước bên phải của Spirit bị kẹt từ năm 2006 và kẹt cát hoàn toàn năm 2009 — màn chơi này là lời tri ân giả tưởng đưa Spirit về nhà!'
   }
 ];
