@@ -473,6 +473,7 @@ class EchoesApp {
       this._completeTimer = null;
     }
     window.soundEngine.setBrushWind(0);
+    window.soundEngine.playModalOpen();
     this.paused = true;
     const shard = window.MEMORY_SHARDS[index];
     document.getElementById('shard-number').textContent = `MẢNH VỠ KÝ ỨC • ${shard.number}`;
@@ -657,6 +658,7 @@ class EchoesApp {
   }
 
   openQuizDeck(startIndex = 0) {
+    window.soundEngine.playModalOpen();
     this.paused = true;
     this.memoryModal.classList.remove('visible');
     this.galleryModal.classList.remove('visible');
@@ -791,11 +793,12 @@ class EchoesApp {
       grid.appendChild(item);
     });
 
-    window.soundEngine.playUIChime(4);
+    window.soundEngine.playModalOpen();
     this.galleryModal.classList.add('visible');
   }
 
   openGuide(index = 0) {
+    window.soundEngine.playModalOpen();
     this.paused = true;
     this.memoryModal.classList.remove('visible');
     this.galleryModal.classList.remove('visible');
@@ -881,6 +884,7 @@ class EchoesApp {
   }
 
   openDossier() {
+    window.soundEngine.playModalOpen();
     this.paused = true;
     this.memoryModal.classList.remove('visible');
     this.galleryModal.classList.remove('visible');
@@ -890,6 +894,15 @@ class EchoesApp {
   }
 
   hideModals() {
+    const anyVisible =
+      this.memoryModal.classList.contains('visible') ||
+      this.galleryModal.classList.contains('visible') ||
+      this.dossierModal.classList.contains('visible') ||
+      this.quizDeckModal.classList.contains('visible') ||
+      this.guideModal.classList.contains('visible');
+    if (anyVisible) {
+      window.soundEngine.playModalClose();
+    }
     this.memoryModal.classList.remove('visible');
     this.galleryModal.classList.remove('visible');
     this.dossierModal.classList.remove('visible');

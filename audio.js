@@ -229,6 +229,86 @@ class SoundEngine {
     this.playPentatonicNote(pitchIdx + 2, 0.04, 0.7, 0.045, 'sine');
   }
 
+  // Liquid Glass panel open: airy upward silk sweep + rising crystalline shimmer
+  playModalOpen() {
+    if (!this.ctx || this.muted) return;
+    const now = this.ctx.currentTime;
+
+    // 1. Airy glass-glide whoosh
+    if (this.noiseBuffer) {
+      const src = this.ctx.createBufferSource();
+      src.buffer = this.noiseBuffer;
+      const bp = this.ctx.createBiquadFilter();
+      bp.type = 'bandpass';
+      bp.Q.value = 1.6;
+      bp.frequency.setValueAtTime(340, now);
+      bp.frequency.exponentialRampToValueAtTime(1900, now + 0.16);
+
+      const g = this.ctx.createGain();
+      g.gain.setValueAtTime(0.0001, now);
+      g.gain.linearRampToValueAtTime(0.085, now + 0.035);
+      g.gain.exponentialRampToValueAtTime(0.0001, now + 0.22);
+
+      src.connect(bp);
+      bp.connect(g);
+      g.connect(this.masterGain);
+      g.connect(this.reverbSend);
+      src.start(now, Math.random() * 1.2, 0.24);
+    }
+
+    // 2. Rising crystalline harmonic shimmer
+    this.playPentatonicNote(5, 0.065, 0.55, 0, 'sine');
+    this.playPentatonicNote(7, 0.05, 0.65, 0.045, 'sine');
+    this.playPentatonicNote(9, 0.03, 0.75, 0.09, 'triangle');
+  }
+
+  // Liquid Glass panel close: soft downward air sigh + gentle glass tuck
+  playModalClose() {
+    if (!this.ctx || this.muted) return;
+    const now = this.ctx.currentTime;
+
+    if (this.noiseBuffer) {
+      const src = this.ctx.createBufferSource();
+      src.buffer = this.noiseBuffer;
+      const lp = this.ctx.createBiquadFilter();
+      lp.type = 'lowpass';
+      lp.Q.value = 1.2;
+      lp.frequency.setValueAtTime(1500, now);
+      lp.frequency.exponentialRampToValueAtTime(260, now + 0.15);
+
+      const g = this.ctx.createGain();
+      g.gain.setValueAtTime(0.0001, now);
+      g.gain.linearRampToValueAtTime(0.07, now + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001, now + 0.17);
+
+      src.connect(lp);
+      lp.connect(g);
+      g.connect(this.masterGain);
+      g.connect(this.reverbSend);
+      src.start(now, Math.random() * 1.2, 0.19);
+    }
+
+    this.playPentatonicNote(6, 0.045, 0.34, 0, 'sine');
+    this.playPentatonicNote(3, 0.035, 0.42, 0.04, 'sine');
+  }
+
+  // Subtle crystalline micro-tick for tab / slide switching
+  playUITick() {
+    if (!this.ctx || this.muted) return;
+    const now = this.ctx.currentTime;
+    const osc = this.ctx.createOscillator();
+    const g = this.ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(1180, now);
+    osc.frequency.exponentialRampToValueAtTime(720, now + 0.04);
+    g.gain.setValueAtTime(0.04, now);
+    g.gain.exponentialRampToValueAtTime(0.0001, now + 0.045);
+    osc.connect(g);
+    g.connect(this.masterGain);
+    osc.start(now);
+    osc.stop(now + 0.05);
+  }
+
   // Warm 4-note cosmic bloom when unlocking a shard or answering correctly
   playSuccessBloom() {
     if (!this.ctx) return;
