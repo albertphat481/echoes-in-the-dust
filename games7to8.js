@@ -605,20 +605,26 @@ class RiseZeroGGame {
     const earthRiseX = cx + Math.min(w, h) * 0.24;
     const earthRiseY = h * 0.76;
     const earthRiseR = Math.min(w, h) * 0.13;
-    const earthGlow = ctx.createRadialGradient(earthRiseX, earthRiseY, earthRiseR * 0.5, earthRiseX, earthRiseY, earthRiseR * 1.65);
-    earthGlow.addColorStop(0, 'rgba(56, 189, 248, 0.45)');
-    earthGlow.addColorStop(0.6, 'rgba(14, 165, 233, 0.15)');
-    earthGlow.addColorStop(1, 'rgba(0, 0, 0, 0)');
-    ctx.fillStyle = earthGlow;
-    ctx.beginPath();
-    ctx.arc(earthRiseX, earthRiseY, earthRiseR * 1.65, 0, Math.PI * 2);
-    ctx.fill();
+    const usedRTXEarth = window.vantaPlanetGL && window.vantaPlanetGL.drawPlanet(ctx, 'earth', earthRiseX, earthRiseY, earthRiseR, {
+      spin: this.elapsed * 0.04 + 0.65,
+      sunDir: [-0.45, 0.55, 0.7]
+    });
 
-    // Earthrise Globe (Blue oceans + Green continents + White cloud swirls)
-    ctx.save();
-    ctx.beginPath();
-    ctx.arc(earthRiseX, earthRiseY, earthRiseR, 0, Math.PI * 2);
-    ctx.clip();
+    if (!usedRTXEarth) {
+      const earthGlow = ctx.createRadialGradient(earthRiseX, earthRiseY, earthRiseR * 0.5, earthRiseX, earthRiseY, earthRiseR * 1.65);
+      earthGlow.addColorStop(0, 'rgba(56, 189, 248, 0.45)');
+      earthGlow.addColorStop(0.6, 'rgba(14, 165, 233, 0.15)');
+      earthGlow.addColorStop(1, 'rgba(0, 0, 0, 0)');
+      ctx.fillStyle = earthGlow;
+      ctx.beginPath();
+      ctx.arc(earthRiseX, earthRiseY, earthRiseR * 1.65, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Earthrise Globe (Blue oceans + Green continents + White cloud swirls)
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(earthRiseX, earthRiseY, earthRiseR, 0, Math.PI * 2);
+      ctx.clip();
     const oceanGrad = ctx.createRadialGradient(
       earthRiseX - earthRiseR * 0.3,
       earthRiseY - earthRiseR * 0.3,
@@ -642,8 +648,9 @@ class RiseZeroGGame {
     ctx.fillStyle = 'rgba(255, 255, 255, 0.35)';
     ctx.beginPath();
     ctx.ellipse(earthRiseX - earthRiseR * 0.1, earthRiseY - earthRiseR * 0.38, earthRiseR * 0.55, earthRiseR * 0.12, -0.18, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.restore();
+      ctx.fill();
+      ctx.restore();
+    }
 
     // Sculpted Gray-Ivory Lunar Horizon Curve at Bottom ("A Little Moon With a Big Dream")
     const moonR = Math.max(w, h) * 1.45;

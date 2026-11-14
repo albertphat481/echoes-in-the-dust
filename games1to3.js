@@ -870,7 +870,12 @@ class StillThereGame {
     ctx.arc(cx, cy, r * 1.48, 0, Math.PI * 2);
     ctx.fill();
 
-    ctx.drawImage(this.moonCanvas, cx - r * 1.087, cy - r * 1.087, r * 2.174, r * 2.174);
+    if (!(window.vantaPlanetGL && window.vantaPlanetGL.drawPlanet(ctx, 'moon', cx, cy, r, {
+      spin: 0.42,
+      sunDir: [-0.55, 0.35, 0.75]
+    }))) {
+      ctx.drawImage(this.moonCanvas, cx - r * 1.087, cy - r * 1.087, r * 2.174, r * 2.174);
+    }
 
     // Constellation Triangle Lines connecting lit retroreflectors
     const litSites = this.sites.filter(s => s.lit);

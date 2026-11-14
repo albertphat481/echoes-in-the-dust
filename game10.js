@@ -587,6 +587,12 @@ class SpiritRescueGame {
   }
 
   _drawRealisticPlanet(ctx, x, y, r, isMars) {
+    if (window.vantaPlanetGL && window.vantaPlanetGL.drawPlanet(ctx, isMars ? 'mars' : 'earth', x, y, r, {
+      spin: (this.elapsed || 0) * (isMars ? 0.05 : 0.08) + (isMars ? 1.85 : 0.45),
+      sunDir: [-0.62, 0.42, 0.66]
+    })) {
+      return;
+    }
     const halo = ctx.createRadialGradient(x, y, r * 0.78, x, y, r * 1.55);
     halo.addColorStop(0, isMars ? 'rgba(251, 146, 60, 0.42)' : 'rgba(56, 189, 248, 0.52)');
     halo.addColorStop(0.55, isMars ? 'rgba(194, 65, 12, 0.14)' : 'rgba(14, 165, 233, 0.16)');
