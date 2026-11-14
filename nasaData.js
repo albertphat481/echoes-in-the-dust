@@ -72,6 +72,14 @@ window.NASA_TELEMETRY = (function () {
       date: '2017-09-14',
       imageUrl: 'https://images-assets.nasa.gov/image/PIA21889/PIA21889~medium.jpg',
       center: 'NASA/JPL-Caltech'
+    },
+    'rise-zero-g': {
+      query: 'iss042e340858',
+      nasaId: 'ISS042-E-340858',
+      title: 'Zero-G Indicator & Earth Horizon Viewed from the ISS Cupola Observation Dome',
+      date: '2015-01-04',
+      imageUrl: 'https://images-assets.nasa.gov/image/iss042e340858/iss042e340858~medium.jpg',
+      center: 'NASA/JSC'
     }
   };
 
@@ -186,6 +194,11 @@ window.NASA_TELEMETRY = (function () {
         return {
           badge: 'CASSINI GRAND FINALE // SATURN UPPER ATMOSPHERE',
           line: '22 quỹ đạo lặn qua khe vành đai (2017) • Tín hiệu cuối duy trì ăng-ten hướng Trái Đất ở tốc độ 113.000 km/h'
+        };
+      case 'rise-zero-g':
+        return {
+          badge: 'LOW EARTH ORBIT CUPOLA // ZERO-G INDICATOR "RISE"',
+          line: 'Độ cao quỹ đạo ISS: ~408 km • Chu kỳ quay quanh Trái Đất: 92,6 phút • Vi trọng lực: 0,00 G (MECO Confirmed)'
         };
       default:
         return { badge: 'NASA TELEMETRY', line: '' };

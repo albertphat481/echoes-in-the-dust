@@ -16,7 +16,8 @@ class EchoesApp {
       window.MoonStillRingsGame,
       window.EternalFootprintGame,
       window.PaleBlueDotGame,
-      window.CassiniGrandFinaleGame
+      window.CassiniGrandFinaleGame,
+      window.RiseZeroGGame
     ];
 
     this.currentIndex = 0;
@@ -212,10 +213,14 @@ class EchoesApp {
       } else if (e.key === 'ArrowLeft' && !this.paused) {
         this._dismissIntroWhisper();
         this.mountGame((this.currentIndex - 1 + this.gameClasses.length) % this.gameClasses.length);
-      } else if (e.key >= '1' && e.key <= '8') {
+      } else if (e.key >= '1' && e.key <= '9') {
         this._dismissIntroWhisper();
         this.hideModals();
         this.mountGame(Number(e.key) - 1);
+      } else if (e.key === 'r' || e.key === 'R') {
+        this._dismissIntroWhisper();
+        this.hideModals();
+        this.mountGame(this.gameClasses.length - 1);
       } else if (e.key === 'i' || e.key === 'I') {
         if (this.memoryModal.classList.contains('visible')) {
           this.hideModals();
@@ -287,7 +292,8 @@ class EchoesApp {
       '05 · Apollo 12',
       '06 · Tranquility',
       '07 · Voyager 1',
-      '08 · Cassini'
+      '08 · Cassini',
+      '09 · Rise Zero-G ★'
     ];
     window.MEMORY_SHARDS.forEach((shard, idx) => {
       const dot = document.createElement('button');
@@ -312,6 +318,18 @@ class EchoesApp {
       window.soundEngine.unlock();
       this.openDossier();
     });
+
+    // Rise Zero-G Plushie Easter Egg Button (Bottom-Left)
+    const btnRise = document.getElementById('btn-rise-mascot');
+    if (btnRise) {
+      btnRise.addEventListener('click', e => {
+        e.currentTarget.blur();
+        window.soundEngine.unlock();
+        this._dismissIntroWhisper();
+        this.hideModals();
+        this.mountGame(this.gameClasses.length - 1);
+      });
+    }
 
     // Top-Right Guide Button (6 Separate Guides)
     document.getElementById('btn-guide').addEventListener('click', e => {
@@ -485,6 +503,10 @@ class EchoesApp {
       const shardId = window.MEMORY_SHARDS[idx].id;
       dot.classList.toggle('unlocked', this.unlockedShards.has(shardId));
     });
+    const btnRise = document.getElementById('btn-rise-mascot');
+    if (btnRise) {
+      btnRise.classList.toggle('active', this.currentIndex === this.gameClasses.length - 1);
+    }
   }
 
   mountGame(index, animate = true) {
@@ -496,6 +518,9 @@ class EchoesApp {
     const curtain = document.getElementById('cinema-transition');
 
     const applyMount = () => {
+      if (this.currentGame && typeof this.currentGame.destroy === 'function') {
+        this.currentGame.destroy();
+      }
       this.currentIndex = index;
       const GameClass = this.gameClasses[index];
       this.currentGame = new GameClass(this);
@@ -541,6 +566,9 @@ class EchoesApp {
     }
     window.soundEngine.setBrushWind(0);
     window.soundEngine.playModalOpen();
+    if (this.currentGame && typeof this.currentGame.destroy === 'function') {
+      this.currentGame.destroy();
+    }
     this.paused = true;
     const shard = window.MEMORY_SHARDS[index];
     document.getElementById('shard-number').textContent = `MẢNH VỠ KÝ ỨC • ${shard.number}`;
@@ -990,6 +1018,9 @@ class EchoesApp {
     this.quizDeckModal.classList.remove('visible');
     this.guideModal.classList.remove('visible');
     this.paused = false;
+    if (this.currentGame && !this.currentGame.completed && typeof this.currentGame._startVideoPlayback === 'function') {
+      this.currentGame._startVideoPlayback(false);
+    }
   }
 
   _wrapCanvasText(ctx, text, x, y, maxWidth, lineHeight, maxLines = 4) {
@@ -1378,7 +1409,8 @@ class EchoesApp {
     const cardW = (stripW - gapX * 3) / 4;
     const cardH = 200;
 
-    window.MEMORY_SHARDS.forEach((shard, idx) => {
+    const coreShards = window.MEMORY_SHARDS.slice(0, 8);
+    coreShards.forEach((shard, idx) => {
       const col = idx % 4;
       const row = Math.floor(idx / 4);
       const bx = gridX + col * (cardW + gapX);

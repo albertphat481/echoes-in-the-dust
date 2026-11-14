@@ -398,5 +398,57 @@ window.MEMORY_SHARDS = [
         <text x="278" y="39" fill="#7dd3fc" font-family="monospace" font-size="8.5">EARTH DSN LOCK (83 MIN RTLT)</text>
       </svg>
     `
+  },
+  {
+    id: 'rise-zero-g',
+    number: '09 / 09 ★',
+    title: 'RISE IN ZERO-G — Linh Vật Không Trọng Lực',
+    subtitle: 'Búp bê Plushie Rise & Truyền thống Zero-G Indicator trên tàu vũ trụ',
+    mission: 'VantaLumen × NASA Human Spaceflight Tradition • LEO 408 km',
+    specs: [
+      { label: 'Vai trò trên tàu', value: 'Zero-G Indicator (MECO)' },
+      { label: 'Gia tốc vi trọng lực', value: '0,00 G (Rơi tự do quỹ đạo)' },
+      { label: 'Vận tốc quỹ đạo ISS', value: '27.600 km/h (7,66 km/s)' }
+    ],
+    defaultStatLabel: 'Cộng hưởng hộp nhạc Zero-G',
+    story:
+      'Từ chuyến bay lịch sử của Yuri Gagarin (1961), các sứ mệnh Apollo, tàu con thoi Space Shuttle, trạm vũ trụ ISS cho đến tàu Orion của sứ mệnh mặt trăng Artemis I, các phi hành gia luôn mang theo một chú thú bông nhỏ được buộc dây mảnh trong khoang lái làm "Zero-G Indicator" (Chỉ báo Không Trọng Lực). Khoảnh khắc tầng tên lửa chính ngắt động cơ (MECO) và chú thú bông bắt đầu lơ lửng nhẹ nhàng trước mặt phi hành đoàn chính là tín hiệu trực quan đầu tiên báo rằng con tàu đã thoát khỏi lực hút mặt đất và bước vào quỹ đạo vũ trụ. Plushie "Rise" là linh vật đồng hành của đội VantaLumen — mang nụ cười, hộp nhạc ấm áp và lời nhắc rằng trong vũ trụ lạnh giá, tâm hồn trẻ thơ và niềm hy vọng của con người luôn cùng bay lên.',
+    sourceLabel: 'NASA — Artemis & ISS Zero-G Indicator Tradition',
+    sourceUrl: 'https://www.nasa.gov/humans-in-space/',
+    svgDiagram: `
+      <svg viewBox="0 0 440 155" width="100%" height="100%">
+        <defs>
+          <pattern id="cad-grid" width="22" height="22" patternUnits="userSpaceOnUse">
+            <path d="M 22 0 L 0 0 0 22" fill="none" stroke="rgba(148,163,184,0.07)" stroke-width="0.7"/>
+          </pattern>
+        </defs>
+        <rect width="440" height="155" fill="#060911"/>
+        <rect width="440" height="155" fill="url(#cad-grid)"/>
+        <line x1="12" y1="30" x2="428" y2="30" stroke="rgba(255,255,255,0.08)" stroke-width="0.8"/>
+        <text x="16" y="21" fill="#94a3b8" font-family="monospace" font-size="9.5" letter-spacing="1">CAD-09 // ZERO-G INDICATOR PLUSHIE "RISE" (MECO MICROGRAVITY SENSOR)</text>
+        <!-- Cupola Octagonal Frame & Tether Schematic -->
+        <g transform="translate(152, 92)" fill="none" stroke="#cbd5e1" stroke-width="1.1">
+          <circle cx="0" cy="0" r="46" stroke="rgba(148,163,184,0.35)" stroke-dasharray="4 3"/>
+          <circle cx="0" cy="0" r="32" fill="#0f172a" stroke="#7dd3fc" stroke-width="1.2"/>
+          <!-- Rise Cap Visor -->
+          <path d="M -26 -12 A 28 24 0 0 1 26 -12" stroke="#38bdf8" stroke-width="2"/>
+          <ellipse cx="0" cy="-20" rx="18" ry="8" fill="#090d16" stroke="#fcd34d" stroke-width="1.1"/>
+          <!-- Eyes & Smile -->
+          <circle cx="-10" cy="-2" r="3.5" fill="#fcd34d"/>
+          <circle cx="10" cy="-2" r="3.5" fill="#fcd34d"/>
+          <circle cx="-17" cy="5" r="3" fill="rgba(244,114,182,0.55)" stroke="none"/>
+          <circle cx="17" cy="5" r="3" fill="rgba(244,114,182,0.55)" stroke="none"/>
+          <path d="M -7 6 Q 0 12 7 6" stroke="#fcd34d" stroke-width="1.4"/>
+          <!-- Umbilical Tether -->
+          <path d="M 0 32 Q 14 44 42 46" stroke="#fcd34d" stroke-width="1.1" stroke-dasharray="3 2"/>
+        </g>
+        <g font-family="monospace" font-size="8.5" fill="#94a3b8">
+          <text x="232" y="64" fill="#fcd34d">PAYLOAD: "RISE" PLUSHIE MASCOT</text>
+          <text x="232" y="82">ACCELERATION: a = 0.000 m/s² (LEO)</text>
+          <text x="232" y="100" fill="#7dd3fc">AUDIO: PENTATONIC MUSIC-BOX CHIME</text>
+          <text x="232" y="118">TETHER: KAPTON BRAIDED UMBILICAL</text>
+        </g>
+      </svg>
+    `
   }
 ];

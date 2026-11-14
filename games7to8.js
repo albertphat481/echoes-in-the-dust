@@ -859,5 +859,706 @@ class CassiniGrandFinaleGame {
   }
 }
 
+// =========================================================================
+// MINIGAME 9 (EASTER EGG): RISE IN ZERO-G (VantaLumen Zero-G Plushie Indicator)
+// =========================================================================
+class RiseZeroGGame {
+  constructor(host) {
+    this.host = host;
+    this.elapsed = 0;
+    this.maxDuration = 22.0;
+    this.completed = false;
+    this.ending = false;
+    this.finaleTimer = 0;
+    this.ghostAlpha = 0.85;
+
+    this.targetChimes = 6;
+    this.chimesCollected = 0;
+    this.petCount = 0;
+    this.joyPulse = 0;
+    this.isDragging = false;
+
+    const w = window.innerWidth;
+    const h = window.innerHeight;
+    this.plush = {
+      x: w * 0.5,
+      y: h * 0.48,
+      vx: 26,
+      vy: -18,
+      angle: 0,
+      vAngle: 0.18,
+      r: Math.min(w, h) * 0.145
+    };
+    this.pointer = { x: w * 0.5, y: h * 0.48, active: false };
+
+    // Initialize Rise Plushie Video (assets/rise_plushie.mp4)
+    this.video = document.createElement('video');
+    this.video.src = 'assets/rise_plushie.mp4';
+    this.video.loop = true;
+    this.video.playsInline = true;
+    this.video.preload = 'auto';
+    this.video.muted = !!(window.soundEngine && window.soundEngine.muted);
+    this.video.volume = 0.85;
+    this._startVideoPlayback(false);
+
+    // 6 Orbital Music-Box Star Notes floating inside the Cupola
+    this.starNotes = [];
+    this._initStarNotes(w, h);
+
+    this.sparkles = [];
+    this.ripples = [];
+  }
+
+  _startVideoPlayback(fromUserGesture = false) {
+    if (!this.video) return;
+    try {
+      const isMuted = !!(window.soundEngine && window.soundEngine.muted);
+      if (fromUserGesture && !isMuted) {
+        this.video.muted = false;
+        this.video.volume = 0.85;
+      }
+      const p = this.video.play();
+      if (p && typeof p.catch === 'function') {
+        p.catch(() => {
+          this.video.muted = true;
+          this.video.play().catch(() => {});
+        });
+      }
+    } catch {}
+  }
+
+  destroy() {
+    if (this.video) {
+      try {
+        this.video.pause();
+      } catch {}
+    }
+  }
+
+  _initStarNotes(w, h) {
+    const cx = w * 0.5;
+    const cy = h * 0.48;
+    const rx = Math.min(w * 0.34, 340);
+    const ry = Math.min(h * 0.28, 230);
+    const glyphs = ['♪', '✦', '♫', '★', '♪', '✦'];
+    this.starNotes = Array.from({ length: 6 }, (_, i) => {
+      const a = (i / 6) * Math.PI * 2 - Math.PI / 2;
+      return {
+        baseAngle: a,
+        rx,
+        ry,
+        x: cx + Math.cos(a) * rx,
+        y: cy + Math.sin(a) * ry,
+        glyph: glyphs[i],
+        collected: false,
+        bloom: 0,
+        phase: i * 1.1
+      };
+    });
+  }
+
+  onResize() {
+    const w = window.innerWidth;
+    const h = window.innerHeight;
+    this.plush.r = Math.max(68, Math.min(128, Math.min(w, h) * 0.145));
+    this.plush.x = Math.max(this.plush.r, Math.min(w - this.plush.r, this.plush.x));
+    this.plush.y = Math.max(this.plush.r, Math.min(h - this.plush.r, this.plush.y));
+    const cx = w * 0.5;
+    const cy = h * 0.48;
+    const rx = Math.min(w * 0.34, 340);
+    const ry = Math.min(h * 0.28, 230);
+    this.starNotes.forEach(n => {
+      n.rx = rx;
+      n.ry = ry;
+      n.x = cx + Math.cos(n.baseAngle) * rx;
+      n.y = cy + Math.sin(n.baseAngle) * ry;
+    });
+  }
+
+  _triggerJoyBurst(x, y, noteIdx = 0) {
+    this.joyPulse = 1.0;
+    if (window.soundEngine) {
+      window.soundEngine.playPentatonicNote(noteIdx % 5, 0.22, 0.45, 0, 'triangle');
+    }
+    this.ripples.push({
+      x,
+      y,
+      r: 16,
+      maxR: 135,
+      alpha: 0.85
+    });
+    const colors = ['#f472b6', '#fcd34d', '#38bdf8', '#fef3c7'];
+    for (let i = 0; i < 14; i++) {
+      const a = (i / 14) * Math.PI * 2 + Math.random() * 0.3;
+      const spd = 55 + Math.random() * 115;
+      this.sparkles.push({
+        x,
+        y,
+        vx: Math.cos(a) * spd,
+        vy: Math.sin(a) * spd - 20,
+        life: 1.0,
+        size: 3 + Math.random() * 4,
+        color: colors[i % colors.length],
+        isHeart: i % 3 === 0
+      });
+    }
+  }
+
+  _collectNextChime(x, y) {
+    if (this.ending || this.completed) return;
+    const uncollected = this.starNotes.find(n => !n.collected);
+    if (uncollected) {
+      uncollected.collected = true;
+      uncollected.bloom = 1.0;
+    }
+    this.chimesCollected = Math.min(this.targetChimes, this.chimesCollected + 1);
+    this._triggerJoyBurst(x, y, this.chimesCollected);
+
+    if (this.chimesCollected >= this.targetChimes && !this.ending) {
+      this.ending = true;
+      if (window.soundEngine) window.soundEngine.playSignatureMotif(3);
+    }
+  }
+
+  onPointerDown(x, y) {
+    if (this.completed || this.ending) return;
+    this.ghostAlpha = 0;
+    this.pointer = { x, y, active: true };
+    this._startVideoPlayback(true);
+
+    const distToPlush = Math.hypot(x - this.plush.x, y - this.plush.y);
+    if (distToPlush <= this.plush.r * 1.35) {
+      // Petting / grabbing Rise directly!
+      this.isDragging = true;
+      this.petCount++;
+      this.plush.vAngle = (Math.random() - 0.5) * 1.4;
+      this._collectNextChime(this.plush.x, this.plush.y - this.plush.r * 0.4);
+      return;
+    }
+
+    // Check if user tapped directly on a floating Star Note
+    const hitNote = this.starNotes.find(n => !n.collected && Math.hypot(x - n.x, y - n.y) < 58);
+    if (hitNote) {
+      hitNote.collected = true;
+      hitNote.bloom = 1.0;
+      // Gently propel Rise toward that note in Zero-G
+      const dx = hitNote.x - this.plush.x;
+      const dy = hitNote.y - this.plush.y;
+      this.plush.vx = dx * 2.2;
+      this.plush.vy = dy * 2.2;
+      this.chimesCollected = Math.min(this.targetChimes, this.chimesCollected + 1);
+      this._triggerJoyBurst(hitNote.x, hitNote.y, this.chimesCollected);
+      if (this.chimesCollected >= this.targetChimes && !this.ending) {
+        this.ending = true;
+        if (window.soundEngine) window.soundEngine.playSignatureMotif(3);
+      }
+      return;
+    }
+
+    // Otherwise give Rise a smooth Zero-G attraction toward the tap point
+    const dx = x - this.plush.x;
+    const dy = y - this.plush.y;
+    const len = Math.max(1, Math.hypot(dx, dy));
+    this.plush.vx += (dx / len) * 165;
+    this.plush.vy += (dy / len) * 165;
+    this.plush.vAngle = (dx / len) * 0.65;
+    if (window.soundEngine) window.soundEngine.playUITick();
+  }
+
+  onPointerMove(x, y, vx = 0, vy = 0) {
+    if (this.completed || this.ending) return;
+    this.pointer.x = x;
+    this.pointer.y = y;
+
+    if (this.isDragging) {
+      this.plush.x += (x - this.plush.x) * 0.35;
+      this.plush.y += (y - this.plush.y) * 0.35;
+      this.plush.vx = vx * 240;
+      this.plush.vy = vy * 240;
+    } else {
+      // Gentle magnetic Zero-G wake when cursor passes near Rise
+      const d = Math.hypot(x - this.plush.x, y - this.plush.y);
+      if (d < this.plush.r * 1.9 && d > 8) {
+        this.plush.vx += ((x - this.plush.x) / d) * 4.5;
+        this.plush.vy += ((y - this.plush.y) / d) * 4.5;
+      }
+    }
+  }
+
+  onPointerUp() {
+    this.isDragging = false;
+    this.pointer.active = false;
+  }
+
+  onKeyDown(e) {
+    if (this.completed || this.ending) return false;
+    this._startVideoPlayback(true);
+    if (e.code === 'Space') {
+      this.petCount++;
+      this.plush.vy -= 95;
+      this.plush.vAngle = 0.7;
+      this._collectNextChime(this.plush.x, this.plush.y);
+      return true;
+    }
+    const impulse = 140;
+    if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') {
+      this.plush.vx -= impulse;
+      return true;
+    }
+    if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') {
+      this.plush.vx += impulse;
+      return true;
+    }
+    if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W') {
+      this.plush.vy -= impulse;
+      return true;
+    }
+    if (e.key === 'ArrowDown' || e.key === 's' || e.key === 'S') {
+      this.plush.vy += impulse;
+      return true;
+    }
+    return false;
+  }
+
+  onKeyUp() {
+    return false;
+  }
+
+  update(dt) {
+    this.elapsed += dt;
+    this.joyPulse = Math.max(0, this.joyPulse - dt * 2.2);
+
+    // Sync video mute state with global soundEngine
+    if (this.video && window.soundEngine) {
+      if (window.soundEngine.muted && !this.video.muted) {
+        this.video.muted = true;
+      }
+    }
+
+    const w = window.innerWidth;
+    const h = window.innerHeight;
+    const cx = w * 0.5;
+    const cy = h * 0.48;
+
+    // Update orbiting Star Notes
+    this.starNotes.forEach((n, idx) => {
+      const a = n.baseAngle + Math.sin(this.elapsed * 0.55 + idx) * 0.12;
+      n.x = cx + Math.cos(a) * n.rx;
+      n.y = cy + Math.sin(a) * n.ry + Math.sin(this.elapsed * 1.6 + n.phase) * 8;
+      if (n.bloom > 0) n.bloom = Math.max(0, n.bloom - dt * 1.4);
+
+      // Check collision between floating Rise plushie and uncollected Star Note
+      if (!n.collected && !this.ending) {
+        const d = Math.hypot(this.plush.x - n.x, this.plush.y - n.y);
+        if (d < this.plush.r + 34) {
+          n.collected = true;
+          n.bloom = 1.0;
+          this.chimesCollected = Math.min(this.targetChimes, this.chimesCollected + 1);
+          this._triggerJoyBurst(n.x, n.y, this.chimesCollected);
+          if (this.chimesCollected >= this.targetChimes && !this.ending) {
+            this.ending = true;
+            if (window.soundEngine) window.soundEngine.playSignatureMotif(3);
+          }
+        }
+      }
+    });
+
+    // Zero-G Physics for Rise
+    if (!this.isDragging && !this.ending) {
+      // Gentle microgravity drift + soft umbilical spring back toward cupola center
+      this.plush.vx += Math.sin(this.elapsed * 0.9) * 12 * dt;
+      this.plush.vy += Math.cos(this.elapsed * 1.1) * 12 * dt;
+      this.plush.vx += (cx - this.plush.x) * 0.14 * dt;
+      this.plush.vy += (cy - this.plush.y) * 0.14 * dt;
+
+      this.plush.vx *= Math.pow(0.985, dt * 60);
+      this.plush.vy *= Math.pow(0.985, dt * 60);
+
+      this.plush.x += this.plush.vx * dt;
+      this.plush.y += this.plush.vy * dt;
+
+      // Soft elastic bounce off Cupola viewport boundaries
+      const pad = this.plush.r + 44;
+      if (this.plush.x < pad) {
+        this.plush.x = pad;
+        this.plush.vx = Math.abs(this.plush.vx) * 0.78;
+        this.plush.vAngle = 0.4;
+      } else if (this.plush.x > w - pad) {
+        this.plush.x = w - pad;
+        this.plush.vx = -Math.abs(this.plush.vx) * 0.78;
+        this.plush.vAngle = -0.4;
+      }
+      if (this.plush.y < pad + 30) {
+        this.plush.y = pad + 30;
+        this.plush.vy = Math.abs(this.plush.vy) * 0.78;
+      } else if (this.plush.y > h - pad - 20) {
+        this.plush.y = h - pad - 20;
+        this.plush.vy = -Math.abs(this.plush.vy) * 0.78;
+      }
+    }
+
+    // Gentle Zero-G rotational bobbing (keeps Rise mostly upright so face is clear)
+    this.plush.angle += this.plush.vAngle * dt;
+    this.plush.vAngle *= Math.pow(0.94, dt * 60);
+    const targetTilt = Math.max(-0.28, Math.min(0.28, this.plush.vx * 0.0012)) + Math.sin(this.elapsed * 1.5) * 0.06;
+    this.plush.angle += (targetTilt - this.plush.angle) * dt * 4.0;
+
+    // Update particles & ripples
+    for (let i = this.sparkles.length - 1; i >= 0; i--) {
+      const s = this.sparkles[i];
+      s.x += s.vx * dt;
+      s.y += s.vy * dt;
+      s.vx *= 0.97;
+      s.vy *= 0.97;
+      s.life -= dt * 1.15;
+      if (s.life <= 0) this.sparkles.splice(i, 1);
+    }
+
+    for (let i = this.ripples.length - 1; i >= 0; i--) {
+      const rp = this.ripples[i];
+      rp.r += dt * 145;
+      rp.alpha -= dt * 0.85;
+      if (rp.alpha <= 0 || rp.r >= rp.maxR) this.ripples.splice(i, 1);
+    }
+
+    // Fallback completion after maxDuration
+    if (!this.ending && this.elapsed >= this.maxDuration) {
+      this.ending = true;
+      this.chimesCollected = this.targetChimes;
+      if (window.soundEngine) window.soundEngine.playSignatureMotif(3);
+    }
+
+    if (this.ending && !this.completed) {
+      this.finaleTimer += dt;
+      this.plush.x += (cx - this.plush.x) * dt * 3.5;
+      this.plush.y += (cy - this.plush.y) * dt * 3.5;
+      this.plush.angle += (0 - this.plush.angle) * dt * 5.0;
+      if (this.finaleTimer >= 1.9) {
+        this.completed = true;
+        this.destroy();
+        this.host.completeCurrentGame();
+      }
+    }
+  }
+
+  _drawFallbackPlushieFace(ctx, r) {
+    // Cream plush head
+    const headGrad = ctx.createRadialGradient(-r * 0.2, -r * 0.2, r * 0.1, 0, 0, r);
+    headGrad.addColorStop(0, '#fffdf7');
+    headGrad.addColorStop(0.75, '#f5eedc');
+    headGrad.addColorStop(1, '#e2d6be');
+    ctx.fillStyle = headGrad;
+    ctx.beginPath();
+    ctx.arc(0, 0, r, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Black & Cyan Cap at top
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(0, -r * 0.18, r * 0.96, Math.PI * 1.08, Math.PI * 1.92);
+    ctx.fillStyle = '#0ea5e9';
+    ctx.fill();
+
+    ctx.beginPath();
+    ctx.ellipse(0, -r * 0.62, r * 0.66, r * 0.34, 0, 0, Math.PI * 2);
+    ctx.fillStyle = '#18181b';
+    ctx.fill();
+    ctx.strokeStyle = '#09090b';
+    ctx.lineWidth = 3;
+    ctx.stroke();
+    ctx.restore();
+
+    // Rosy Pink Embroidered Cheeks
+    ctx.fillStyle = '#f472b6';
+    [-r * 0.48, r * 0.48].forEach(cx => {
+      ctx.beginPath();
+      ctx.arc(cx, r * 0.16, r * 0.13, 0, Math.PI * 2);
+      ctx.fill();
+    });
+
+    // Big Sparkling Plushie Eyes
+    [-r * 0.28, r * 0.28].forEach(ex => {
+      ctx.fillStyle = '#18181b';
+      ctx.beginPath();
+      ctx.arc(ex, -r * 0.02, r * 0.13, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath();
+      ctx.arc(ex - r * 0.04, -r * 0.06, r * 0.045, 0, Math.PI * 2);
+      ctx.fill();
+    });
+
+    // Happy plush smile
+    ctx.strokeStyle = '#18181b';
+    ctx.lineWidth = 3.2;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.arc(0, r * 0.08, r * 0.16, 0.2, Math.PI - 0.2);
+    ctx.stroke();
+  }
+
+  render(ctx, w, h) {
+    const cx = w * 0.5;
+    const cy = h * 0.48;
+
+    // 1. Deep Orbital Space + VantaLumen GLSL Nebula Backdrop
+    const bg = ctx.createRadialGradient(cx, h * 0.95, 40, cx, cy, Math.max(w, h) * 0.9);
+    bg.addColorStop(0, '#0c2344');
+    bg.addColorStop(0.45, '#071022');
+    bg.addColorStop(1, '#03060e');
+    ctx.fillStyle = bg;
+    ctx.fillRect(0, 0, w, h);
+
+    if (window.vantaNebulaGL) {
+      window.vantaNebulaGL.drawBackdrop(ctx, w, h, {
+        alpha: 0.78,
+        lumen: 0.95,
+        cyan: 0.85,
+        stars: 0.8
+      });
+    }
+
+    if (window.VantaGfx) {
+      if (!this._stars) this._stars = window.VantaGfx.createStarfield(130, 0.9);
+      window.VantaGfx.drawStarfield(ctx, this._stars, w, h, this.elapsed, 0.9);
+    }
+
+    // 2. Curved Glowing Blue Earth Limb below the Cupola Window
+    ctx.save();
+    const earthR = Math.max(w, h) * 1.35;
+    const earthY = h + earthR * 0.82;
+    const atmoGrad = ctx.createRadialGradient(cx, earthY, earthR * 0.96, cx, earthY, earthR * 1.03);
+    atmoGrad.addColorStop(0, '#06152d');
+    atmoGrad.addColorStop(0.65, '#0284c7');
+    atmoGrad.addColorStop(0.84, 'rgba(56, 189, 248, 0.55)');
+    atmoGrad.addColorStop(1, 'rgba(56, 189, 248, 0)');
+    ctx.fillStyle = atmoGrad;
+    ctx.beginPath();
+    ctx.arc(cx, earthY, earthR * 1.03, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+
+    // 3. ISS / Artemis Octagonal Cupola Observation Window Frame
+    const cupR = Math.min(w, h) * 0.44;
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.strokeStyle = 'rgba(148, 163, 184, 0.22)';
+    ctx.lineWidth = 2.2;
+    ctx.beginPath();
+    for (let i = 0; i <= 8; i++) {
+      const a = (i / 8) * Math.PI * 2 + Math.PI / 8;
+      const px = Math.cos(a) * cupR;
+      const py = Math.sin(a) * cupR;
+      if (i === 0) ctx.moveTo(px, py);
+      else ctx.lineTo(px, py);
+    }
+    ctx.stroke();
+
+    // Radial window struts
+    ctx.strokeStyle = 'rgba(148, 163, 184, 0.11)';
+    ctx.lineWidth = 1.4;
+    for (let i = 0; i < 8; i++) {
+      const a = (i / 8) * Math.PI * 2 + Math.PI / 8;
+      ctx.beginPath();
+      ctx.moveTo(Math.cos(a) * cupR, Math.sin(a) * cupR);
+      ctx.lineTo(Math.cos(a) * cupR * 1.45, Math.sin(a) * cupR * 1.45);
+      ctx.stroke();
+    }
+
+    // Subtle Cupola telemetry inscription
+    ctx.fillStyle = 'rgba(148, 163, 184, 0.46)';
+    ctx.font = '500 10.5px "JetBrains Mono", monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText('CUPOLA OBSERVATION DOME  //  ZERO-G INDICATOR: RISE  //  0.00 G MICROGRAVITY', 0, cupR + 24);
+    ctx.restore();
+
+    // 4. Flexible Gold-Kapton Zero-G Tether connecting Cupola anchor to Rise
+    ctx.save();
+    ctx.strokeStyle = 'rgba(252, 211, 77, 0.34)';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([5, 5]);
+    ctx.beginPath();
+    ctx.moveTo(cx, cy + cupR * 0.88);
+    const midX = (cx + this.plush.x) * 0.5 + Math.sin(this.elapsed * 2) * 28;
+    const midY = (cy + cupR * 0.88 + this.plush.y) * 0.5;
+    ctx.quadraticCurveTo(midX, midY, this.plush.x, this.plush.y + this.plush.r * 0.9);
+    ctx.stroke();
+    ctx.restore();
+
+    // 5. Floating Orbital Music-Box Star Notes
+    this.starNotes.forEach((n, idx) => {
+      if (n.collected && n.bloom <= 0.02) return;
+      const alpha = n.collected ? n.bloom : 0.92;
+      const pulse = 1 + Math.sin(this.elapsed * 3.2 + n.phase) * 0.12;
+
+      ctx.save();
+      ctx.translate(n.x, n.y);
+      ctx.scale(pulse, pulse);
+
+      const halo = ctx.createRadialGradient(0, 0, 2, 0, 0, 34);
+      halo.addColorStop(0, `rgba(244, 114, 182, ${0.45 * alpha})`);
+      halo.addColorStop(0.5, `rgba(252, 211, 77, ${0.22 * alpha})`);
+      halo.addColorStop(1, 'rgba(0,0,0,0)');
+      ctx.fillStyle = halo;
+      ctx.beginPath();
+      ctx.arc(0, 0, 34, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.strokeStyle = `rgba(252, 211, 77, ${0.68 * alpha})`;
+      ctx.lineWidth = 1.4;
+      ctx.beginPath();
+      ctx.arc(0, 0, 18, 0, Math.PI * 2);
+      ctx.stroke();
+
+      ctx.fillStyle = `rgba(254, 243, 199, ${alpha})`;
+      ctx.font = '600 17px "Be Vietnam Pro", sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(n.glyph, 0, 1);
+      ctx.restore();
+    });
+
+    // 6. Joy Ripples
+    this.ripples.forEach(rp => {
+      ctx.save();
+      ctx.strokeStyle = `rgba(244, 114, 182, ${rp.alpha})`;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(rp.x, rp.y, rp.r, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.restore();
+    });
+
+    // 7. RISE — ZERO-G PLUSHIE INDICATOR (Live Cropped Video + Space Helmet Bubble)
+    const pr = this.plush.r * (1 + this.joyPulse * 0.08);
+    ctx.save();
+    ctx.translate(this.plush.x, this.plush.y);
+    ctx.rotate(this.plush.angle);
+
+    // Outer warm aurora glow around Rise
+    const auraR = pr * (this.ending ? 2.1 : 1.55);
+    const aura = ctx.createRadialGradient(0, 0, pr * 0.6, 0, 0, auraR);
+    aura.addColorStop(0, 'rgba(244, 114, 182, 0.34)');
+    aura.addColorStop(0.5, 'rgba(252, 211, 77, 0.18)');
+    aura.addColorStop(1, 'rgba(56, 189, 248, 0)');
+    ctx.fillStyle = aura;
+    ctx.beginPath();
+    ctx.arc(0, 0, auraR, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Cute Plush Astronaut Little Arms floating on sides
+    const armWave = Math.sin(this.elapsed * 3.8 + this.joyPulse * 4) * 0.22;
+    [-1, 1].forEach(dir => {
+      ctx.save();
+      ctx.translate(dir * pr * 0.86, pr * 0.32);
+      ctx.rotate(dir * (0.45 + armWave));
+      ctx.fillStyle = '#f5eedc';
+      ctx.strokeStyle = 'rgba(226, 214, 190, 0.85)';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.ellipse(0, 0, pr * 0.24, pr * 0.14, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+      ctx.restore();
+    });
+
+    // Circular Plush Portrait Clipped to Center of rise_plushie.mp4 (100% watermark-free!)
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(0, 0, pr, 0, Math.PI * 2);
+    ctx.clip();
+
+    if (this.video && this.video.readyState >= 2 && this.video.videoWidth > 0) {
+      const vw = this.video.videoWidth;
+      const vh = this.video.videoHeight;
+      // Crop central square tightly around Rise's plush head (excludes dark background corners & bottom-right watermark)
+      const cropSize = vh * 0.94;
+      const sx = (vw - cropSize) * 0.5;
+      const sy = vh * 0.02;
+      ctx.drawImage(this.video, sx, sy, cropSize, cropSize, -pr * 1.05, -pr * 1.05, pr * 2.1, pr * 2.1);
+    } else {
+      this._drawFallbackPlushieFace(ctx, pr);
+    }
+
+    // Soft spherical plush vignette & polycarbonate helmet glass sheen
+    const innerShade = ctx.createRadialGradient(-pr * 0.28, -pr * 0.32, pr * 0.2, 0, 0, pr);
+    innerShade.addColorStop(0, 'rgba(255, 255, 255, 0.14)');
+    innerShade.addColorStop(0.72, 'rgba(0, 0, 0, 0)');
+    innerShade.addColorStop(1, 'rgba(8, 14, 28, 0.42)');
+    ctx.fillStyle = innerShade;
+    ctx.fillRect(-pr, -pr, pr * 2, pr * 2);
+    ctx.restore();
+
+    // Polycarbonate Space Helmet Bubble Rim & Specular Highlight Arc
+    ctx.strokeStyle = 'rgba(224, 242, 254, 0.52)';
+    ctx.lineWidth = 2.2;
+    ctx.beginPath();
+    ctx.arc(0, 0, pr * 1.03, 0, Math.PI * 2);
+    ctx.stroke();
+
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.45)';
+    ctx.lineWidth = 3;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.arc(0, 0, pr * 0.95, -Math.PI * 0.78, -Math.PI * 0.46);
+    ctx.stroke();
+
+    // Golden Orbital Joy Resonance Progress Ring around Rise's Helmet
+    const progress = this.chimesCollected / this.targetChimes;
+    if (progress > 0) {
+      ctx.strokeStyle = '#fcd34d';
+      ctx.lineWidth = 3.5;
+      ctx.beginPath();
+      ctx.arc(0, 0, pr * 1.11, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * progress);
+      ctx.stroke();
+    }
+
+    // Mini "RISE // 0-G" Nameplate Collar Badge at Bottom of Helmet
+    ctx.fillStyle = 'rgba(9, 14, 26, 0.88)';
+    ctx.strokeStyle = 'rgba(252, 211, 77, 0.65)';
+    ctx.lineWidth = 1.2;
+    ctx.beginPath();
+    ctx.roundRect(-48, pr * 0.86, 96, 22, 11);
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.fillStyle = '#fef3c7';
+    ctx.font = '600 10.5px "JetBrains Mono", monospace';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('RISE // 0-G', 0, pr * 0.86 + 11);
+
+    ctx.restore();
+
+    // 8. Joy Sparkles & Hearts
+    this.sparkles.forEach(s => {
+      ctx.save();
+      ctx.globalAlpha = Math.max(0, s.life);
+      ctx.fillStyle = s.color;
+      if (s.isHeart) {
+        ctx.font = `${Math.round(s.size * 3.8)}px "Be Vietnam Pro", sans-serif`;
+        ctx.textAlign = 'center';
+        ctx.fillText('♥', s.x, s.y);
+      } else {
+        ctx.beginPath();
+        ctx.arc(s.x, s.y, s.size, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.restore();
+    });
+
+    // 9. Subtle Ghost Reticle Prompt before first interaction
+    if (this.ghostAlpha > 0.02 && typeof drawGhostHand === 'function') {
+      drawGhostHand(ctx, this.plush.x, this.plush.y, this.ghostAlpha, 1.1, false);
+    }
+  }
+
+  getSessionMetric() {
+    return `Rise Zero-G • ${this.chimesCollected}/${this.targetChimes} Nốt Nhạc • 0.00 G`;
+  }
+}
+
 window.PaleBlueDotGame = PaleBlueDotGame;
 window.CassiniGrandFinaleGame = CassiniGrandFinaleGame;
+window.RiseZeroGGame = RiseZeroGGame;

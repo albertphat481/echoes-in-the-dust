@@ -212,5 +212,30 @@ window.GAME_GUIDES = [
       'Khi đủ 5/5 gói, Cassini sẽ bừng sáng như một vệt sao băng ấm áp hòa vào tầng mây Sao Thổ để bảo vệ sự sống tiềm năng trên vệ tinh Enceladus.'
     ],
     tip: 'Thực tế ngày 15/09/2017, Cassini giữ khóa tín hiệu về Trái Đất tới tận những giây cuối cùng khi bốc cháy ở tốc độ 113.000 km/h!'
+  },
+  {
+    id: 'rise-zero-g',
+    number: '09 / 09 ★',
+    title: 'RISE IN ZERO-G — Linh Vật Không Trọng Lực',
+    hardware: 'Búp bê Plushie Rise (Zero-G Indicator) & Cửa sổ Cupola Quỹ đạo',
+    goal: 'Tương tác với linh vật plushie Rise đang lơ lửng không trọng lực và thu thập 6 nốt nhạc hộp nhạc quanh khoang tàu.',
+    controls: [
+      {
+        gesture: 'Chạm / Xoa đầu hoặc Kéo thả Rise',
+        action: 'Chạm trực tiếp vào Rise để phát giai điệu hộp nhạc, xem biểu cảm nháy mắt và đẩy nhẹ Rise bay trong môi trường 0-G.',
+        svg: `<svg viewBox="0 0 48 48"><circle cx="24" cy="24" r="14" stroke="#f472b6" stroke-width="2" fill="rgba(244,114,182,0.15)"/><circle cx="19" cy="22" r="2.2" fill="#fcd34d"/><circle cx="29" cy="22" r="2.2" fill="#fcd34d"/><path d="M20 27 Q24 31 28 27" stroke="#fcd34d" stroke-width="2" fill="none"/></svg>`
+      },
+      {
+        gesture: 'Chạm vào 6 Nốt Nhạc Sao (♪ ✦ ♫)',
+        action: 'Chạm vào các nốt nhạc quanh cửa sổ Cupola (hoặc lái Rise bằng chuột / phím mũi tên / Space) để Rise bay tới đón nốt nhạc.',
+        svg: `<svg viewBox="0 0 48 48"><circle cx="24" cy="24" r="15" stroke="#fcd34d" stroke-width="1.8" stroke-dasharray="4 3" fill="none"/><text x="24" y="29" text-anchor="middle" fill="#fef3c7" font-size="16">♪</text></svg>`
+      }
+    ],
+    steps: [
+      'Chạm vào plushie Rise đang lơ lửng giữa cửa sổ quan sát Cupola để đánh thức video biểu cảm và tiếng hộp nhạc trong trẻo.',
+      'Kéo thả Rise hoặc chạm vào 6 nốt nhạc phát sáng quanh khoang tàu để Rise lướt qua thu thập trong môi trường vi trọng lực 0.00 G.',
+      'Khi thu thập đủ 6/6 nốt nhạc cộng hưởng, Rise sẽ tỏa hào quang vàng hồng và mở khóa Thẻ Ký Ức Đặc Biệt của linh vật VantaLumen!'
+    ],
+    tip: 'Trong các sứ mệnh vũ trụ thật (từ Apollo đến Artemis I), thú bông Zero-G Indicator lơ lửng là dấu hiệu đầu tiên báo hiệu tàu đã vào quỹ đạo!'
   }
 ];
