@@ -35,7 +35,7 @@
   <div id="cinema-transition"></div>
 
   <!-- Team VANTALUMEN Subtle Emblem (Icon-only during play; expands on hover, opens NASA Space Apps Dossier) -->
-  <div id="brand-emblem" title="VANTALUMEN • NASA Space Apps Dossier">
+  <div id="brand-emblem" title="VANTALUMEN • Hồ Sơ Dự Án NASA Space Apps (Phím tắt: J)">
     <div class="emblem-mark">
       <img src="assets/vantalumen_logo.png" alt="VantaLumen" />
     </div>
@@ -44,6 +44,13 @@
 
   <!-- Wordless Constellation Navigation (6 Minigames) -->
   <nav id="constellation-nav" aria-label="Constellation Navigation"></nav>
+
+  <!-- Ambient First-Contact Whisper (Self-dismisses on first interaction, zero barrier) -->
+  <div id="intro-whisper" aria-hidden="true">
+    <div class="whisper-pill">NASA SPACE APPS CHALLENGE • TEAM VANTALUMEN</div>
+    <div class="whisper-title">ECHOES IN THE DUST</div>
+    <div class="whisper-sub">Sáu thiết bị NASA bị bỏ lại đang chờ được đánh thức — chạm hoặc kéo để bắt đầu</div>
+  </div>
 
   <!-- Minimalist Corner Icon Controls -->
   <div id="corner-controls">
@@ -159,11 +166,34 @@
           <p class="gallery-subtitle">Sáu thiết bị vũ trụ bị bỏ lại nhưng chưa bao giờ bị lãng quên</p>
         </div>
         <div class="btn-group">
+          <button id="btn-export-certificate" class="btn btn-ghost" title="Tải ảnh Chứng Nhận Sứ Mệnh VantaLumen">Chứng Nhận PNG ↓</button>
           <button id="btn-open-quiz-from-gallery" class="btn btn-primary">Bộ 7 Câu Hỏi VantaLumen ★</button>
           <button id="btn-open-dossier-from-gallery" class="btn btn-ghost">Hồ Sơ Dự Án</button>
           <button id="btn-close-gallery" class="btn btn-ghost">Đóng ✕</button>
         </div>
       </div>
+
+      <div id="gallery-telemetry" class="telemetry-strip">
+        <div class="telemetry-metric">
+          <div class="telemetry-top">
+            <span class="telemetry-label">MẢNH VỠ KÝ ỨC ĐÃ ĐÁNH THỨC</span>
+            <span id="gal-shards-count" class="telemetry-val">0 / 6</span>
+          </div>
+          <div class="telemetry-bar"><div id="gal-shards-fill" class="telemetry-fill"></div></div>
+        </div>
+        <div class="telemetry-metric">
+          <div class="telemetry-top">
+            <span class="telemetry-label">TRI THỨC VŨ TRỤ VANTALUMEN</span>
+            <span id="gal-quiz-count" class="telemetry-val">0 / 7</span>
+          </div>
+          <div class="telemetry-bar"><div id="gal-quiz-fill" class="telemetry-fill cyan"></div></div>
+        </div>
+        <div class="telemetry-metric rank-box">
+          <span class="telemetry-label">DANH HIỆU SỨ MỆNH</span>
+          <span id="gal-rank" class="telemetry-rank">Người Lắng Nghe Khởi Đầu</span>
+        </div>
+      </div>
+
       <div id="gallery-grid" class="gallery-grid"></div>
     </div>
   </div>
@@ -201,7 +231,7 @@
         <div class="dossier-card">
           <h3>1. Triết lý "Show Trước, Tell Sau"</h3>
           <p>
-            Đề bài yêu cầu truyền tải kiến thức về <strong>phần cứng vũ trụ và những khám phá khoa học</strong> cho học sinh theo cách cuốn hút nhất. Thay vì một bảo tàng chữ khô khan, <strong>Vantalumen</strong> đặt người chơi vào đúng thao tác vật lý của thiết bị trong 20–35 giây hoàn toàn không lời:
+            Đề bài yêu cầu truyền tải kiến thức về <strong>phần cứng vũ trụ và những khám phá khoa học</strong> theo cách cuốn hút nhất. Thay vì bảo tàng chữ khô khan, <strong>VantaLumen</strong> đặt người chơi vào đúng thao tác vật lý của thiết bị trong 20–35 giây hoàn toàn không lời:
           </p>
           <ul>
             <li>Không chữ, không thanh %, không Game Over lúc đang chơi.</li>
@@ -210,14 +240,14 @@
         </div>
 
         <div class="dossier-card">
-          <h3>2. Một Ngôn Ngữ Cảm Xúc &amp; Âm Thanh</h3>
+          <h3>2. Ngôn Ngữ Cảm Xúc &amp; Âm Thanh</h3>
           <p>
-            Tên nhóm <strong>Vantalumen</strong> chính là bảng màu chủ đạo của toàn bộ vũ trụ:
+            Tên nhóm <strong>VantaLumen</strong> chính là bảng màu chủ đạo của toàn bộ vũ trụ:
           </p>
           <ul>
             <li><strong>Vanta (Xám xanh lạnh &amp; Bụi)</strong>: Trạng thái bị thời gian lãng quên.</li>
             <li><strong>Lumen (Vàng hổ phách ấm)</strong>: Trạng thái được đánh thức và nhớ đến.</li>
-            <li><strong>Web Audio Tổng Hợp 100%</strong>: Cả 6 game dùng chung một thang âm ngũ cung, một buồng vang không gian (Convolver Reverb) và <strong>motif 3 nốt đi lên</strong> khi khám phá thành công.</li>
+            <li><strong>Web Audio Tổng Hợp 100%</strong>: Cả 6 game dùng chung thang âm ngũ cung, buồng vang stereo 4,8 giây (Convolver Reverb) và <strong>motif 3 nốt đi lên</strong> khi khám phá thành công.</li>
           </ul>
         </div>
 
@@ -232,14 +262,26 @@
             <li><strong>06. LRO Bootprints</strong> + Câu hỏi <em>Sun's Hottest Layer (Corona)</em> &amp; <em>Jupiter's Great Red Spot</em>.</li>
           </ul>
         </div>
+
+        <div class="dossier-card">
+          <h3>4. Tư Liệu NASA &amp; Tác Động Giáo Dục</h3>
+          <p>
+            Mỗi thao tác trong game mô phỏng trực tiếp thông số khoa học chính thức từ <strong>NASA Science &amp; JPL</strong>:
+          </p>
+          <ul>
+            <li>Hiện tượng <em>saltation</em> cứu pin InSight (`1.319` trận marsquakes), trễ laser `2,562s` của LRRR, `>90%` opaline silica của Spirit, và tuổi thọ `5.111 sols` của Opportunity.</li>
+            <li>Học sinh thực hành qua <strong>Vòng lặp 3 bước</strong>: Cảm thụ vật lý → Đọc hồ sơ phần cứng → Kiểm chứng qua bộ 7 câu hỏi song ngữ Anh–Việt &amp; tải Chứng nhận PNG.</li>
+          </ul>
+        </div>
       </div>
 
       <div class="judge-bar">
         <div class="judge-bar-text">
           <h4>Chế độ Ban Giám Khảo &amp; Thuyết Trình (Judge / Pitch Mode)</h4>
-          <p>Phím số <code>1–6</code> để chuyển màn, <code>H</code> mở Hướng dẫn 6 game, <code>I</code> bật thẻ khoa học, <code>Q</code> mở Bộ 7 Câu Hỏi VantaLumen.</p>
+          <p>Phím <code>1–6</code> / <code>← →</code> chuyển màn, <code>H</code> Hướng dẫn, <code>I</code> Thẻ Ký Ức, <code>Q</code> 7 Câu Hỏi, <code>J</code> Hồ Sơ Dự Án.</p>
         </div>
         <div class="btn-group">
+          <button id="btn-export-cert-dossier" class="btn btn-ghost">Chứng Nhận PNG ↓</button>
           <button id="btn-open-guide-from-dossier" class="btn btn-ghost">Hướng Dẫn 6 Game</button>
           <button id="btn-open-quiz-from-dossier" class="btn btn-ghost">Bộ 7 Câu Hỏi</button>
           <button id="btn-unlock-all" class="btn btn-primary">Mở khóa toàn bộ 6 Ký Ức ★</button>

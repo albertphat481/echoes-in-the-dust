@@ -177,7 +177,7 @@ window.MEMORY_SHARDS = [
     ],
     defaultStatLabel: 'Mã vân đế giày định danh của bạn',
     story:
-      'Vì Mặt Trăng không có khí quyển, gió hay mưa, những hạt bụi khi bước chân văng lên theo quỹ đạo parabol thuần túy và những vết giày Apollo từ năm 1969 vẫn hiện rõ trong ảnh chụp từ tàu quỹ đạo LRO ngày nay. Chúng sẽ tồn tại hàng triệu năm — dù không bất멸 tuyệt đối vì mưa vi thiên thạch siêu nhỏ vẫn chầm chậm san phẳng lớp đất bề mặt. Chúng ta không bất tử vì dấu vết không phai, mà vì luôn có thế hệ tiếp theo quay lại nhìn.',
+      'Vì Mặt Trăng không có khí quyển, gió hay mưa, những hạt bụi khi bước chân văng lên theo quỹ đạo parabol thuần túy và những vết giày Apollo từ năm 1969 vẫn hiện rõ trong ảnh chụp từ tàu quỹ đạo LRO ngày nay. Chúng sẽ tồn tại hàng triệu năm — dù không bất diệt tuyệt đối vì mưa vi thiên thạch siêu nhỏ vẫn chầm chậm san phẳng lớp đất bề mặt. Chúng ta không bất tử vì dấu vết không phai, mà vì luôn có thế hệ tiếp theo quay lại nhìn.',
     sourceLabel: 'NASA Lunar Reconnaissance Orbiter (LRO)',
     sourceUrl: 'https://science.nasa.gov/mission/lro/',
     svgDiagram: `
