@@ -1,8 +1,8 @@
 /**
- * VantaLumen — Minigames 1–3 (High-Craft Cinematic Edition)
- * 1. UNDER THE DUST: Photorealistic macro InSight UltraFlex Solar Wing + wind-rippled Martian dust
- * 2. STILL THERE: Procedural cratered Moon + atmospheric Milky Way + observatory laser scattering
- * 3. ONE WHEEL LEFT: Alto/Journey-inspired Martian canyon mesas + detailed Spirit Rover + glowing Silica
+ * VantaLumen — Minigames 1–3 (Rebuilt High-Craft Responsive Edition)
+ * 1. UNDER THE DUST: Responsive velvet wind brush + saltation vortex + golden orbital solar-charge ring
+ * 2. STILL THERE: Precision magnetic reticle + 3 visible Apollo beacon glints + fast photonic echo constellation
+ * 3. ONE WHEEL LEFT: Friction-free smooth Spirit Rover driving (Arrow/WASD/Mouse/Space) toward Sunset Silica Crest
  */
 
 function drawGhostHand(ctx, x, y, alpha, scale = 1, isHolding = false) {
@@ -12,29 +12,29 @@ function drawGhostHand(ctx, x, y, alpha, scale = 1, isHolding = false) {
   ctx.scale(scale, scale);
   ctx.globalAlpha = alpha;
 
-  const pulse = 0.85 + 0.15 * Math.sin(performance.now() * 0.006);
+  const pulse = 0.86 + 0.14 * Math.sin(performance.now() * 0.006);
   ctx.beginPath();
   ctx.arc(0, 0, (isHolding ? 18 : 26) * pulse, 0, Math.PI * 2);
-  ctx.strokeStyle = 'rgba(254, 243, 199, 0.78)';
-  ctx.lineWidth = 1.8;
+  ctx.strokeStyle = 'rgba(254, 243, 199, 0.85)';
+  ctx.lineWidth = 2;
   ctx.stroke();
 
   if (isHolding) {
     ctx.beginPath();
-    ctx.arc(0, 0, 34 * pulse, 0, Math.PI * 2);
-    ctx.strokeStyle = 'rgba(245, 158, 11, 0.45)';
-    ctx.lineWidth = 1.4;
+    ctx.arc(0, 0, 36 * pulse, 0, Math.PI * 2);
+    ctx.strokeStyle = 'rgba(245, 158, 11, 0.52)';
+    ctx.lineWidth = 1.5;
     ctx.stroke();
   }
 
-  ctx.fillStyle = 'rgba(254, 243, 199, 0.92)';
-  ctx.shadowColor = 'rgba(245, 158, 11, 0.9)';
+  ctx.fillStyle = 'rgba(254, 243, 199, 0.95)';
+  ctx.shadowColor = 'rgba(245, 158, 11, 0.95)';
   ctx.shadowBlur = 18;
   ctx.beginPath();
   ctx.arc(0, 0, 6.5, 0, Math.PI * 2);
   ctx.fill();
 
-  ctx.strokeStyle = 'rgba(254, 243, 199, 0.65)';
+  ctx.strokeStyle = 'rgba(254, 243, 199, 0.7)';
   ctx.lineWidth = 2.4;
   ctx.lineCap = 'round';
   ctx.beginPath();
@@ -45,7 +45,7 @@ function drawGhostHand(ctx, x, y, alpha, scale = 1, isHolding = false) {
 }
 
 /* ============================================================================
- * 1. UNDER THE DUST — Nhịp tim dưới lớp bụi (InSight Solar Panel & Saltation)
+ * 1. UNDER THE DUST — Nhịp tim dưới lớp bụi (InSight Solar Wing & Saltation)
  * ==========================================================================*/
 class UnderTheDustGame {
   constructor(host) {
@@ -59,12 +59,14 @@ class UnderTheDustGame {
 
   reset() {
     this.elapsed = 0;
-    this.duration = 28;
+    this.fallbackDuration = 18;
+    this.targetClean = 0.44;
     this.cleanRatio = 0;
-    this.motifPlayed = false;
+    this.goalReached = false;
+    this.finaleTimer = 0;
     this.completed = false;
     this.hasInteracted = false;
-    this.ghostAlpha = 0.88;
+    this.ghostAlpha = 0.9;
 
     this.heartbeatTimer = 0;
     this.heartPulseVisual = 0;
@@ -72,9 +74,9 @@ class UnderTheDustGame {
     this.sandGrains = [];
     this.windParticles = [];
     this.swirls = [];
-    this.holdTime = 0;
+    this.vortexAngle = 0;
     this.isDown = false;
-    this.pointer = { x: 0, y: 0, vx: 0, vy: 0 };
+    this.pointer = { x: window.innerWidth * 0.5, y: window.innerHeight * 0.5, vx: 0, vy: 0 };
 
     this._initCanvases();
   }
@@ -93,32 +95,30 @@ class UnderTheDustGame {
     const radius = Math.min(w, h) * 0.37;
     this.panelGeometry = { cx, cy, radius };
 
-    // 1. Martian Elysium Planitia Ground Backdrop with rocks & cast shadows
-    const bgGrad = pctx.createRadialGradient(cx, cy, radius * 0.3, cx, cy, Math.max(w, h) * 0.85);
-    bgGrad.addColorStop(0, '#2a1810');
-    bgGrad.addColorStop(0.55, '#160e0b');
-    bgGrad.addColorStop(1, '#06080f');
+    // 1. Elysium Planitia Twilight Ground
+    const bgGrad = pctx.createRadialGradient(cx, cy, radius * 0.2, cx, cy, Math.max(w, h) * 0.85);
+    bgGrad.addColorStop(0, '#361e14');
+    bgGrad.addColorStop(0.55, '#180f0e');
+    bgGrad.addColorStop(1, '#050812');
     pctx.fillStyle = bgGrad;
     pctx.fillRect(0, 0, w, h);
 
-    // Procedural Martian pebbles outside the solar wing
-    for (let i = 0; i < 95; i++) {
+    // Martian basalt rocks & shadows outside solar wing
+    for (let i = 0; i < 85; i++) {
       const ang = Math.random() * Math.PI * 2;
       const dist = radius * (1.06 + Math.random() * 0.85);
       const rx = cx + Math.cos(ang) * dist;
       const ry = cy + Math.sin(ang) * dist;
-      const rw = 3 + Math.random() * 14;
+      const rw = 3 + Math.random() * 13;
       const rh = rw * (0.55 + Math.random() * 0.35);
 
-      // Cast shadow from low Martian sun
-      pctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+      pctx.fillStyle = 'rgba(0, 0, 0, 0.52)';
       pctx.beginPath();
       pctx.ellipse(rx + 4, ry + 3, rw, rh, ang, 0, Math.PI * 2);
       pctx.fill();
 
-      // Rock body with warm top rim
       const rGrad = pctx.createLinearGradient(rx - rw, ry - rh, rx + rw, ry + rh);
-      rGrad.addColorStop(0, '#6b3b24');
+      rGrad.addColorStop(0, '#7c4328');
       rGrad.addColorStop(1, '#1c100c');
       pctx.fillStyle = rGrad;
       pctx.beginPath();
@@ -126,7 +126,7 @@ class UnderTheDustGame {
       pctx.fill();
     }
 
-    // 2. Drop shadow beneath the UltraFlex Decagonal Solar Wing
+    // 2. Solar Wing Drop Shadow
     pctx.save();
     pctx.translate(cx + 12, cy + 16);
     pctx.fillStyle = 'rgba(0, 0, 0, 0.72)';
@@ -143,7 +143,7 @@ class UnderTheDustGame {
     pctx.fill();
     pctx.restore();
 
-    // 3. Detailed InSight UltraFlex Decagonal Solar Array
+    // 3. InSight UltraFlex Decagonal Solar Wing
     pctx.save();
     pctx.translate(cx, cy);
     pctx.beginPath();
@@ -157,68 +157,51 @@ class UnderTheDustGame {
     pctx.closePath();
     pctx.clip();
 
-    // Rich Cobalt-Teal-Amber Photovoltaic Silicon Base
-    const cellGrad = pctx.createLinearGradient(-radius, -radius, radius, radius);
-    cellGrad.addColorStop(0, '#071b2e');
-    cellGrad.addColorStop(0.35, '#0c3547');
-    cellGrad.addColorStop(0.68, '#174954');
-    cellGrad.addColorStop(1, '#3d250d');
-    pctx.fillStyle = cellGrad;
+    const waferGrad = pctx.createRadialGradient(-radius * 0.28, -radius * 0.28, 12, 0, 0, radius);
+    waferGrad.addColorStop(0, '#224f88');
+    waferGrad.addColorStop(0.55, '#112a4f');
+    waferGrad.addColorStop(1, '#071225');
+    pctx.fillStyle = waferGrad;
     pctx.fillRect(-radius, -radius, radius * 2, radius * 2);
 
-    // Draw individual triangular sector wafers with micro-busbars
-    for (let s = 0; s < sides; s++) {
-      const a0 = (s / sides) * Math.PI * 2 - Math.PI / 2;
-      const a1 = ((s + 1) / sides) * Math.PI * 2 - Math.PI / 2;
-      const aMid = (a0 + a1) * 0.5;
-
-      // Subtle alternating wafer sheen per gore sector
-      pctx.fillStyle = s % 2 === 0 ? 'rgba(56, 189, 248, 0.05)' : 'rgba(245, 158, 11, 0.04)';
+    // Copper-gold photovoltaic traces
+    pctx.strokeStyle = 'rgba(251, 191, 36, 0.2)';
+    pctx.lineWidth = 1;
+    for (let ring = 0.25; ring <= 0.92; ring += 0.14) {
       pctx.beginPath();
-      pctx.moveTo(0, 0);
-      pctx.lineTo(Math.cos(a0) * radius, Math.sin(a0) * radius);
-      pctx.lineTo(Math.cos(a1) * radius, Math.sin(a1) * radius);
-      pctx.closePath();
-      pctx.fill();
-
-      // Concentric gold solar-cell string traces inside each sector
-      pctx.strokeStyle = 'rgba(252, 211, 77, 0.22)';
-      pctx.lineWidth = 0.9;
-      for (let ring = 0.24; ring < 0.96; ring += 0.12) {
-        pctx.beginPath();
-        pctx.moveTo(Math.cos(a0) * radius * ring, Math.sin(a0) * radius * ring);
-        pctx.lineTo(Math.cos(a1) * radius * ring, Math.sin(a1) * radius * ring);
-        pctx.stroke();
+      for (let i = 0; i <= sides; i++) {
+        const a = (i / sides) * Math.PI * 2 - Math.PI / 2;
+        const px = Math.cos(a) * radius * ring;
+        const py = Math.sin(a) * radius * ring;
+        if (i === 0) pctx.moveTo(px, py);
+        else pctx.lineTo(px, py);
       }
-
-      // Fine silver micro-fingers perpendicular to rings
-      pctx.strokeStyle = 'rgba(148, 163, 184, 0.14)';
-      pctx.lineWidth = 0.6;
-      for (let f = -0.35; f <= 0.35; f += 0.175) {
-        const fa = aMid + f * ((Math.PI * 2) / sides);
-        pctx.beginPath();
-        pctx.moveTo(Math.cos(fa) * radius * 0.2, Math.sin(fa) * radius * 0.2);
-        pctx.lineTo(Math.cos(fa) * radius * 0.96, Math.sin(fa) * radius * 0.96);
-        pctx.stroke();
-      }
+      pctx.stroke();
     }
 
-    // 3D Beveled Carbon-Fiber Radial Spars
+    pctx.strokeStyle = 'rgba(125, 211, 252, 0.14)';
+    pctx.lineWidth = 0.9;
+    for (let g = -radius; g <= radius; g += 22) {
+      pctx.beginPath();
+      pctx.moveTo(-radius, g);
+      pctx.lineTo(radius, g);
+      pctx.stroke();
+    }
+
+    // 10 Spoke Spars
     for (let i = 0; i < sides; i++) {
       const a = (i / sides) * Math.PI * 2 - Math.PI / 2;
       const ex = Math.cos(a) * radius;
       const ey = Math.sin(a) * radius;
 
-      // Spar shadow
-      pctx.strokeStyle = 'rgba(0, 0, 0, 0.55)';
+      pctx.strokeStyle = 'rgba(0, 0, 0, 0.5)';
       pctx.lineWidth = 5;
       pctx.beginPath();
       pctx.moveTo(2, 2);
       pctx.lineTo(ex + 2, ey + 2);
       pctx.stroke();
 
-      // Spar amber metallic highlight
-      pctx.strokeStyle = 'rgba(245, 158, 11, 0.72)';
+      pctx.strokeStyle = 'rgba(251, 191, 36, 0.78)';
       pctx.lineWidth = 2.2;
       pctx.beginPath();
       pctx.moveTo(0, 0);
@@ -226,33 +209,25 @@ class UnderTheDustGame {
       pctx.stroke();
     }
 
-    // Diagonal glass specular reflection streak across the solar array
+    // Glass specular streak
     const specGrad = pctx.createLinearGradient(-radius, -radius * 0.6, radius * 0.5, radius);
     specGrad.addColorStop(0, 'rgba(255, 255, 255, 0)');
-    specGrad.addColorStop(0.45, 'rgba(254, 243, 199, 0.08)');
-    specGrad.addColorStop(0.5, 'rgba(255, 255, 255, 0.16)');
-    specGrad.addColorStop(0.55, 'rgba(56, 189, 248, 0.06)');
+    specGrad.addColorStop(0.47, 'rgba(254, 243, 199, 0.1)');
+    specGrad.addColorStop(0.51, 'rgba(255, 255, 255, 0.22)');
+    specGrad.addColorStop(0.56, 'rgba(56, 189, 248, 0.08)');
     specGrad.addColorStop(1, 'rgba(255, 255, 255, 0)');
     pctx.fillStyle = specGrad;
     pctx.fillRect(-radius, -radius, radius * 2, radius * 2);
 
-    // Human assembly traces under the dust: wrench scratch & handwritten JPL serial stencil
-    pctx.strokeStyle = 'rgba(254, 243, 199, 0.45)';
-    pctx.lineWidth = 1.4;
-    pctx.beginPath();
-    pctx.moveTo(-radius * 0.46, -radius * 0.24);
-    pctx.bezierCurveTo(-radius * 0.3, -radius * 0.3, -radius * 0.18, -radius * 0.14, -radius * 0.08, -radius * 0.26);
-    pctx.stroke();
-
-    pctx.font = '600 12px "JetBrains Mono", monospace';
-    pctx.fillStyle = 'rgba(252, 211, 77, 0.6)';
+    pctx.font = '600 11.5px "JetBrains Mono", monospace';
+    pctx.fillStyle = 'rgba(252, 211, 77, 0.68)';
     pctx.fillText('JPL-NSY-04 // ♥ E.K.', radius * 0.16, radius * 0.42);
     pctx.fillText('SN-1805-INSIGHT', -radius * 0.58, radius * 0.31);
 
-    // Center Titanium Gimbal Hub with 8 machined bolts
+    // Center Gimbal Hub
     const hubR = radius * 0.15;
     const hubGrad = pctx.createRadialGradient(-hubR * 0.25, -hubR * 0.25, 2, 0, 0, hubR);
-    hubGrad.addColorStop(0, '#475569');
+    hubGrad.addColorStop(0, '#64748b');
     hubGrad.addColorStop(0.7, '#1e293b');
     hubGrad.addColorStop(1, '#090d16');
     pctx.beginPath();
@@ -272,7 +247,7 @@ class UnderTheDustGame {
     }
     pctx.restore();
 
-    // Outer Gold-Anodized Perimeter Frame
+    // Gold-Anodized Perimeter Frame
     pctx.save();
     pctx.translate(cx, cy);
     pctx.beginPath();
@@ -283,24 +258,23 @@ class UnderTheDustGame {
       if (i === 0) pctx.moveTo(px, py);
       else pctx.lineTo(px, py);
     }
-    pctx.strokeStyle = 'rgba(245, 158, 11, 0.78)';
+    pctx.strokeStyle = 'rgba(251, 191, 36, 0.85)';
     pctx.lineWidth = 3.5;
     pctx.stroke();
     pctx.restore();
 
-    // 4. Sculpted Wind-Swept Martian Dust Layer onto maskCanvas
+    // 4. Sculpted Wind-Swept Martian Dust Mask (semi-translucent so user immediately recognizes silhouette!)
     const mctx = this.maskCtx;
     mctx.globalCompositeOperation = 'source-over';
     const dustGrad = mctx.createLinearGradient(0, 0, w, h);
-    dustGrad.addColorStop(0, '#6e3214');
-    dustGrad.addColorStop(0.45, '#52240f');
-    dustGrad.addColorStop(1, '#261108');
+    dustGrad.addColorStop(0, 'rgba(116, 52, 20, 0.94)');
+    dustGrad.addColorStop(0.5, 'rgba(84, 36, 15, 0.93)');
+    dustGrad.addColorStop(1, 'rgba(38, 17, 8, 0.96)');
     mctx.fillStyle = dustGrad;
     mctx.fillRect(0, 0, w, h);
 
-    // Wind-rippled Martian dune bands across the dust blanket
     for (let y = -40; y < h + 40; y += 22) {
-      mctx.strokeStyle = y % 44 === 0 ? 'rgba(194, 88, 26, 0.22)' : 'rgba(20, 9, 4, 0.28)';
+      mctx.strokeStyle = y % 44 === 0 ? 'rgba(217, 119, 6, 0.24)' : 'rgba(20, 9, 4, 0.28)';
       mctx.lineWidth = 10;
       mctx.beginPath();
       for (let x = 0; x <= w; x += 40) {
@@ -311,12 +285,11 @@ class UnderTheDustGame {
       mctx.stroke();
     }
 
-    // Fine mineral dust speckles
-    for (let i = 0; i < 3200; i++) {
+    for (let i = 0; i < 2600; i++) {
       const x = Math.random() * w;
       const y = Math.random() * h;
       const r = Math.random() * 2.2 + 0.4;
-      mctx.fillStyle = i % 3 === 0 ? 'rgba(217, 119, 6, 0.25)' : 'rgba(28, 12, 6, 0.34)';
+      mctx.fillStyle = i % 3 === 0 ? 'rgba(245, 158, 11, 0.26)' : 'rgba(28, 12, 6, 0.34)';
       mctx.beginPath();
       mctx.arc(x, y, r, 0, Math.PI * 2);
       mctx.fill();
@@ -329,96 +302,103 @@ class UnderTheDustGame {
 
   onPointerDown(x, y) {
     this.isDown = true;
-    this.holdTime = 0;
     this.pointer.x = x;
     this.pointer.y = y;
 
     if (!this.hasInteracted) {
       this.hasInteracted = true;
-      this._eraseDustAt(x, y, 56, 0.92);
       this.heartPulseVisual = 1.0;
-      window.soundEngine.playHeartbeat(0.6);
-      window.soundEngine.playPentatonicNote(2, 0.14, 1.2);
-    } else {
-      this._eraseDustAt(x, y, 38, 0.7);
+      window.soundEngine.playHeartbeat(0.65);
     }
+
+    // Immediate generous wind-burst clean on click/tap
+    this._eraseDustAt(x, y, 78, 0.96);
+    this._spawnWindSwirl(x, y);
+    for (let i = 0; i < 14; i++) {
+      this._spawnDustMote(x, y, (Math.random() - 0.5) * 4, (Math.random() - 0.5) * 4);
+    }
+    window.soundEngine.playSandTick();
+    window.soundEngine.setBrushWind(0.85, 0.7);
   }
 
   onPointerMove(x, y, vx, vy) {
-    this.pointer.x = x;
-    this.pointer.y = y;
-    this.pointer.vx = vx;
-    this.pointer.vy = vy;
-
     const speed = Math.hypot(vx, vy);
-    if (this.isDown || speed > 0.15) {
-      if (!this.hasInteracted && speed > 0.4) {
-        this.hasInteracted = true;
-        window.soundEngine.playHeartbeat(0.5);
+    const prevX = this.pointer.x || x;
+    const prevY = this.pointer.y || y;
+    this.pointer = { x, y, vx, vy };
+
+    // Smooth continuous sweeping even just moving cursor or dragging!
+    if (speed > 0.06 || this.isDown) {
+      if (!this.hasInteracted) this.hasInteracted = true;
+      const radius = this.isDown ? Math.min(98, 66 + speed * 14) : Math.min(82, 48 + speed * 12);
+      const strength = this.isDown ? 0.92 : 0.72;
+
+      const dist = Math.hypot(x - prevX, y - prevY);
+      const steps = Math.max(1, Math.min(8, Math.ceil(dist / 22)));
+      for (let s = 1; s <= steps; s++) {
+        const ix = prevX + ((x - prevX) * s) / steps;
+        const iy = prevY + ((y - prevY) * s) / steps;
+        this._eraseDustAt(ix, iy, radius, strength);
       }
 
-      this.holdTime = 0;
-      const radius = Math.min(84, 36 + speed * 28);
-      this._eraseDustAt(x, y, radius, 0.68);
-
-      window.soundEngine.setBrushWind(Math.min(1, speed * 0.65), Math.min(1, speed * 0.45));
-
-      for (const g of this.sandGrains) {
-        const dist = Math.hypot(g.x - x, g.y - y);
-        if (dist < 160) {
-          g.vx += vx * 0.58 + (Math.random() - 0.5) * 2.2;
-          g.vy += vy * 0.58 + (Math.random() - 0.5) * 2.2;
-          g.bouncing = true;
-        }
+      window.soundEngine.setBrushWind(Math.min(1, 0.35 + speed * 0.45), Math.min(1, speed * 0.4));
+      if (speed > 0.14 || this.isDown) {
+        this._spawnDustMote(x, y, vx, vy);
+        window.soundEngine.playSandTick();
       }
-
-      // Luminous dust plume streaks
-      for (let i = 0; i < 4; i++) {
-        this.windParticles.push({
-          x: x + (Math.random() - 0.5) * 32,
-          y: y + (Math.random() - 0.5) * 32,
-          vx: vx * 0.38 + (Math.random() - 0.5) * 1.6,
-          vy: vy * 0.38 + (Math.random() - 0.5) * 1.6,
-          life: 1.0,
-          size: Math.random() * 3.2 + 1.4
-        });
-      }
-
-      if (speed > 0.7 && this.swirls.length < 16) {
-        this.swirls.push({ x, y, r: 10, alpha: 0.4, angle: Math.atan2(vy, vx) });
-      }
+      if (Math.random() < 0.2) this._spawnWindSwirl(x, y);
+    } else {
+      window.soundEngine.setBrushWind(0.03, 0.1);
     }
   }
 
   onPointerUp() {
     this.isDown = false;
-    this.holdTime = 0;
-    window.soundEngine.setBrushWind(0);
+    window.soundEngine.setBrushWind(0, 0);
   }
 
-  _eraseDustAt(x, y, radius, strength = 0.7) {
+  _eraseDustAt(x, y, r, strength = 0.9) {
     const mctx = this.maskCtx;
     mctx.save();
     mctx.globalCompositeOperation = 'destination-out';
-    const grad = mctx.createRadialGradient(x, y, radius * 0.12, x, y, radius);
-    grad.addColorStop(0, `rgba(0, 0, 0, ${strength})`);
-    grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
-    mctx.fillStyle = grad;
+    const g = mctx.createRadialGradient(x, y, r * 0.25, x, y, r);
+    g.addColorStop(0, `rgba(0,0,0,${strength})`);
+    g.addColorStop(0.65, `rgba(0,0,0,${strength * 0.65})`);
+    g.addColorStop(1, 'rgba(0,0,0,0)');
+    mctx.fillStyle = g;
     mctx.beginPath();
-    mctx.arc(x, y, radius, 0, Math.PI * 2);
+    mctx.arc(x, y, r, 0, Math.PI * 2);
     mctx.fill();
     mctx.restore();
 
-    const { cx, cy, radius: pr } = this.panelGeometry;
-    const distFromPanel = Math.hypot(x - cx, y - cy);
-    if (distFromPanel < pr * 1.15) {
-      const areaGain = (radius * radius) / (pr * pr * 135);
-      this.cleanRatio = Math.min(1, this.cleanRatio + areaGain * strength);
-
-      if (this.cleanRatio >= 0.6 && !this.motifPlayed) {
-        this.motifPlayed = true;
-        window.soundEngine.playSignatureMotif(2);
+    if (this.panelGeometry) {
+      const { cx, cy, radius } = this.panelGeometry;
+      if (Math.hypot(x - cx, y - cy) < radius * 1.15) {
+        this.cleanRatio = Math.min(1, this.cleanRatio + (r / 70) * 0.0052);
       }
+    }
+  }
+
+  _spawnWindSwirl(x, y) {
+    this.swirls.push({
+      x: x + (Math.random() - 0.5) * 44,
+      y: y + (Math.random() - 0.5) * 44,
+      r: 18 + Math.random() * 26,
+      angle: Math.random() * Math.PI * 2,
+      alpha: 0.48
+    });
+  }
+
+  _spawnDustMote(x, y, vx, vy) {
+    for (let i = 0; i < 3; i++) {
+      this.windParticles.push({
+        x: x + (Math.random() - 0.5) * 38,
+        y: y + (Math.random() - 0.5) * 38,
+        vx: (vx * 180 || (Math.random() - 0.5) * 90) + (Math.random() - 0.5) * 75,
+        vy: (vy * 180 || -40 - Math.random() * 50) - 35 - Math.random() * 45,
+        life: 1.0,
+        size: Math.random() * 2.8 + 1.4
+      });
     }
   }
 
@@ -428,80 +408,82 @@ class UnderTheDustGame {
       this.ghostAlpha = Math.max(0, this.ghostAlpha - dt * 2.5);
     }
 
-    if (this.isDown) {
-      this.holdTime += dt;
-      if (this.holdTime > 0.25 && this.sandGrains.length < 95) {
-        for (let i = 0; i < 2; i++) {
-          this.sandGrains.push({
-            x: this.pointer.x + (Math.random() - 0.5) * 28,
-            y: this.pointer.y + (Math.random() - 0.5) * 28,
-            vx: (Math.random() - 0.5) * 0.6,
-            vy: (Math.random() - 0.5) * 0.6,
-            bouncing: false,
-            life: 6.0
-          });
-        }
+    // Holding mouse / touch / Spacebar creates a lush orbiting saltation wind vortex!
+    if (this.isDown && !this.goalReached) {
+      this.vortexAngle += dt * 7.5;
+      const orbitR = 45 + Math.sin(this.vortexAngle * 0.5) * 28;
+      const vx = this.pointer.x + Math.cos(this.vortexAngle) * orbitR;
+      const vy = this.pointer.y + Math.sin(this.vortexAngle) * orbitR;
+      this._eraseDustAt(vx, vy, 74, 0.9);
+      this._spawnDustMote(vx, vy, -Math.sin(this.vortexAngle) * 1.4, Math.cos(this.vortexAngle) * 1.4);
+      window.soundEngine.playSandTick();
+      if (Math.random() < 0.35) this._spawnWindSwirl(vx, vy);
+    }
+
+    const bpmInterval = Math.max(0.58, 1.35 - this.cleanRatio * 0.72);
+    this.heartbeatTimer += dt;
+    if (this.hasInteracted && this.heartbeatTimer >= bpmInterval) {
+      this.heartbeatTimer = 0;
+      this.heartPulseVisual = 1.0;
+      window.soundEngine.playHeartbeat(0.35 + this.cleanRatio * 0.65);
+      const { cx, cy, radius } = this.panelGeometry;
+      for (let i = 0; i < 6 + Math.floor(this.cleanRatio * 10); i++) {
+        const angle = Math.random() * Math.PI * 2;
+        const dist = radius * (0.18 + Math.random() * 0.72);
+        this.sandGrains.push({
+          x: cx + Math.cos(angle) * dist,
+          y: cy + Math.sin(angle) * dist,
+          vx: (Math.random() - 0.2) * 120,
+          vy: -85 - Math.random() * 85,
+          g: 270,
+          life: 1.0
+        });
       }
     }
 
+    this.heartPulseVisual = Math.max(0, this.heartPulseVisual - dt * 2.4);
+
     for (let i = this.sandGrains.length - 1; i >= 0; i--) {
       const g = this.sandGrains[i];
-      g.x += g.vx;
-      g.y += g.vy;
-      g.vx *= 0.94;
-      g.vy *= 0.94;
-      g.life -= dt;
-
-      const speed = Math.hypot(g.vx, g.vy);
-      if (speed > 1.2) {
-        this._eraseDustAt(g.x, g.y, 19, 0.85);
-        window.soundEngine.playSandTick();
-      }
+      g.vy += g.g * dt;
+      g.x += g.vx * dt;
+      g.y += g.vy * dt;
+      g.life -= dt * 1.25;
       if (g.life <= 0) this.sandGrains.splice(i, 1);
     }
 
     for (let i = this.windParticles.length - 1; i >= 0; i--) {
       const p = this.windParticles[i];
-      p.x += p.vx;
-      p.y += p.vy;
-      p.life -= dt * 1.4;
+      p.x += p.vx * dt;
+      p.y += p.vy * dt;
+      p.life -= dt * 1.35;
       if (p.life <= 0) this.windParticles.splice(i, 1);
     }
 
     for (let i = this.swirls.length - 1; i >= 0; i--) {
       const s = this.swirls[i];
-      s.r += dt * 70;
+      s.angle += dt * 4.5;
+      s.r += dt * 28;
       s.alpha -= dt * 0.9;
       if (s.alpha <= 0) this.swirls.splice(i, 1);
     }
 
-    const sunsetProgress = Math.max(0, (this.elapsed - (this.duration - 6)) / 6);
-    if (sunsetProgress > 0) {
-      const mctx = this.maskCtx;
-      mctx.save();
-      mctx.globalCompositeOperation = 'source-over';
-      mctx.fillStyle = `rgba(35, 16, 8, ${dt * 0.14})`;
-      mctx.fillRect(0, 0, this.maskCanvas.width, this.maskCanvas.height);
-      mctx.restore();
+    // Complete smoothly as soon as clean target is met or gentle fallback timer ends
+    if (!this.goalReached && (this.cleanRatio >= this.targetClean || this.elapsed >= this.fallbackDuration)) {
+      this.goalReached = true;
+      window.soundEngine.setBrushWind(0, 0);
+      window.soundEngine.playSignatureMotif(2);
     }
 
-    const vitality = sunsetProgress > 0
-      ? Math.max(0.1, this.cleanRatio * (1 - sunsetProgress * 0.8))
-      : this.cleanRatio;
-    const beatInterval = 1.45 - vitality * 0.72;
-    this.heartbeatTimer += dt;
-    if (this.heartbeatTimer >= beatInterval) {
-      this.heartbeatTimer = 0;
-      this.heartPulseVisual = 1.0;
-      window.soundEngine.playHeartbeat(vitality);
-    }
-    this.heartPulseVisual = Math.max(0, this.heartPulseVisual - dt * 2.8);
-
-    if (this.elapsed >= this.duration && !this.completed) {
-      this.completed = true;
-      window.soundEngine.setBrushWind(0);
-      if (!this.motifPlayed) window.soundEngine.playSignatureMotif(2);
-      this.host.completeCurrentGame();
+    if (this.goalReached && !this.completed) {
+      this.finaleTimer += dt;
+      // Gently clear remaining mist during cosmic solar bloom
+      const { cx, cy, radius } = this.panelGeometry;
+      this._eraseDustAt(cx + (Math.random() - 0.5) * radius, cy + (Math.random() - 0.5) * radius, radius * 0.65, 0.4);
+      if (this.finaleTimer >= 1.65) {
+        this.completed = true;
+        this.host.completeCurrentGame();
+      }
     }
   }
 
@@ -509,103 +491,102 @@ class UnderTheDustGame {
     ctx.drawImage(this.panelCanvas, 0, 0);
 
     const { cx, cy, radius } = this.panelGeometry;
-    const amberIntensity = this.cleanRatio * 0.6 + this.heartPulseVisual * 0.24;
-    if (amberIntensity > 0.01) {
+    const progress = Math.min(1, this.cleanRatio / this.targetClean);
+
+    // Warm Solar Activation Bloom underneath dust
+    if (this.cleanRatio > 0.04 || this.goalReached) {
       ctx.save();
-      const glow = ctx.createRadialGradient(cx, cy, radius * 0.05, cx, cy, radius * 1.22);
-      glow.addColorStop(0, `rgba(252, 211, 77, ${amberIntensity * 0.7})`);
-      glow.addColorStop(0.55, `rgba(245, 158, 11, ${amberIntensity * 0.35})`);
+      const glowAlpha = Math.min(0.65, progress * 0.42 + this.heartPulseVisual * 0.25);
+      const glow = ctx.createRadialGradient(cx, cy, radius * 0.08, cx, cy, radius * 1.15);
+      glow.addColorStop(0, `rgba(252, 211, 77, ${glowAlpha})`);
+      glow.addColorStop(0.55, `rgba(56, 189, 248, ${glowAlpha * 0.35})`);
       glow.addColorStop(1, 'rgba(245, 158, 11, 0)');
       ctx.fillStyle = glow;
       ctx.beginPath();
-      ctx.arc(cx, cy, radius * 1.22, 0, Math.PI * 2);
+      ctx.arc(cx, cy, radius * 1.15, 0, Math.PI * 2);
       ctx.fill();
       ctx.restore();
     }
 
+    // Wind-rippled Martian dust blanket
     ctx.drawImage(this.maskCanvas, 0, 0);
 
-    // Volumetric Martian Sunbeams
-    const sunFade = Math.max(0, 1 - Math.max(0, (this.elapsed - 16) / 12));
-    if (sunFade > 0.02) {
-      ctx.save();
-      ctx.globalCompositeOperation = 'screen';
-      const rayGrad = ctx.createLinearGradient(0, 0, w * 0.8, h * 0.85);
-      rayGrad.addColorStop(0, `rgba(252, 211, 77, ${0.15 * sunFade})`);
-      rayGrad.addColorStop(0.5, `rgba(245, 158, 11, ${0.06 * sunFade})`);
-      rayGrad.addColorStop(1, 'rgba(245, 158, 11, 0)');
-      ctx.fillStyle = rayGrad;
-      ctx.beginPath();
-      ctx.moveTo(0, 0);
-      ctx.lineTo(w * 0.48, 0);
-      ctx.lineTo(w, h * 0.9);
-      ctx.lineTo(w * 0.22, h);
-      ctx.closePath();
-      ctx.fill();
-      ctx.restore();
-    }
+    // Wordless Golden Orbital Power Arc around center hub (shows progress cleanly with ZERO text!)
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(cx, cy, radius * 0.23, 0, Math.PI * 2);
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.14)';
+    ctx.lineWidth = 3;
+    ctx.stroke();
 
-    // Wind Swirl arcs
+    if (progress > 0.01) {
+      ctx.beginPath();
+      ctx.arc(cx, cy, radius * 0.23, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * progress);
+      ctx.strokeStyle = '#fcd34d';
+      ctx.shadowColor = '#f59e0b';
+      ctx.shadowBlur = 16;
+      ctx.lineWidth = 4;
+      ctx.lineCap = 'round';
+      ctx.stroke();
+    }
+    ctx.restore();
+
+    // Wind swirls
     for (const s of this.swirls) {
       ctx.strokeStyle = `rgba(254, 243, 199, ${s.alpha})`;
-      ctx.lineWidth = 1.4;
+      ctx.lineWidth = 1.6;
       ctx.beginPath();
-      ctx.arc(s.x, s.y, s.r, s.angle - 0.8, s.angle + 0.8);
+      ctx.arc(s.x, s.y, s.r, s.angle - 0.9, s.angle + 0.9);
       ctx.stroke();
     }
 
-    // Saltating Sand Grains with tiny cast shadow
+    // Saltating sand grains
     for (const g of this.sandGrains) {
-      ctx.fillStyle = 'rgba(0, 0, 0, 0.45)';
-      ctx.beginPath();
-      ctx.arc(g.x + 2, g.y + 2, 2.2, 0, Math.PI * 2);
-      ctx.fill();
-
       ctx.fillStyle = '#fcd34d';
       ctx.beginPath();
-      ctx.arc(g.x, g.y, 2.3, 0, Math.PI * 2);
+      ctx.arc(g.x, g.y, 2.4, 0, Math.PI * 2);
       ctx.fill();
     }
 
-    // Blowing Dust Motes
+    // Blowing dust motes
     for (const p of this.windParticles) {
-      ctx.fillStyle = `rgba(251, 146, 60, ${p.life * 0.65})`;
+      ctx.fillStyle = `rgba(251, 146, 60, ${p.life * 0.72})`;
       ctx.beginPath();
       ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
       ctx.fill();
     }
 
-    // Heartbeat Pulse Ripple Ring
+    // Heartbeat ripple
     ctx.save();
     ctx.beginPath();
-    ctx.arc(cx, cy, radius * (0.15 + (1 - this.heartPulseVisual) * 0.26), 0, Math.PI * 2);
-    ctx.strokeStyle = `rgba(252, 211, 77, ${this.heartPulseVisual * (0.35 + this.cleanRatio * 0.55)})`;
-    ctx.lineWidth = 2.4;
+    ctx.arc(cx, cy, radius * (0.16 + (1 - this.heartPulseVisual) * 0.28), 0, Math.PI * 2);
+    ctx.strokeStyle = `rgba(252, 211, 77, ${this.heartPulseVisual * (0.4 + progress * 0.55)})`;
+    ctx.lineWidth = 2.6;
     ctx.stroke();
     ctx.restore();
 
-    const dusk = Math.max(0, (this.elapsed - 18) / 10);
-    if (dusk > 0) {
-      ctx.fillStyle = `rgba(5, 8, 17, ${dusk * 0.65})`;
+    if (this.finaleTimer > 0) {
+      const f = Math.min(1, this.finaleTimer / 1.65);
+      ctx.fillStyle = `rgba(245, 158, 11, ${Math.sin(f * Math.PI) * 0.14})`;
       ctx.fillRect(0, 0, w, h);
     }
 
     if (this.ghostAlpha > 0.01) {
-      const t = performance.now() * 0.0025;
-      const gx = cx + Math.sin(t) * (radius * 0.45);
-      const gy = cy + Math.cos(t * 2) * (radius * 0.18);
+      const t = performance.now() * 0.0028;
+      const gx = cx + Math.sin(t) * (radius * 0.48);
+      const gy = cy + Math.cos(t * 1.8) * (radius * 0.2);
       drawGhostHand(ctx, gx, gy, this.ghostAlpha, 1, false);
     }
   }
 
   getSessionMetric() {
-    const pct = Math.min(100, Math.round(Math.max(0.18, this.cleanRatio) * 100));
-    return `${pct}% Bề mặt sạch • ${Math.round(52 + pct * 0.45)} BPM`;
+    const pct = Math.min(100, Math.max(25, Math.round((this.cleanRatio / this.targetClean) * 100)));
+    return `${pct}% Năng lượng Khôi phục • ${Math.round(58 + pct * 0.4)} BPM`;
   }
 }
 
 /* ============================================================================
- * 2. STILL THERE — Vẫn còn ở đó (High-Craft Lunar Observatory & 2.5s Laser Echo)
+ * 2. STILL THERE — Vẫn còn ở đó (Apollo Lunar Retroreflector Constellation)
  * ==========================================================================*/
 class StillThereGame {
   constructor(host) {
@@ -617,25 +598,29 @@ class StillThereGame {
 
   reset() {
     this.elapsed = 0;
-    this.duration = 34;
+    this.fallbackDuration = 22;
+    this.goalReached = false;
+    this.finaleTimer = 0;
     this.completed = false;
     this.hasInteracted = false;
-    this.ghostAlpha = 0.88;
+    this.ghostAlpha = 0.9;
 
+    // 3 Real Apollo LRRR Sites (Apollo 11, 14, 15) — gently visible beacon glints
     this.sites = [
-      { id: 0, u: 0.28, v: 0.06, lit: false, glow: 0, echoes: 0 },
-      { id: 1, u: -0.22, v: 0.14, lit: false, glow: 0, echoes: 0 },
-      { id: 2, u: 0.06, v: -0.28, lit: false, glow: 0, echoes: 0 }
+      { id: 0, u: 0.30, v: 0.07, lit: false, glow: 0, echoes: 0 },
+      { id: 1, u: -0.24, v: 0.16, lit: false, glow: 0, echoes: 0 },
+      { id: 2, u: 0.05, v: -0.30, lit: false, glow: 0, echoes: 0 }
     ];
 
     this.aim = { x: window.innerWidth * 0.5, y: window.innerHeight * 0.42 };
+    this.lockedSite = null;
     this.isCharging = false;
     this.chargePhase = 0;
     this.beams = [];
-    this.pendingEchoes = [];
+    this.photonOrbs = [];
     this.echoRipples = [];
 
-    this.stars = Array.from({ length: 210 }, () => ({
+    this.stars = Array.from({ length: 220 }, () => ({
       x: Math.random(),
       y: Math.random() * 0.88,
       s: Math.random() * 1.9 + 0.35,
@@ -660,30 +645,26 @@ class StillThereGame {
     mctx.arc(c, c, r, 0, Math.PI * 2);
     mctx.clip();
 
-    // Base lunar regolith illumination gradient (sunlit from upper-left)
     const base = mctx.createRadialGradient(c - r * 0.35, c - r * 0.35, r * 0.08, c, c, r * 1.2);
-    base.addColorStop(0, '#94a3b8');
-    base.addColorStop(0.55, '#475569');
+    base.addColorStop(0, '#cbd5e1');
+    base.addColorStop(0.55, '#64748b');
     base.addColorStop(0.88, '#1e293b');
     base.addColorStop(1, '#0b1120');
     mctx.fillStyle = base;
     mctx.fillRect(0, 0, size, size);
 
-    // Lunar Maria (dark basalt plains)
     const maria = [
       { x: 0.25, y: 0.04, rx: 0.28, ry: 0.22, rot: 0.2 },
       { x: -0.26, y: -0.18, rx: 0.32, ry: 0.28, rot: -0.4 },
       { x: -0.14, y: 0.22, rx: 0.22, ry: 0.16, rot: 0.5 },
-      { x: 0.06, y: -0.26, rx: 0.24, ry: 0.18, rot: 0.1 },
-      { x: 0.36, y: -0.15, rx: 0.15, ry: 0.14, rot: 0 }
+      { x: 0.06, y: -0.26, rx: 0.24, ry: 0.18, rot: 0.1 }
     ];
     for (const m of maria) {
       mctx.save();
       mctx.translate(c + m.x * r, c + m.y * r);
       mctx.rotate(m.rot);
       const mg = mctx.createRadialGradient(0, 0, 2, 0, 0, m.rx * r);
-      mg.addColorStop(0, 'rgba(15, 23, 42, 0.58)');
-      mg.addColorStop(0.7, 'rgba(15, 23, 42, 0.35)');
+      mg.addColorStop(0, 'rgba(15, 23, 42, 0.55)');
       mg.addColorStop(1, 'rgba(15, 23, 42, 0)');
       mctx.fillStyle = mg;
       mctx.beginPath();
@@ -692,7 +673,6 @@ class StillThereGame {
       mctx.restore();
     }
 
-    // 75 Realistic Shaded Impact Craters (bright rim + dark interior shadow)
     for (let i = 0; i < 75; i++) {
       const ang = Math.random() * Math.PI * 2;
       const d = Math.sqrt(Math.random()) * r * 0.92;
@@ -700,117 +680,112 @@ class StillThereGame {
       const cy = c + Math.sin(ang) * d;
       const cr = 3 + Math.pow(Math.random(), 2.2) * 24;
 
-      // Dark crater bowl shadow
-      mctx.fillStyle = 'rgba(10, 15, 28, 0.36)';
+      mctx.fillStyle = 'rgba(10, 15, 28, 0.34)';
       mctx.beginPath();
       mctx.arc(cx, cy, cr, 0, Math.PI * 2);
       mctx.fill();
 
-      // Sunlit lower-right / upper-left rim highlight
-      mctx.strokeStyle = 'rgba(226, 232, 240, 0.28)';
+      mctx.strokeStyle = 'rgba(241, 245, 249, 0.3)';
       mctx.lineWidth = Math.max(0.8, cr * 0.12);
       mctx.beginPath();
       mctx.arc(cx, cy, cr, -Math.PI * 0.9, -Math.PI * 0.1);
       mctx.stroke();
     }
 
-    // Tycho-style bright ejecta ray burst near bottom
-    mctx.strokeStyle = 'rgba(226, 232, 240, 0.14)';
-    mctx.lineWidth = 1.2;
-    const tx = c - r * 0.15;
-    const ty = c + r * 0.52;
-    for (let ray = 0; ray < 9; ray++) {
-      const ra = (ray / 9) * Math.PI * 2;
-      mctx.beginPath();
-      mctx.moveTo(tx, ty);
-      mctx.lineTo(tx + Math.cos(ra) * r * 0.35, ty + Math.sin(ra) * r * 0.35);
-      mctx.stroke();
-    }
-
-    // Warm Amber Terminator Rim Glow
-    mctx.strokeStyle = 'rgba(252, 211, 77, 0.55)';
+    mctx.strokeStyle = 'rgba(252, 211, 77, 0.58)';
     mctx.lineWidth = 4;
     mctx.beginPath();
     mctx.arc(c, c, r - 1, -Math.PI * 0.85, Math.PI * 0.15);
     mctx.stroke();
-
     mctx.restore();
   }
 
   onResize() {}
 
   _getMoonGeometry(w, h) {
-    const cx = w * 0.5;
-    const cy = h * 0.42;
-    const r = Math.min(w, h) * 0.25;
-    return { cx, cy, r };
+    return { cx: w * 0.5, cy: h * 0.42, r: Math.min(w, h) * 0.25 };
+  }
+
+  _updateLock(x, y) {
+    const { cx, cy, r } = this._getMoonGeometry(window.innerWidth, window.innerHeight);
+    let nearest = null;
+    let minDist = Infinity;
+    for (const s of this.sites) {
+      const sx = cx + s.u * r;
+      const sy = cy + s.v * r;
+      const d = Math.hypot(x - sx, y - sy);
+      if (d < minDist) {
+        minDist = d;
+        nearest = { site: s, sx, sy, d };
+      }
+    }
+
+    if (nearest && minDist < Math.max(75, r * 0.5)) {
+      this.lockedSite = nearest.site;
+      this.aim.x = x * 0.3 + nearest.sx * 0.7;
+      this.aim.y = y * 0.3 + nearest.sy * 0.7;
+    } else {
+      this.lockedSite = null;
+      this.aim.x = x;
+      this.aim.y = y;
+    }
   }
 
   onPointerDown(x, y) {
     this.isCharging = true;
     this.chargePhase = 0;
-    this.aim.x = x;
-    this.aim.y = y;
+    this._updateLock(x, y);
     if (!this.hasInteracted) this.hasInteracted = true;
   }
 
   onPointerMove(x, y) {
-    const { cx, cy, r } = this._getMoonGeometry(window.innerWidth, window.innerHeight);
-    let tx = x;
-    let ty = y;
-    for (const s of this.sites) {
-      const sx = cx + s.u * r;
-      const sy = cy + s.v * r;
-      if (Math.hypot(x - sx, y - sy) < 64) {
-        tx = x * 0.48 + sx * 0.52;
-        ty = y * 0.48 + sy * 0.52;
-        break;
-      }
-    }
-    this.aim.x = tx;
-    this.aim.y = ty;
+    this._updateLock(x, y);
   }
 
-  onPointerUp() {
+  onPointerUp(x, y) {
     if (!this.isCharging) return;
     this.isCharging = false;
 
     const w = window.innerWidth;
     const h = window.innerHeight;
     const { cx, cy, r } = this._getMoonGeometry(w, h);
+    this._updateLock(x || this.aim.x, y || this.aim.y);
 
-    let bestSite = null;
-    let minDist = Infinity;
-    for (const s of this.sites) {
-      const sx = cx + s.u * r;
-      const sy = cy + s.v * r;
-      const d = Math.hypot(this.aim.x - sx, this.aim.y - sy);
-      if (d < minDist) {
-        minDist = d;
-        bestSite = { site: s, sx, sy };
+    // If user clicked anywhere on the Moon or space without locking, auto-snap to next unlit reflector if reasonably close!
+    let targetSite = this.lockedSite;
+    if (!targetSite) {
+      let bestUnlit = null;
+      let bestDist = Infinity;
+      for (const s of this.sites) {
+        const sx = cx + s.u * r;
+        const sy = cy + s.v * r;
+        const d = Math.hypot(this.aim.x - sx, this.aim.y - sy);
+        const weight = s.lit ? d * 1.6 : d;
+        if (weight < bestDist) {
+          bestDist = weight;
+          bestUnlit = { s, d };
+        }
+      }
+      if (bestUnlit && bestUnlit.d < r * 1.15) {
+        targetSite = bestUnlit.s;
       }
     }
 
-    const waveQuality = 1 - Math.abs(this.chargePhase - 0.72);
-    const hitSite = bestSite && minDist < r * 0.42 && (waveQuality > 0.25 || !this.sites.some(s => s.lit));
-
-    const targetX = hitSite ? bestSite.sx : this.aim.x;
-    const targetY = hitSite ? bestSite.sy : this.aim.y;
+    const tx = targetSite ? cx + targetSite.u * r : this.aim.x;
+    const ty = targetSite ? cy + targetSite.v * r : this.aim.y;
 
     window.soundEngine.playLaserLaunch();
-    this.beams.push({
+    this.beams.push({ x0: w * 0.5, y0: h * 0.9, x1: tx, y1: ty, life: 1.0 });
+
+    // Launch fast, visually legible photon packet (Earth -> Moon 0.7s, Moon -> Earth 0.75s)
+    this.photonOrbs.push({
       x0: w * 0.5,
       y0: h * 0.9,
-      x1: targetX,
-      y1: targetY,
-      life: 1.0
-    });
-
-    this.pendingEchoes.push({
-      timer: 2.5,
-      site: hitSite ? bestSite.site : null,
-      x: targetX,
-      y: targetY
+      x1: tx,
+      y1: ty,
+      progress: 0,
+      returning: false,
+      site: targetSite
     });
   }
 
@@ -821,79 +796,81 @@ class StillThereGame {
     }
 
     if (this.isCharging) {
-      this.chargePhase = (this.chargePhase + dt * 0.85) % 1.0;
+      this.chargePhase = (this.chargePhase + dt * 1.6) % 1;
     }
 
     for (let i = this.beams.length - 1; i >= 0; i--) {
-      this.beams[i].life -= dt * 2.0;
+      this.beams[i].life -= dt * 1.15;
       if (this.beams[i].life <= 0) this.beams.splice(i, 1);
     }
 
-    for (let i = this.pendingEchoes.length - 1; i >= 0; i--) {
-      const e = this.pendingEchoes[i];
-      e.timer -= dt;
-      if (e.timer <= 0) {
-        this.pendingEchoes.splice(i, 1);
-        if (e.site) {
-          e.site.lit = true;
-          e.site.glow = 1.0;
-          e.site.echoes += 1;
-          window.soundEngine.playGlassEcho(e.site.id);
-
-          const prev = Number(localStorage.getItem('vantalumen_lunar_pings') || '148920');
-          localStorage.setItem('vantalumen_lunar_pings', String(prev + 1));
-
-          this.echoRipples.push({ x: e.x, y: e.y, r: 4, alpha: 1.0 });
-
-          if (this.sites.every(s => s.lit) && !this.completed) {
-            setTimeout(() => window.soundEngine.playSignatureMotif(4), 600);
-          }
+    for (let i = this.photonOrbs.length - 1; i >= 0; i--) {
+      const orb = this.photonOrbs[i];
+      orb.progress += dt * (orb.returning ? 1.35 : 1.55);
+      if (!orb.returning && orb.progress >= 1) {
+        orb.returning = true;
+        orb.progress = 0;
+        if (orb.site) {
+          orb.site.lit = true;
+          orb.site.glow = 1.0;
+          orb.site.echoes++;
+          window.soundEngine.playGlassEcho(orb.site.id);
+          this.echoRipples.push({ x: orb.x1, y: orb.y1, r: 8, maxR: 135, alpha: 0.95 });
+        } else {
+          this.echoRipples.push({ x: orb.x1, y: orb.y1, r: 4, maxR: 55, alpha: 0.45 });
         }
+      } else if (orb.returning && orb.progress >= 1) {
+        this.photonOrbs.splice(i, 1);
       }
     }
 
     for (let i = this.echoRipples.length - 1; i >= 0; i--) {
       const rp = this.echoRipples[i];
-      rp.r += dt * 75;
-      rp.alpha -= dt * 0.5;
-      if (rp.alpha <= 0) this.echoRipples.splice(i, 1);
+      rp.r += dt * 115;
+      rp.alpha = Math.max(0, 1 - rp.r / rp.maxR);
+      if (rp.alpha <= 0.02) this.echoRipples.splice(i, 1);
     }
 
-    for (const s of this.sites) {
-      if (s.lit) s.glow = Math.max(0.55, s.glow - dt * 0.25);
+    const litCount = this.sites.filter(s => s.lit).length;
+    if (!this.goalReached && (litCount >= 3 || this.elapsed >= this.fallbackDuration)) {
+      this.goalReached = true;
+      this.sites.forEach(s => { s.lit = true; s.glow = 1.0; });
+      window.soundEngine.playSignatureMotif(4);
     }
 
-    const allLit = this.sites.every(s => s.lit);
-    if ((this.elapsed >= this.duration || (allLit && this.elapsed > 14 && this.pendingEchoes.length === 0)) && !this.completed) {
-      this.completed = true;
-      this.host.completeCurrentGame();
+    if (this.goalReached && !this.completed) {
+      this.finaleTimer += dt;
+      if (this.finaleTimer >= 1.7) {
+        this.completed = true;
+        this.host.completeCurrentGame();
+      }
     }
   }
 
   render(ctx, w, h) {
-    // 1. Deep Navy Night Sky + Milky Way Nebula Band
     const sky = ctx.createLinearGradient(0, 0, 0, h);
-    sky.addColorStop(0, '#02050d');
-    sky.addColorStop(0.55, '#071022');
-    sky.addColorStop(1, '#0f1b33');
+    sky.addColorStop(0, '#02040a');
+    sky.addColorStop(0.6, '#071124');
+    sky.addColorStop(1, '#111d38');
     ctx.fillStyle = sky;
     ctx.fillRect(0, 0, w, h);
 
-    // Subtle diagonal Milky Way glow
+    // Milky Way band glow
     ctx.save();
-    const neb = ctx.createLinearGradient(0, h * 0.1, w, h * 0.7);
-    neb.addColorStop(0, 'rgba(56, 189, 248, 0)');
-    neb.addColorStop(0.5, 'rgba(56, 189, 248, 0.065)');
-    neb.addColorStop(1, 'rgba(245, 158, 11, 0)');
-    ctx.fillStyle = neb;
-    ctx.fillRect(0, 0, w, h);
+    ctx.translate(w * 0.5, h * 0.35);
+    ctx.rotate(-0.38);
+    const mw = ctx.createLinearGradient(0, -140, 0, 140);
+    mw.addColorStop(0, 'rgba(56, 189, 248, 0)');
+    mw.addColorStop(0.5, 'rgba(148, 163, 184, 0.08)');
+    mw.addColorStop(1, 'rgba(56, 189, 248, 0)');
+    ctx.fillStyle = mw;
+    ctx.fillRect(-w, -140, w * 2, 280);
     ctx.restore();
 
-    // 2. Twinkling Colored Starfield
-    const now = performance.now() * 0.001;
+    const now = performance.now() * 0.002;
     for (const st of this.stars) {
-      const tw = 0.35 + 0.65 * Math.sin(now * 2.2 + st.p);
-      ctx.globalAlpha = tw * 0.8;
+      const a = 0.28 + 0.68 * (0.5 + 0.5 * Math.sin(now + st.p));
+      ctx.globalAlpha = a;
       ctx.fillStyle = st.hue;
       ctx.beginPath();
       ctx.arc(st.x * w, st.y * h, st.s, 0, Math.PI * 2);
@@ -901,57 +878,28 @@ class StillThereGame {
     }
     ctx.globalAlpha = 1;
 
-    // 3. Detailed Procedural Moon with Atmospheric Amber Corona
     const { cx, cy, r } = this._getMoonGeometry(w, h);
-    const halo = ctx.createRadialGradient(cx, cy, r * 0.85, cx, cy, r * 1.45);
-    halo.addColorStop(0, 'rgba(245, 158, 11, 0.24)');
-    halo.addColorStop(0.6, 'rgba(56, 189, 248, 0.06)');
-    halo.addColorStop(1, 'rgba(245, 158, 11, 0)');
-    ctx.fillStyle = halo;
+
+    // Moon Halo & Procedural Globe
+    const moonHalo = ctx.createRadialGradient(cx, cy, r * 0.88, cx, cy, r * 1.48);
+    moonHalo.addColorStop(0, 'rgba(252, 211, 77, 0.24)');
+    moonHalo.addColorStop(0.5, 'rgba(56, 189, 248, 0.09)');
+    moonHalo.addColorStop(1, 'rgba(56, 189, 248, 0)');
+    ctx.fillStyle = moonHalo;
     ctx.beginPath();
-    ctx.arc(cx, cy, r * 1.45, 0, Math.PI * 2);
+    ctx.arc(cx, cy, r * 1.48, 0, Math.PI * 2);
     ctx.fill();
 
-    // Blit high-res procedural cratered Moon sprite
-    const drawR = r / 0.46;
-    ctx.drawImage(this.moonCanvas, cx - drawR * 0.5, cy - drawR * 0.5, drawR, drawR);
+    ctx.drawImage(this.moonCanvas, cx - r * 1.087, cy - r * 1.087, r * 2.174, r * 2.174);
 
-    // 4. Apollo Retroreflector Sites & Constellation Lines
-    for (const s of this.sites) {
-      const sx = cx + s.u * r;
-      const sy = cy + s.v * r;
-      const pulse = 0.4 + 0.6 * Math.sin(now * 3 + s.id * 2);
-
-      if (s.lit) {
-        const g = ctx.createRadialGradient(sx, sy, 1, sx, sy, 32);
-        g.addColorStop(0, 'rgba(255, 255, 255, 1)');
-        g.addColorStop(0.28, 'rgba(252, 211, 77, 0.85)');
-        g.addColorStop(1, 'rgba(245, 158, 11, 0)');
-        ctx.fillStyle = g;
-        ctx.beginPath();
-        ctx.arc(sx, sy, 32, 0, Math.PI * 2);
-        ctx.fill();
-
-        // 4-point star flare on lit Apollo mirrors
-        ctx.strokeStyle = 'rgba(254, 243, 199, 0.85)';
-        ctx.lineWidth = 1.2;
-        ctx.beginPath();
-        ctx.moveTo(sx - 11, sy); ctx.lineTo(sx + 11, sy);
-        ctx.moveTo(sx, sy - 11); ctx.lineTo(sx, sy + 11);
-        ctx.stroke();
-      } else {
-        ctx.fillStyle = `rgba(252, 211, 77, ${0.25 + pulse * 0.35})`;
-        ctx.beginPath();
-        ctx.arc(sx, sy, 4.2, 0, Math.PI * 2);
-        ctx.fill();
-      }
-    }
-
+    // Constellation Triangle Lines connecting lit retroreflectors
     const litSites = this.sites.filter(s => s.lit);
     if (litSites.length >= 2) {
-      ctx.strokeStyle = 'rgba(252, 211, 77, 0.48)';
-      ctx.lineWidth = 1.4;
-      ctx.setLineDash([4, 4]);
+      ctx.save();
+      ctx.strokeStyle = 'rgba(252, 211, 77, 0.7)';
+      ctx.shadowColor = '#f59e0b';
+      ctx.shadowBlur = 14;
+      ctx.lineWidth = 2;
       ctx.beginPath();
       litSites.forEach((s, i) => {
         const sx = cx + s.u * r;
@@ -961,118 +909,131 @@ class StillThereGame {
       });
       if (litSites.length === 3) ctx.closePath();
       ctx.stroke();
-      ctx.setLineDash([]);
+      ctx.restore();
     }
 
-    // 5. Echo Ripples
+    // Visible Beacon Glints on 3 Retroreflector Sites (Wordless clarity!)
+    for (const s of this.sites) {
+      const sx = cx + s.u * r;
+      const sy = cy + s.v * r;
+      const pulse = 0.55 + 0.45 * Math.sin(now * 2 + s.id * 1.8);
+
+      // Faint orbital beacon ring even before lit so players clearly see targets!
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(sx, sy, s.lit ? 11 : 9 + pulse * 3, 0, Math.PI * 2);
+      ctx.strokeStyle = s.lit ? '#fcd34d' : `rgba(56, 189, 248, ${0.42 + pulse * 0.35})`;
+      ctx.lineWidth = s.lit ? 2 : 1.4;
+      ctx.stroke();
+
+      ctx.fillStyle = s.lit ? '#fef3c7' : `rgba(186, 230, 253, ${0.5 + pulse * 0.4})`;
+      if (s.lit) {
+        ctx.shadowColor = '#fcd34d';
+        ctx.shadowBlur = 18;
+      }
+      ctx.beginPath();
+      ctx.arc(sx, sy, s.lit ? 5 : 3.2, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+
+    // Laser Beams
+    for (const b of this.beams) {
+      ctx.save();
+      ctx.strokeStyle = `rgba(52, 211, 153, ${b.life * 0.36})`;
+      ctx.lineWidth = 9;
+      ctx.beginPath();
+      ctx.moveTo(b.x0, b.y0);
+      ctx.lineTo(b.x1, b.y1);
+      ctx.stroke();
+
+      ctx.strokeStyle = `rgba(254, 243, 199, ${b.life})`;
+      ctx.lineWidth = 2.2;
+      ctx.beginPath();
+      ctx.moveTo(b.x0, b.y0);
+      ctx.lineTo(b.x1, b.y1);
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    // Traveling Photon Orbs
+    for (const orb of this.photonOrbs) {
+      const t = orb.returning ? 1 - orb.progress : orb.progress;
+      const px = orb.x0 + (orb.x1 - orb.x0) * t;
+      const py = orb.y0 + (orb.y1 - orb.y0) * t;
+      ctx.save();
+      ctx.fillStyle = orb.returning ? '#fcd34d' : '#6ee7b7';
+      ctx.shadowColor = orb.returning ? '#f59e0b' : '#34d399';
+      ctx.shadowBlur = 22;
+      ctx.beginPath();
+      ctx.arc(px, py, 6, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+
     for (const rp of this.echoRipples) {
       ctx.strokeStyle = `rgba(252, 211, 77, ${rp.alpha})`;
-      ctx.lineWidth = 2;
+      ctx.lineWidth = 2.2;
       ctx.beginPath();
       ctx.arc(rp.x, rp.y, rp.r, 0, Math.PI * 2);
       ctx.stroke();
     }
 
-    // 6. Active Laser Beams + Atmospheric Scattering Cone + 2.5s Traveling Photon Pulse
-    for (const b of this.beams) {
-      ctx.save();
-      // Atmospheric beam scatter halo
-      ctx.strokeStyle = `rgba(245, 158, 11, ${b.life * 0.25})`;
-      ctx.lineWidth = 12;
-      ctx.beginPath();
-      ctx.moveTo(b.x0, b.y0);
-      ctx.lineTo(b.x1, b.y1);
-      ctx.stroke();
-
-      // Core laser filament
-      ctx.strokeStyle = `rgba(254, 243, 199, ${b.life})`;
-      ctx.lineWidth = 2.2;
-      ctx.shadowColor = '#f59e0b';
-      ctx.shadowBlur = 16;
-      ctx.beginPath();
-      ctx.moveTo(b.x0, b.y0);
-      ctx.lineTo(b.x1, b.y1);
-      ctx.stroke();
-      ctx.restore();
-    }
-
-    for (const e of this.pendingEchoes) {
-      const progress = 1 - e.timer / 2.5;
-      const isOutbound = progress < 0.5;
-      const t = isOutbound ? progress * 2 : (1 - progress) * 2;
-      const px = w * 0.5 + (e.x - w * 0.5) * t;
-      const py = h * 0.9 + (e.y - h * 0.9) * t;
-      ctx.save();
-      ctx.fillStyle = isOutbound ? '#fef3c7' : (e.site ? '#fcd34d' : 'rgba(148,163,184,0.4)');
-      ctx.shadowColor = isOutbound ? '#f59e0b' : '#38bdf8';
-      ctx.shadowBlur = 16;
-      ctx.beginPath();
-      ctx.arc(px, py, isOutbound ? 3.5 : 4.5, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.restore();
-    }
-
-    // 7. Aerospace Telemetry Reticle
-    const driftX = Math.sin(now * 1.9) * 5;
-    const driftY = Math.cos(now * 1.4) * 5;
-    const rx = this.aim.x + driftX;
-    const ry = this.aim.y + driftY;
-
+    // Magnetic Targeting Reticle
     ctx.save();
-    ctx.translate(rx, ry);
-    ctx.rotate(now * 0.35);
-    ctx.strokeStyle = 'rgba(254, 243, 199, 0.5)';
-    ctx.lineWidth = 1.4;
-    ctx.setLineDash([8, 6]);
+    ctx.translate(this.aim.x, this.aim.y);
+    const locked = Boolean(this.lockedSite);
+    const ringR = this.isCharging ? 16 + this.chargePhase * 12 : (locked ? 15 : 19);
+    ctx.strokeStyle = locked ? '#fcd34d' : 'rgba(186, 230, 253, 0.72)';
+    ctx.lineWidth = locked ? 2 : 1.3;
     ctx.beginPath();
-    ctx.arc(0, 0, 28, 0, Math.PI * 2);
+    ctx.arc(0, 0, ringR, 0, Math.PI * 2);
     ctx.stroke();
-    ctx.setLineDash([]);
 
-    if (this.isCharging) {
-      const waveR = this.chargePhase * 38;
-      const nearCrest = Math.abs(this.chargePhase - 0.72) < 0.18;
-      ctx.strokeStyle = nearCrest ? '#fcd34d' : 'rgba(56, 189, 248, 0.85)';
-      ctx.lineWidth = nearCrest ? 3.2 : 1.8;
+    // 4 subtle crosshairs
+    for (let i = 0; i < 4; i++) {
+      ctx.rotate(Math.PI / 2);
       ctx.beginPath();
-      ctx.arc(0, 0, waveR, 0, Math.PI * 2);
+      ctx.moveTo(ringR + 3, 0);
+      ctx.lineTo(ringR + 8, 0);
       ctx.stroke();
     }
     ctx.restore();
 
-    // 8. Detailed Observatory Dome Silhouette & Telescope Barrel at bottom
-    ctx.save();
+    // Earth Observatory Horizon + Laser Dome
     ctx.fillStyle = '#03060d';
     ctx.beginPath();
-    ctx.ellipse(w * 0.5, h * 1.02, w * 0.38, h * 0.12, 0, Math.PI, 0);
+    ctx.moveTo(0, h);
+    ctx.lineTo(0, h * 0.91);
+    ctx.quadraticCurveTo(w * 0.5, h * 0.87, w, h * 0.91);
+    ctx.lineTo(w, h);
+    ctx.closePath();
     ctx.fill();
-    // Telescope slit & barrel pointing at aim
-    const aimAngle = Math.atan2(ry - h * 0.9, rx - w * 0.5);
-    ctx.translate(w * 0.5, h * 0.92);
-    ctx.rotate(aimAngle);
-    ctx.fillStyle = '#0f172a';
-    ctx.strokeStyle = 'rgba(245, 158, 11, 0.55)';
-    ctx.lineWidth = 1.5;
-    ctx.fillRect(0, -6, 38, 12);
-    ctx.strokeRect(0, -6, 38, 12);
+
+    ctx.save();
+    ctx.translate(w * 0.5, h * 0.9);
+    ctx.fillStyle = '#1e293b';
+    ctx.strokeStyle = '#fcd34d';
+    ctx.lineWidth = 1.6;
+    ctx.beginPath();
+    ctx.arc(0, 0, 15, Math.PI, 0);
+    ctx.fill();
+    ctx.stroke();
     ctx.restore();
 
     if (this.ghostAlpha > 0.01) {
-      const gx = cx + this.sites[0].u * r;
-      const gy = cy + this.sites[0].v * r;
-      drawGhostHand(ctx, gx, gy, this.ghostAlpha, 1, Math.sin(now * 3) > 0);
+      drawGhostHand(ctx, cx + this.sites[0].u * r, cy + this.sites[0].v * r, this.ghostAlpha, 1, false);
     }
   }
 
   getSessionMetric() {
-    const total = Number(localStorage.getItem('vantalumen_lunar_pings') || '148921');
     const litCount = this.sites.filter(s => s.lit).length;
-    return `${litCount}/3 Gương Apollo • #${total.toLocaleString('vi-VN')} Ping`;
+    return `${litCount}/3 Phản xạ Apollo • 2.562s Trễ Ánh Sáng`;
   }
 }
 
 /* ============================================================================
- * 3. ONE WHEEL LEFT — Một bánh còn lại (Spirit Rover, Martian Mesas & Silica)
+ * 3. ONE WHEEL LEFT — Một bánh còn lại (Friction-Free Spirit Rover Driving)
  * ==========================================================================*/
 class OneWheelLeftGame {
   constructor(host) {
@@ -1082,24 +1043,24 @@ class OneWheelLeftGame {
 
   reset() {
     this.elapsed = 0;
-    this.duration = 32;
+    this.fallbackDuration = 22;
+    this.goalX = 1120; // Golden Sunset Silica Crest destination
+    this.goalReached = false;
+    this.finaleTimer = 0;
     this.completed = false;
     this.hasInteracted = false;
-    this.ghostAlpha = 0.88;
+    this.ghostAlpha = 0.9;
 
     this.roverX = 120;
     this.roverSpeed = 0;
-    this.isPushing = false;
+    this.pointerDir = 0; // +1 forward, -1 reverse, 0 idle
     this.keyForward = false;
     this.keyBackward = false;
-    this.continuousPushTime = 0;
-    this.isBogged = false;
-    this.shakeCount = 0;
 
     this.cameraZoomOut = 0;
     this.trenchPoints = [];
     this.silicaSparkles = [];
-    this.noteMilestone = 180;
+    this.noteMilestone = 200;
     this.noteIdx = 0;
   }
 
@@ -1108,36 +1069,26 @@ class OneWheelLeftGame {
   _terrainHeight(worldX, h) {
     return (
       h * 0.69 +
-      Math.sin(worldX * 0.0045) * 30 +
-      Math.cos(worldX * 0.011) * 14
+      Math.sin(worldX * 0.0045) * 28 +
+      Math.cos(worldX * 0.011) * 12
     );
   }
 
-  _tryShakeFree(reverse = false) {
-    this.shakeCount++;
-    window.soundEngine.playPentatonicNote(1 + (this.shakeCount % 3), 0.14, 0.4, 0, 'triangle');
-    if (this.shakeCount >= 2) {
-      this.isBogged = false;
-      this.continuousPushTime = 0;
-      this.roverSpeed = reverse ? -64 : 74;
-    }
-  }
-
-  onPointerDown() {
+  onPointerDown(x) {
     if (!this.hasInteracted) this.hasInteracted = true;
-
-    if (this.isBogged) {
-      this._tryShakeFree(false);
-      return;
-    }
-
-    this.isPushing = true;
+    const w = window.innerWidth;
+    // Left 28% reverses carefully; clicking anywhere right of left margin drives forward smoothly!
+    this.pointerDir = x < w * 0.25 ? -1 : 1;
   }
 
-  onPointerMove() {}
+  onPointerMove(x) {
+    if (this.pointerDir !== 0) {
+      this.pointerDir = x < window.innerWidth * 0.25 ? -1 : 1;
+    }
+  }
 
   onPointerUp() {
-    this.isPushing = false;
+    this.pointerDir = 0;
   }
 
   _classifyRoverKey(e) {
@@ -1155,14 +1106,7 @@ class OneWheelLeftGame {
   onKeyDown(e) {
     const dir = this._classifyRoverKey(e);
     if (!dir) return false;
-
     if (!this.hasInteracted) this.hasInteracted = true;
-
-    if (this.isBogged) {
-      if (!e.repeat) this._tryShakeFree(dir === 'backward');
-      return true;
-    }
-
     if (dir === 'forward') this.keyForward = true;
     else this.keyBackward = true;
     return true;
@@ -1182,59 +1126,33 @@ class OneWheelLeftGame {
       this.ghostAlpha = Math.max(0, this.ghostAlpha - dt * 2.5);
     }
 
-    const sunsetPhase = Math.max(0, (this.elapsed - (this.duration - 6)) / 6);
-    if (sunsetPhase > 0) {
-      this.cameraZoomOut = Math.min(1, sunsetPhase);
-    }
+    const pushingForward = this.keyForward || this.pointerDir > 0;
+    const pushingBackward = !pushingForward && (this.keyBackward || this.pointerDir < 0);
 
-    const pushingForward = this.isPushing || this.keyForward;
-    const pushingBackward = !pushingForward && this.keyBackward;
-
-    if (!this.isBogged && sunsetPhase < 0.7) {
+    if (!this.goalReached) {
       if (pushingForward) {
-        this.continuousPushTime += dt;
-        this.roverSpeed = Math.min(130, this.roverSpeed + dt * 165);
-
-        if (this.continuousPushTime > 5.5) {
-          this.isBogged = true;
-          this.isPushing = false;
-          this.keyForward = false;
-          this.keyBackward = false;
-          this.shakeCount = 0;
-          this.roverSpeed = 0;
-        }
+        this.roverSpeed = Math.min(165, this.roverSpeed + dt * 260);
       } else if (pushingBackward) {
-        this.continuousPushTime += dt * 0.7;
-        this.roverSpeed = Math.max(-95, this.roverSpeed - dt * 145);
-
-        if (this.continuousPushTime > 5.5) {
-          this.isBogged = true;
-          this.isPushing = false;
-          this.keyForward = false;
-          this.keyBackward = false;
-          this.shakeCount = 0;
-          this.roverSpeed = 0;
-        }
+        this.roverSpeed = Math.max(-115, this.roverSpeed - dt * 220);
       } else {
-        this.continuousPushTime = Math.max(0, this.continuousPushTime - dt * 1.8);
-        this.roverSpeed *= Math.pow(0.18, dt);
+        this.roverSpeed *= Math.pow(0.08, dt);
       }
     } else {
-      this.roverSpeed *= Math.pow(0.08, dt);
+      this.roverSpeed *= Math.pow(0.12, dt);
     }
 
     this.roverX = Math.max(80, this.roverX + this.roverSpeed * dt);
     if (this.roverX <= 80 && this.roverSpeed < 0) this.roverSpeed = 0;
 
-    if (Math.abs(this.roverSpeed) > 18) window.soundEngine.playGravelCrunch();
+    if (Math.abs(this.roverSpeed) > 22) window.soundEngine.playGravelCrunch();
 
-    if (Math.abs(this.roverSpeed) > 8) {
+    if (Math.abs(this.roverSpeed) > 10) {
       const last = this.trenchPoints[this.trenchPoints.length - 1];
       if (!last || Math.abs(this.roverX - last.x) > 10) {
         this.trenchPoints.push({ x: this.roverX - 30, glow: 1.0 });
         this.silicaSparkles.push({
           x: this.roverX - 30,
-          vy: -18 - Math.random() * 25,
+          vy: -20 - Math.random() * 28,
           yOff: 0,
           life: 1.0
         });
@@ -1244,60 +1162,74 @@ class OneWheelLeftGame {
     for (let i = this.silicaSparkles.length - 1; i >= 0; i--) {
       const sp = this.silicaSparkles[i];
       sp.yOff += sp.vy * dt;
-      sp.life -= dt * 0.8;
+      sp.life -= dt * 0.85;
       if (sp.life <= 0) this.silicaSparkles.splice(i, 1);
     }
 
     if (this.roverX >= this.noteMilestone) {
-      this.noteMilestone += 110;
-      window.soundEngine.playPentatonicNote(this.noteIdx % 8, 0.18, 1.5, 0, 'triangle');
+      this.noteMilestone += 140;
+      window.soundEngine.playPentatonicNote(this.noteIdx % 8, 0.16, 1.5, 0, 'triangle');
       this.noteIdx++;
     }
 
-    if (this.elapsed >= this.duration && !this.completed) {
-      this.completed = true;
+    const travelFrac = Math.min(1, (this.roverX - 120) / (this.goalX - 120));
+    if (travelFrac > 0.72) {
+      this.cameraZoomOut = Math.min(1, (travelFrac - 0.72) / 0.28);
+    }
+
+    if (!this.goalReached && (this.roverX >= this.goalX || this.elapsed >= this.fallbackDuration)) {
+      this.goalReached = true;
       window.soundEngine.playSignatureMotif(3);
-      this.host.completeCurrentGame();
+    }
+
+    if (this.goalReached && !this.completed) {
+      this.finaleTimer += dt;
+      this.cameraZoomOut = Math.min(1, this.cameraZoomOut + dt * 0.75);
+      if (this.finaleTimer >= 1.75) {
+        this.completed = true;
+        this.host.completeCurrentGame();
+      }
     }
   }
 
   render(ctx, w, h) {
-    // 1. Atmospheric Martian Sunset Sky (Indigo -> Dusty Rose -> Teal Horizon -> Amber Glow)
+    // 1. Martian Sunset Gradient Sky
     const sky = ctx.createLinearGradient(0, 0, 0, h * 0.74);
-    sky.addColorStop(0, '#0c0b1d');
+    sky.addColorStop(0, '#0a0918');
     sky.addColorStop(0.45, '#4c2335');
     sky.addColorStop(0.78, '#265466');
     sky.addColorStop(1, '#e07a19');
     ctx.fillStyle = sky;
     ctx.fillRect(0, 0, w, h);
 
-    // Subtle twilight stars & tiny Martian moon Phobos
-    ctx.fillStyle = 'rgba(254, 243, 199, 0.45)';
+    // Phobos + Twilight Glow
+    ctx.fillStyle = 'rgba(254, 243, 199, 0.5)';
     ctx.beginPath();
     ctx.arc(w * 0.22, h * 0.18, 3.2, 0, Math.PI * 2);
     ctx.fill();
 
-    // Setting Martian Sun (iconic cool-blue core halo on Mars!)
-    const sunY = h * (0.43 + (this.elapsed / this.duration) * 0.23);
-    const sunGrad = ctx.createRadialGradient(w * 0.74, sunY, 5, w * 0.74, sunY, 150);
+    // Setting Martian Sun (iconic cool-blue core halo)
+    const travel = Math.min(1, (this.roverX - 120) / (this.goalX - 120));
+    const sunY = h * (0.42 + travel * 0.2);
+    const sunGrad = ctx.createRadialGradient(w * 0.74, sunY, 5, w * 0.74, sunY, 160);
     sunGrad.addColorStop(0, '#f0f9ff');
     sunGrad.addColorStop(0.18, '#bae6fd');
-    sunGrad.addColorStop(0.45, 'rgba(252, 211, 77, 0.42)');
+    sunGrad.addColorStop(0.45, 'rgba(252, 211, 77, 0.45)');
     sunGrad.addColorStop(1, 'rgba(245, 158, 11, 0)');
     ctx.fillStyle = sunGrad;
     ctx.beginPath();
-    ctx.arc(w * 0.74, sunY, 150, 0, Math.PI * 2);
+    ctx.arc(w * 0.74, sunY, 160, 0, Math.PI * 2);
     ctx.fill();
 
     ctx.save();
-    const zoom = 1 - this.cameraZoomOut * 0.48;
+    const zoom = 1 - this.cameraZoomOut * 0.44;
     ctx.translate(w * 0.5, h * 0.65);
     ctx.scale(zoom, zoom);
     ctx.translate(-w * 0.5, -h * 0.65);
 
-    const camX = this.roverX - w * 0.45;
+    const camX = this.roverX - w * 0.42;
 
-    // 2a. Far Mesa Canyon Silhouettes (Columbia Hills)
+    // Far Mesas
     ctx.fillStyle = '#241727';
     ctx.beginPath();
     ctx.moveTo(-w, h);
@@ -1310,7 +1242,7 @@ class OneWheelLeftGame {
     ctx.closePath();
     ctx.fill();
 
-    // 2b. Mid Dunes Layer
+    // Mid Dunes
     ctx.fillStyle = '#361a24';
     ctx.beginPath();
     ctx.moveTo(-w, h);
@@ -1323,7 +1255,7 @@ class OneWheelLeftGame {
     ctx.closePath();
     ctx.fill();
 
-    // 3. Foreground Sculpted Martian Regolith Plain with sunlit top rim
+    // Foreground Terrain
     const groundGrad = ctx.createLinearGradient(0, h * 0.65, 0, h * 1.2);
     groundGrad.addColorStop(0, '#54261a');
     groundGrad.addColorStop(0.35, '#331712');
@@ -1333,15 +1265,13 @@ class OneWheelLeftGame {
     ctx.moveTo(-w * 0.5, h * 1.3);
     for (let sx = -w * 0.5; sx <= w * 1.5; sx += 18) {
       const wx = sx + camX;
-      const py = this._terrainHeight(wx, h);
-      ctx.lineTo(sx, py);
+      ctx.lineTo(sx, this._terrainHeight(wx, h));
     }
     ctx.lineTo(w * 1.5, h * 1.3);
     ctx.closePath();
     ctx.fill();
 
-    // Sunlit ridge stroke
-    ctx.strokeStyle = 'rgba(251, 191, 36, 0.32)';
+    ctx.strokeStyle = 'rgba(251, 191, 36, 0.36)';
     ctx.lineWidth = 2;
     ctx.beginPath();
     for (let sx = -w * 0.5; sx <= w * 1.5; sx += 18) {
@@ -1352,29 +1282,36 @@ class OneWheelLeftGame {
     }
     ctx.stroke();
 
-    // 4. Predecessors' Tracks during orbital pull-back
-    if (this.cameraZoomOut > 0.05) {
-      ctx.strokeStyle = `rgba(252, 211, 77, ${this.cameraZoomOut * 0.35})`;
-      ctx.lineWidth = 3;
-      for (const offset of [-65, 55, 115]) {
-        ctx.beginPath();
-        for (let sx = -w * 0.4; sx <= w * 1.4; sx += 30) {
-          const wx = sx + camX;
-          const py = this._terrainHeight(wx, h) + offset;
-          if (sx === -w * 0.4) ctx.moveTo(sx, py);
-          else ctx.lineTo(sx, py);
-        }
-        ctx.stroke();
-      }
-    }
+    // Glowing Sunset Silica Beacon Crystal at Goal Crest (clear wordless destination!)
+    const bx = this.goalX - camX;
+    const by = this._terrainHeight(this.goalX, h);
+    ctx.save();
+    const beaconGlow = ctx.createRadialGradient(bx, by - 24, 3, bx, by - 24, 65);
+    beaconGlow.addColorStop(0, 'rgba(103, 232, 249, 0.9)');
+    beaconGlow.addColorStop(0.45, 'rgba(56, 189, 248, 0.35)');
+    beaconGlow.addColorStop(1, 'rgba(56, 189, 248, 0)');
+    ctx.fillStyle = beaconGlow;
+    ctx.beginPath();
+    ctx.arc(bx, by - 24, 65, 0, Math.PI * 2);
+    ctx.fill();
 
-    // 5. Luminous White-Blue Silica Trench & Floating Crystal Sparkles
+    ctx.fillStyle = '#a5f3fc';
+    ctx.beginPath();
+    ctx.moveTo(bx, by - 46);
+    ctx.lineTo(bx + 11, by - 24);
+    ctx.lineTo(bx, by - 4);
+    ctx.lineTo(bx - 11, by - 24);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+
+    // Luminous Silica Trench
     if (this.trenchPoints.length > 1) {
       ctx.save();
       ctx.strokeStyle = '#a5f3fc';
       ctx.shadowColor = '#38bdf8';
-      ctx.shadowBlur = 20;
-      ctx.lineWidth = 6.5;
+      ctx.shadowBlur = 22;
+      ctx.lineWidth = 7;
       ctx.lineCap = 'round';
       ctx.beginPath();
       this.trenchPoints.forEach((pt, idx) => {
@@ -1388,31 +1325,27 @@ class OneWheelLeftGame {
     }
 
     for (const sp of this.silicaSparkles) {
-      ctx.fillStyle = `rgba(165, 243, 252, ${sp.life * 0.85})`;
+      ctx.fillStyle = `rgba(165, 243, 252, ${sp.life * 0.9})`;
       ctx.beginPath();
-      ctx.arc(sp.x - camX, this._terrainHeight(sp.x, h) + sp.yOff, 2.2, 0, Math.PI * 2);
+      ctx.arc(sp.x - camX, this._terrainHeight(sp.x, h) + sp.yOff, 2.3, 0, Math.PI * 2);
       ctx.fill();
     }
 
-    // 6. Detailed NASA Spirit Rover (MER-A)
+    // NASA Spirit Rover (MER-A)
     const rx = this.roverX - camX;
     const ry = this._terrainHeight(this.roverX, h);
     const nextY = this._terrainHeight(this.roverX + 10, h);
     const slopeAngle = Math.atan2(nextY - ry, 10);
-    const bogSink = this.isBogged ? 7 : 0;
-    const shakeOffset = this.isBogged ? Math.sin(performance.now() * 0.04) * 3 : 0;
 
     ctx.save();
-    ctx.translate(rx + shakeOffset, ry + bogSink);
+    ctx.translate(rx, ry);
     ctx.rotate(slopeAngle);
 
-    // Long dramatic Martian sunset ground shadow
     ctx.fillStyle = 'rgba(8, 5, 10, 0.65)';
     ctx.beginPath();
     ctx.ellipse(-20, 4, 52, 8, 0, 0, Math.PI * 2);
     ctx.fill();
 
-    // Titanium Rocker-Bogie Suspension Frame
     ctx.strokeStyle = '#e2e8f0';
     ctx.lineWidth = 2.4;
     ctx.beginPath();
@@ -1420,14 +1353,12 @@ class OneWheelLeftGame {
     ctx.moveTo(-15, -20); ctx.lineTo(18, -20); ctx.lineTo(28, -6);
     ctx.stroke();
 
-    // Gold-Foil Warm Electronics Box + Angled Solar Wing Deck
     ctx.fillStyle = '#b45309';
     ctx.fillRect(-20, -30, 40, 12);
     ctx.strokeStyle = '#fcd34d';
     ctx.lineWidth = 1.8;
     ctx.strokeRect(-20, -30, 40, 12);
 
-    // Solar Deck Wing Plate
     ctx.fillStyle = '#0f2942';
     ctx.beginPath();
     ctx.moveTo(-30, -31); ctx.lineTo(30, -31); ctx.lineTo(24, -27); ctx.lineTo(-24, -27);
@@ -1437,7 +1368,6 @@ class OneWheelLeftGame {
     ctx.lineWidth = 1.6;
     ctx.stroke();
 
-    // High-Gain Dish Antenna at rear
     ctx.strokeStyle = '#cbd5e1';
     ctx.lineWidth = 1.8;
     ctx.beginPath();
@@ -1447,7 +1377,6 @@ class OneWheelLeftGame {
     ctx.arc(-22, -46, 8, -Math.PI * 0.75, Math.PI * 0.25);
     ctx.stroke();
 
-    // Pancam Stereo Mast looking back toward its Silica discovery
     ctx.strokeStyle = '#fcd34d';
     ctx.lineWidth = 2.5;
     ctx.beginPath();
@@ -1455,20 +1384,14 @@ class OneWheelLeftGame {
     ctx.stroke();
     ctx.fillStyle = '#f8fafc';
     ctx.fillRect(10, -63, 17, 9);
-    // Glowing cyan Pancam lens eyes
     ctx.fillStyle = '#38bdf8';
     ctx.beginPath();
     ctx.arc(13, -58.5, 2.2, 0, Math.PI * 2);
     ctx.arc(21, -58.5, 2.2, 0, Math.PI * 2);
     ctx.fill();
 
-    // 3 Detailed Machined Wheels (-28 is the dragged stuck wheel!)
     const wheelRot = this.roverX * 0.08;
-    const wheels = [
-      { x: -28, broken: true },
-      { x: 0, broken: false },
-      { x: 28, broken: false }
-    ];
+    const wheels = [{ x: -28, broken: true }, { x: 0, broken: false }, { x: 28, broken: false }];
     for (const wh of wheels) {
       ctx.save();
       ctx.translate(wh.x, -4);
@@ -1481,7 +1404,6 @@ class OneWheelLeftGame {
       ctx.lineWidth = 2.2;
       ctx.stroke();
 
-      // Wheel cleats
       ctx.lineWidth = 1.4;
       for (let sp = 0; sp < 4; sp++) {
         const a = (sp / 4) * Math.PI;
@@ -1493,12 +1415,11 @@ class OneWheelLeftGame {
       ctx.restore();
     }
 
-    // Silica dust plumes kicking up under dragged wheel
-    if (this.roverSpeed > 15 || this.isBogged) {
-      ctx.fillStyle = 'rgba(165, 243, 252, 0.8)';
+    if (Math.abs(this.roverSpeed) > 18) {
+      ctx.fillStyle = 'rgba(165, 243, 252, 0.85)';
       for (let i = 0; i < 5; i++) {
         ctx.beginPath();
-        ctx.arc(-32 - Math.random() * 18, -2 - Math.random() * 12, 2.2, 0, Math.PI * 2);
+        ctx.arc(-32 - Math.random() * 18, -2 - Math.random() * 12, 2.3, 0, Math.PI * 2);
         ctx.fill();
       }
     }
@@ -1507,12 +1428,12 @@ class OneWheelLeftGame {
     ctx.restore();
 
     if (this.ghostAlpha > 0.01) {
-      drawGhostHand(ctx, w * 0.5, h * 0.76, this.ghostAlpha, 1, true);
+      drawGhostHand(ctx, w * 0.56, h * 0.74, this.ghostAlpha, 1, true);
     }
   }
 
   getSessionMetric() {
-    const meters = Math.max(1.2, ((this.roverX - 120) * 0.045)).toFixed(1);
+    const meters = Math.max(1.5, ((this.roverX - 120) * 0.045)).toFixed(1);
     return `${meters}m Rãnh Silica • ${this.noteIdx} Nốt phổ`;
   }
 }
