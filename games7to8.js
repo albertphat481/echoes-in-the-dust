@@ -957,6 +957,16 @@ class RiseZeroGGame {
       '★ ORION MPCV',
       '★ ARTEMIS II'
     ];
+    const meanings = [
+      '1968 APOLLO 8 EARTHRISE • Cảm hứng bức ảnh Trái Đất mọc lịch sử',
+      '1969 APOLLO 11 FOOTPRINT • Dấu chân xám sau lưng nối tiếp di sản Mặt Trăng',
+      'LUCAS YE (8 TUỔI) • Nhà thiết kế nhí chiến thắng cuộc thi linh vật NASA',
+      'THE EARTH CAP • Mũ đại dương xanh & lục địa nhắc nhớ ngôi nhà chung',
+      '7 STARS & 2 ROCKETS • Vành mũ đen thêu 7 ngôi sao & 2 tên lửa khát vọng',
+      'ORION ZERO-G INDICATOR • Vật chỉ thị trạng thái không trọng lực (0.00 G)',
+      '2026 ARTEMIS II • Hành trình đưa phi hành đoàn bay vòng quanh Mặt Trăng'
+    ];
+    this.activeBanner = null;
     this.starNotes = Array.from({ length: 7 }, (_, i) => {
       const a = (i / 7) * Math.PI * 2 - Math.PI / 2;
       return {
@@ -967,6 +977,7 @@ class RiseZeroGGame {
         y: cy + Math.sin(a) * ry,
         glyph: '★',
         tag: tags[i],
+        meaning: meanings[i],
         collected: false,
         bloom: 0,
         phase: i * 0.95
@@ -1027,6 +1038,7 @@ class RiseZeroGGame {
     if (uncollected) {
       uncollected.collected = true;
       uncollected.bloom = 1.0;
+      this.activeBanner = { text: uncollected.meaning, alpha: 1.0 };
     }
     this.chimesCollected = Math.min(this.targetChimes, this.chimesCollected + 1);
     this._triggerJoyBurst(x, y, this.chimesCollected);
@@ -1058,6 +1070,7 @@ class RiseZeroGGame {
     if (hitNote) {
       hitNote.collected = true;
       hitNote.bloom = 1.0;
+      this.activeBanner = { text: hitNote.meaning, alpha: 1.0 };
       // Gently propel Rise toward that note in Zero-G
       const dx = hitNote.x - this.plush.x;
       const dy = hitNote.y - this.plush.y;
@@ -1170,6 +1183,7 @@ class RiseZeroGGame {
         if (d < this.plush.r + 34) {
           n.collected = true;
           n.bloom = 1.0;
+          this.activeBanner = { text: n.meaning, alpha: 1.0 };
           this.chimesCollected = Math.min(this.targetChimes, this.chimesCollected + 1);
           this._triggerJoyBurst(n.x, n.y, this.chimesCollected);
           if (this.chimesCollected >= this.targetChimes && !this.ending) {
@@ -1179,6 +1193,10 @@ class RiseZeroGGame {
         }
       }
     });
+
+    if (this.activeBanner && this.activeBanner.alpha > 0) {
+      this.activeBanner.alpha = Math.max(0, this.activeBanner.alpha - dt * 0.28);
+    }
 
     // Zero-G Physics for Rise
     if (!this.isDragging && !this.ending) {
@@ -1637,7 +1655,29 @@ class RiseZeroGGame {
       ctx.restore();
     });
 
-    // 9. Subtle Ghost Reticle Prompt before first interaction
+    // 9. Floating Symbolism Callout Pill when a Star Note is collected
+    if (this.activeBanner && this.activeBanner.alpha > 0.02) {
+      const a = Math.min(1, this.activeBanner.alpha * 1.4);
+      const pillY = Math.max(106, cy - cupR * 0.82);
+      ctx.save();
+      ctx.globalAlpha = a;
+      ctx.font = w < 640 ? '600 11px "Be Vietnam Pro", sans-serif' : '600 12.5px "Be Vietnam Pro", sans-serif';
+      const tw = Math.min(w - 32, ctx.measureText(this.activeBanner.text).width + 32);
+      ctx.fillStyle = 'rgba(8, 13, 26, 0.88)';
+      ctx.strokeStyle = 'rgba(252, 211, 77, 0.65)';
+      ctx.lineWidth = 1.2;
+      ctx.beginPath();
+      ctx.roundRect(cx - tw * 0.5, pillY - 17, tw, 34, 17);
+      ctx.fill();
+      ctx.stroke();
+      ctx.fillStyle = '#fef3c7';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(this.activeBanner.text, cx, pillY, tw - 20);
+      ctx.restore();
+    }
+
+    // 10. Subtle Ghost Reticle Prompt before first interaction
     if (this.ghostAlpha > 0.02 && typeof drawGhostHand === 'function') {
       drawGhostHand(ctx, this.plush.x, this.plush.y, this.ghostAlpha, 1.1, false);
     }

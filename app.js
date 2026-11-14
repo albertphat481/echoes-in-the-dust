@@ -299,6 +299,7 @@ class EchoesApp {
     this.dossierModal = document.getElementById('dossier-modal');
     this.quizDeckModal = document.getElementById('quiz-deck-modal');
     this.guideModal = document.getElementById('guide-modal');
+    this.lightboxModal = document.getElementById('img-lightbox');
 
     // Build 9 wordless constellation dots + Prev/Next touch buttons for tablets & phones
     this.navStars = [];
@@ -459,6 +460,32 @@ class EchoesApp {
     document.getElementById('btn-close-dossier').addEventListener('click', () => this.hideModals());
     document.getElementById('btn-close-quiz-deck').addEventListener('click', () => this.hideModals());
     document.getElementById('btn-close-guide').addEventListener('click', () => this.hideModals());
+
+    // Fullscreen Image Lightbox for NASA Archive Photos & Rise Infographic
+    const nasaImgEl = document.getElementById('shard-nasa-img');
+    if (nasaImgEl) {
+      nasaImgEl.addEventListener('click', () => {
+        const cap = document.getElementById('shard-nasa-title')?.textContent || '';
+        if (nasaImgEl.src) this.openLightbox(nasaImgEl.src, cap);
+      });
+    }
+    const deckImgEl = document.getElementById('deck-img');
+    if (deckImgEl) {
+      deckImgEl.addEventListener('click', () => {
+        const cap = document.getElementById('deck-question-vi')?.textContent || '';
+        if (deckImgEl.src) this.openLightbox(deckImgEl.src, cap);
+      });
+    }
+    if (this.lightboxModal) {
+      this.lightboxModal.addEventListener('click', () => this.closeLightbox());
+    }
+    const closeLbBtn = document.getElementById('btn-close-lightbox');
+    if (closeLbBtn) {
+      closeLbBtn.addEventListener('click', e => {
+        e.stopPropagation();
+        this.closeLightbox();
+      });
+    }
 
     // Quiz Deck Prev / Next Navigation
     document.getElementById('btn-prev-quiz').addEventListener('click', () => {
@@ -744,7 +771,7 @@ class EchoesApp {
     container.innerHTML = `
       <div class="quiz-header-bar">
         <span class="quiz-tag">KIỂM CHỨNG TRI THỨC ${isSolved ? '• ✓ ĐÃ GIẢI MÃ' : ''}</span>
-        <button type="button" class="quiz-deck-link" id="btn-expand-quiz-deck">Bộ 7 câu hỏi ↗</button>
+        <button type="button" class="quiz-deck-link" id="btn-expand-quiz-deck">Bộ 8 câu hỏi ↗</button>
       </div>
       <div class="quiz-card-layout">
         <div>
@@ -808,8 +835,8 @@ class EchoesApp {
     const shards = this.unlockedShards.size;
     const quizzes = this.solvedQuizzes.size;
     const total = shards + quizzes;
-    if (shards >= 8 && quizzes >= 7) return 'Người Giữ Ký Ức VantaLumen ★';
-    if (total >= 10) return 'Kỹ Sư Viễn Thám NASA';
+    if (shards >= 9 && quizzes >= 8) return 'Người Giữ Ký Ức VantaLumen ★';
+    if (total >= 11) return 'Kỹ Sư Viễn Thám NASA';
     if (total >= 5) return 'Nhà Khám Phá Bụi Sao';
     return 'Người Lắng Nghe Khởi Đầu';
   }
@@ -1053,7 +1080,26 @@ class EchoesApp {
     this.dossierModal.classList.add('visible');
   }
 
+  openLightbox(src, caption = '') {
+    if (!this.lightboxModal || !src) return;
+    const imgEl = document.getElementById('lightbox-img');
+    const capEl = document.getElementById('lightbox-caption');
+    if (imgEl) imgEl.src = src;
+    if (capEl) capEl.textContent = caption;
+    window.soundEngine.playUITick();
+    this.lightboxModal.classList.add('visible');
+  }
+
+  closeLightbox() {
+    if (!this.lightboxModal) return;
+    this.lightboxModal.classList.remove('visible');
+  }
+
   hideModals() {
+    if (this.lightboxModal && this.lightboxModal.classList.contains('visible')) {
+      this.closeLightbox();
+      return;
+    }
     const anyVisible =
       this.memoryModal.classList.contains('visible') ||
       this.galleryModal.classList.contains('visible') ||
@@ -1230,6 +1276,16 @@ class EchoesApp {
       ctx.arc(0, 0, 2.5, 0, Math.PI * 2);
       ctx.fill();
       ctx.strokeRect(-7, -7, 14, 14);
+    } else if (id === 'rise-zero-g') {
+      ctx.beginPath();
+      ctx.arc(0, 2, 8.5, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.ellipse(0, -4.5, 8, 3.2, 0, Math.PI, Math.PI * 2);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(0, -4.5, 1.5, 0, Math.PI * 2);
+      ctx.fill();
     } else {
       ctx.rotate(-0.3);
       ctx.beginPath();
@@ -1382,10 +1438,10 @@ class EchoesApp {
     ctx.textAlign = 'right';
     ctx.fillStyle = '#fcd34d';
     ctx.font = '600 13px "JetBrains Mono", monospace';
-    ctx.fillText('DOC-ID // VL-8M-2026', w - 88, 98);
+    ctx.fillText('DOC-ID // VL-9M-2026', w - 88, 98);
     ctx.fillStyle = '#64748b';
     ctx.font = '400 12px "JetBrains Mono", monospace';
-    ctx.fillText('TELEMETRY VERIFIED • JPL / APOLLO / VOYAGER', w - 88, 120);
+    ctx.fillText('TELEMETRY VERIFIED • JPL / APOLLO / ARTEMIS II', w - 88, 120);
     ctx.restore();
 
     ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
@@ -1451,19 +1507,19 @@ class EchoesApp {
 
     ctx.fillStyle = '#64748b';
     ctx.font = '500 12.5px "JetBrains Mono", monospace';
-    ctx.fillText('HỒ SƠ 08 SỨ MỆNH PHẦN CỨNG NASA TRONG BỘ SƯU TẬP', 88, 412);
+    ctx.fillText('HỒ SƠ 09 SỨ MỆNH PHẦN CỨNG NASA & ARTEMIS II TRONG BỘ SƯU TẬP', 88, 408);
 
     const gridX = 88;
-    const gridY = 432;
-    const gapX = 20;
-    const gapY = 20;
-    const cardW = (stripW - gapX * 3) / 4;
-    const cardH = 200;
+    const gridY = 426;
+    const gapX = 18;
+    const gapY = 14;
+    const cardW = (stripW - gapX * 2) / 3;
+    const cardH = 142;
 
-    const coreShards = window.MEMORY_SHARDS.slice(0, 8);
+    const coreShards = window.MEMORY_SHARDS.slice(0, 9);
     coreShards.forEach((shard, idx) => {
-      const col = idx % 4;
-      const row = Math.floor(idx / 4);
+      const col = idx % 3;
+      const row = Math.floor(idx / 3);
       const bx = gridX + col * (cardW + gapX);
       const by = gridY + row * (cardH + gapY);
       const unlocked = this.unlockedShards.has(shard.id);
@@ -1482,41 +1538,41 @@ class EchoesApp {
 
       ctx.fillStyle = unlocked ? '#fcd34d' : '#475569';
       ctx.beginPath();
-      ctx.arc(bx + 20, by + 26, 3.5, 0, Math.PI * 2);
+      ctx.arc(bx + 18, by + 22, 3.5, 0, Math.PI * 2);
       ctx.fill();
 
       ctx.fillStyle = unlocked ? '#fcd34d' : '#64748b';
-      ctx.font = '500 11px "JetBrains Mono", monospace';
-      ctx.fillText(`${shard.number}  •  ${unlocked ? 'ĐÃ ĐÁNH THỨC' : 'CHƯA KHÁM PHÁ'}`, bx + 31, by + 30);
+      ctx.font = '500 10.5px "JetBrains Mono", monospace';
+      ctx.fillText(`${shard.number}  •  ${unlocked ? 'ĐÃ ĐÁNH THỨC' : 'CHƯA KHÁM PHÁ'}`, bx + 28, by + 26);
 
-      this._drawMissionSealIcon(ctx, shard.id, bx + cardW - 26, by + 28, unlocked);
+      this._drawMissionSealIcon(ctx, shard.id, bx + cardW - 24, by + 24, unlocked);
 
       const parts = shard.title.split('—');
       const enTitle = (parts[0] || shard.title).trim();
       const viTitle = (parts[1] || '').trim();
 
       ctx.fillStyle = unlocked ? '#f8fafc' : '#94a3b8';
-      ctx.font = '700 18px "Space Grotesk", "Be Vietnam Pro", sans-serif';
-      ctx.fillText(enTitle, bx + 18, by + 62);
+      ctx.font = '700 17px "Space Grotesk", "Be Vietnam Pro", sans-serif';
+      ctx.fillText(enTitle, bx + 18, by + 54);
 
       ctx.fillStyle = unlocked ? '#eab308' : '#64748b';
-      ctx.font = '500 13.5px "Be Vietnam Pro", sans-serif';
-      ctx.fillText(viTitle, bx + 18, by + 84);
+      ctx.font = '500 13px "Be Vietnam Pro", sans-serif';
+      ctx.fillText(viTitle, bx + 18, by + 74);
 
       ctx.fillStyle = unlocked ? '#cbd5e1' : '#475569';
-      ctx.font = '400 12.5px "Be Vietnam Pro", sans-serif';
-      this._wrapCanvasText(ctx, shard.subtitle, bx + 18, by + 112, cardW - 36, 18, 2);
+      ctx.font = '400 12px "Be Vietnam Pro", sans-serif';
+      this._wrapCanvasText(ctx, shard.subtitle, bx + 18, by + 98, cardW - 36, 16, 1);
 
       ctx.strokeStyle = 'rgba(255, 255, 255, 0.06)';
       ctx.beginPath();
-      ctx.moveTo(bx + 18, by + 158);
-      ctx.lineTo(bx + cardW - 18, by + 158);
+      ctx.moveTo(bx + 18, by + 112);
+      ctx.lineTo(bx + cardW - 18, by + 112);
       ctx.stroke();
 
       const keySpec = shard.specs && shard.specs[1] ? shard.specs[1].value : shard.mission;
       ctx.fillStyle = unlocked ? '#7dd3fc' : '#475569';
-      ctx.font = '500 11.5px "JetBrains Mono", monospace';
-      ctx.fillText(keySpec, bx + 18, by + 180, cardW - 36);
+      ctx.font = '500 11px "JetBrains Mono", monospace';
+      ctx.fillText(keySpec, bx + 18, by + 130, cardW - 36);
     });
 
     const dateStr = new Date().toLocaleDateString('vi-VN');

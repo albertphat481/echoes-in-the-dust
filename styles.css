@@ -1489,8 +1489,8 @@ html, body {
 
 .mission-mini-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 7px 12px;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 7px 10px;
   font-size: 12px;
   color: #cbd5e1;
 }
@@ -2175,4 +2175,71 @@ html, body {
     display: none;
   }
 }
+
+/* ============================================================================
+ * FULLSCREEN LIGHTBOX ZOOM FOR NASA ARCHIVE PHOTOS & RISE INFOGRAPHIC
+ * ==========================================================================*/
+#shard-nasa-img,
+.deck-banner-img {
+  cursor: zoom-in;
+}
+
+#img-lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 95;
+  background: rgba(3, 6, 14, 0.92);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 16px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease;
+  cursor: zoom-out;
+}
+
+#img-lightbox.visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+#img-lightbox img {
+  max-width: 95vw;
+  max-height: 84dvh;
+  object-fit: contain;
+  border-radius: 12px;
+  border: 1px solid rgba(252, 211, 77, 0.38);
+  box-shadow: 0 28px 90px rgba(0, 0, 0, 0.85);
+}
+
+.lightbox-close {
+  position: absolute;
+  top: calc(18px + env(safe-area-inset-top, 0px));
+  right: calc(18px + env(safe-area-inset-right, 0px));
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: rgba(15, 23, 42, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  color: #f8fafc;
+  font-size: 18px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.lightbox-caption {
+  margin-top: 12px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: #e2e8f0;
+  text-align: center;
+  max-width: 88vw;
+}
+
 

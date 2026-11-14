@@ -6,7 +6,7 @@
 window.MEMORY_SHARDS = [
   {
     id: 'under-the-dust',
-    number: '01 / 08',
+    number: '01 / 09',
     title: 'UNDER THE DUST — Nhịp Tim Dưới Lớp Bụi',
     subtitle: 'Trạm đổ bộ InSight & Máy đo địa chấn SEIS (Elysium Planitia, Sao Hỏa)',
     mission: 'NASA Discovery Program • 2018–2022',
@@ -61,7 +61,7 @@ window.MEMORY_SHARDS = [
   },
   {
     id: 'still-there',
-    number: '02 / 08',
+    number: '02 / 09',
     title: 'STILL THERE — Vẫn Còn Ở Đó',
     subtitle: 'Gương phản xạ Laser Mặt Trăng (LRRR — Apollo 11, 14, 15)',
     mission: 'NASA Apollo Program • 1969–Nay',
@@ -115,7 +115,7 @@ window.MEMORY_SHARDS = [
   },
   {
     id: 'one-wheel-left',
-    number: '03 / 08',
+    number: '03 / 09',
     title: 'ONE WHEEL LEFT — Một Bánh Còn Lại',
     subtitle: 'Rover tự hành Spirit (MER-A) & Rãnh Silica tại Home Plate',
     mission: 'NASA Mars Exploration Rover • 2004–2010',
@@ -168,7 +168,7 @@ window.MEMORY_SHARDS = [
   },
   {
     id: 'unsent',
-    number: '04 / 08',
+    number: '04 / 09',
     title: 'UNSENT — Những Điều Chưa Kịp Gửi',
     subtitle: 'Rover tự hành Opportunity (MER-B) & Bộ nhớ Flash 256 MB',
     mission: 'NASA Mars Exploration Rover • 2004–2018',
@@ -218,7 +218,7 @@ window.MEMORY_SHARDS = [
   },
   {
     id: 'moon-still-rings',
-    number: '05 / 08',
+    number: '05 / 09',
     title: 'MOON STILL RINGS — Mặt Trăng Vẫn Ngân',
     subtitle: 'Thí nghiệm Địa chấn Thụ động Apollo (PSE) & Tầng tàu va chạm',
     mission: 'NASA Apollo 12, 14, 15, 16 • 1969–1977',
@@ -264,7 +264,7 @@ window.MEMORY_SHARDS = [
   },
   {
     id: 'eternal-footprint',
-    number: '06 / 08',
+    number: '06 / 09',
     title: 'ETERNAL FOOTPRINT — Dấu Chân Bất Tận',
     subtitle: 'Dấu giày trên lớp đất Regolith & Camera tàu quỹ đạo LRO',
     mission: 'NASA Apollo & Lunar Reconnaissance Orbiter • 1969–Nay',
@@ -310,7 +310,7 @@ window.MEMORY_SHARDS = [
   },
   {
     id: 'pale-blue-dot',
-    number: '07 / 08',
+    number: '07 / 09',
     title: 'PALE BLUE DOT — Chấm Xanh Mờ',
     subtitle: 'Tàu thăm dò Voyager 1 & Bức ảnh Gia Đình Hệ Mặt Trời (6 tỷ km)',
     mission: 'NASA Voyager Interstellar Mission • 1977–Nay',
@@ -357,7 +357,7 @@ window.MEMORY_SHARDS = [
   },
   {
     id: 'grand-finale',
-    number: '08 / 08',
+    number: '08 / 09',
     title: 'GRAND FINALE — Cú Lao Cuối Cùng',
     subtitle: 'Tàu quỹ đạo Cassini & 22 Quỹ Đạo Lặn Vào Sao Thổ',
     mission: 'NASA / ESA / ASI Cassini–Huygens • 1997–2017',
