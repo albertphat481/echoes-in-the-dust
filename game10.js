@@ -646,7 +646,7 @@ class SpiritRescueGame {
     ctx.fillText(
       isOutbound ? `SPACEX STARSHIP • EARTH → MARS • ${km}M / 225M KM` : `STARSHIP CARGO: SPIRIT • MARS → EARTH • ${km}M KM`,
       w * 0.5,
-      h * 0.16
+      Math.max(122, h * 0.21)
     );
     ctx.restore();
   }
@@ -874,7 +874,7 @@ class SpiritRescueGame {
       ? ['1. To Mars', '2. Lift Spirit', '3. To Earth', '4. Swap Motor', '5. Charge']
       : ['1. Bay Sao Hỏa', '2. Bế Spirit', '3. Bay Về', '4. Thay Motor', '5. Sạc Pin'];
     const activeIdx = phases.indexOf(this.phase);
-    const y = h * 0.11;
+    const y = Math.max(88, h * 0.135);
     const stepW = Math.min(82, (w - 40) / 5);
     const startX = w * 0.5 - (stepW * 5) * 0.5 + stepW * 0.5;
 

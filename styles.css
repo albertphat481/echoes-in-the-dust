@@ -1770,7 +1770,7 @@ html, body {
 
 .deck-banner-img {
   width: 100%;
-  max-height: 340px;
+  max-height: min(260px, 34vh);
   object-fit: contain;
   display: block;
   margin: 0 auto;
@@ -2028,7 +2028,7 @@ html, body {
   .nav-star::after {
     width: 12px;
   }
-  #btn-rise-mascot {
+  #mascot-dock {
     bottom: calc(18px + env(safe-area-inset-bottom, 0px));
     left: calc(16px + env(safe-area-inset-left, 0px));
   }

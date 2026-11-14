@@ -614,23 +614,24 @@ class EchoesApp {
     } else if (this.guideModal.classList.contains('visible')) {
       this.renderGuide(this.currentIndex);
     } else if (this.quizDeckModal.classList.contains('visible')) {
-      this.renderQuizDeckCard();
+      this.renderQuizDeckSlide(this.currentDeckQuizIndex);
     }
   }
 
   _syncAudioButton() {
     const btnAudio = document.getElementById('btn-audio');
     if (!btnAudio) return;
+    const en = window.VantaI18n && window.VantaI18n.isEn();
     const muted = window.soundEngine.muted;
     const awaiting = !muted && window.soundEngine.needsGesture();
     btnAudio.classList.toggle('audio-awaiting', awaiting);
     btnAudio.style.opacity = muted ? '0.45' : '1';
     if (muted) {
-      btnAudio.setAttribute('data-tooltip', 'Âm Thanh Đang Tắt (M)');
+      btnAudio.setAttribute('data-tooltip', en ? 'Sound Muted (M)' : 'Âm Thanh Đang Tắt (M)');
     } else if (awaiting) {
-      btnAudio.setAttribute('data-tooltip', 'Chạm để Bật Âm Thanh (Trình duyệt chặn tự phát)');
+      btnAudio.setAttribute('data-tooltip', en ? 'Tap to Enable Sound' : 'Chạm để Bật Âm Thanh (Trình duyệt chặn tự phát)');
     } else {
-      btnAudio.setAttribute('data-tooltip', 'Âm Thanh (M)');
+      btnAudio.setAttribute('data-tooltip', en ? 'Sound (M)' : 'Âm Thanh (M)');
     }
   }
 
