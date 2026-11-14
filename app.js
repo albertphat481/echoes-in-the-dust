@@ -864,82 +864,145 @@ class EchoesApp {
   }
 
   exportShardCardPNG(index) {
+    window.soundEngine.playUIChime(7);
     const shard = window.MEMORY_SHARDS[index];
     const c = document.createElement('canvas');
-    c.width = 1080;
-    c.height = 620;
+    c.width = 1280;
+    c.height = 760;
     const ctx = c.getContext('2d');
 
-    const bg = ctx.createLinearGradient(0, 0, 1080, 620);
-    bg.addColorStop(0, '#070b16');
-    bg.addColorStop(1, '#121b36');
+    const bg = ctx.createLinearGradient(0, 0, 1280, 760);
+    bg.addColorStop(0, '#050811');
+    bg.addColorStop(0.55, '#0b1429');
+    bg.addColorStop(1, '#111d3a');
     ctx.fillStyle = bg;
-    ctx.fillRect(0, 0, 1080, 620);
+    ctx.fillRect(0, 0, 1280, 760);
 
-    const glow = ctx.createRadialGradient(880, 140, 20, 880, 140, 360);
-    glow.addColorStop(0, 'rgba(245, 158, 11, 0.25)');
+    // Subtle starfield
+    for (let i = 0; i < 65; i++) {
+      const sx = ((i * 193 + 37) % 1220) + 30;
+      const sy = ((i * 277 + 53) % 700) + 30;
+      ctx.fillStyle = `rgba(254, 243, 199, ${0.12 + (i % 4) * 0.06})`;
+      ctx.beginPath();
+      ctx.arc(sx, sy, i % 3 === 0 ? 1.4 : 0.85, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    const glow = ctx.createRadialGradient(1120, 125, 20, 1120, 125, 420);
+    glow.addColorStop(0, 'rgba(245, 158, 11, 0.22)');
     glow.addColorStop(1, 'rgba(245, 158, 11, 0)');
     ctx.fillStyle = glow;
-    ctx.fillRect(0, 0, 1080, 620);
+    ctx.fillRect(0, 0, 1280, 760);
 
-    ctx.strokeStyle = 'rgba(245, 158, 11, 0.55)';
-    ctx.lineWidth = 3;
-    ctx.strokeRect(28, 28, 1024, 564);
+    ctx.strokeStyle = 'rgba(245, 158, 11, 0.6)';
+    ctx.lineWidth = 2.5;
+    ctx.strokeRect(28, 28, 1224, 704);
+    ctx.strokeStyle = 'rgba(254, 243, 199, 0.14)';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(42, 42, 1196, 676);
 
-    ctx.fillStyle = '#fcd34d';
-    ctx.font = '600 18px "JetBrains Mono", monospace';
-    ctx.fillText(`TEAM VANTALUMEN // NASA SPACE APPS CHALLENGE • MẢNH VỠ KÝ ỨC ${shard.number}`, 64, 82);
+    ctx.fillStyle = '#38bdf8';
+    ctx.font = '600 15px "JetBrains Mono", monospace';
+    ctx.fillText(`TEAM VANTALUMEN // NASA SPACE APPS • MẢNH VỠ KÝ ỨC ${shard.number}`, 74, 92);
 
     ctx.fillStyle = '#94a3b8';
-    ctx.font = '16px "JetBrains Mono", monospace';
-    ctx.fillText(shard.mission, 64, 112);
+    ctx.font = '15px "JetBrains Mono", monospace';
+    ctx.fillText(shard.mission, 74, 118);
 
     ctx.fillStyle = '#fef3c7';
-    ctx.font = '600 42px Georgia, serif';
-    ctx.fillText(shard.title, 64, 175);
+    ctx.font = '600 34px Georgia, serif';
+    ctx.fillText(shard.title, 74, 168, 940);
 
     ctx.fillStyle = '#f59e0b';
-    ctx.font = '500 22px Inter, sans-serif';
-    ctx.fillText(shard.subtitle, 64, 212);
+    ctx.font = '500 19px Inter, sans-serif';
+    ctx.fillText(shard.subtitle, 74, 204, 940);
 
+    // Gold divider
+    ctx.strokeStyle = 'rgba(245, 158, 11, 0.35)';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(74, 228);
+    ctx.lineTo(1000, 228);
+    ctx.stroke();
+
+    // Story text with safe vertical bounds (y: 268..475)
     ctx.fillStyle = '#e2e8f0';
-    ctx.font = '21px Inter, sans-serif';
+    ctx.font = '20px Inter, sans-serif';
     const words = shard.story.split(' ');
     let line = '';
-    let y = 275;
+    let y = 268;
+    const maxY = 468;
     for (const w of words) {
       const test = line + w + ' ';
-      if (ctx.measureText(test).width > 940) {
-        ctx.fillText(line, 64, y);
+      if (ctx.measureText(test).width > 1120) {
+        if (y <= maxY) ctx.fillText(line.trim(), 74, y);
         line = w + ' ';
-        y += 34;
+        y += 32;
       } else {
         line = test;
       }
     }
-    if (line) ctx.fillText(line, 64, y);
+    if (line && y <= maxY) ctx.fillText(line.trim(), 74, y);
 
+    // Session Telemetry + Live Ephemeris Box
     const metric =
       this.currentGame && this.currentGame.getSessionMetric
         ? this.currentGame.getSessionMetric()
         : 'Đã ghi nhận';
-    ctx.fillStyle = 'rgba(245, 158, 11, 0.14)';
-    ctx.fillRect(64, 470, 952, 74);
-    ctx.strokeStyle = '#f59e0b';
+    const eph = window.NASA_TELEMETRY ? window.NASA_TELEMETRY.getLiveMissionTelemetry(shard.id) : null;
+
+    ctx.fillStyle = 'rgba(13, 21, 42, 0.88)';
+    ctx.fillRect(74, 510, 1132, 134);
+    ctx.strokeStyle = 'rgba(245, 158, 11, 0.5)';
     ctx.lineWidth = 1.5;
-    ctx.strokeRect(64, 470, 952, 74);
+    ctx.strokeRect(74, 510, 1132, 134);
 
     ctx.fillStyle = '#fcd34d';
-    ctx.font = '600 18px "JetBrains Mono", monospace';
-    ctx.fillText(`DỮ LIỆU CỦA BẠN: ${metric}`, 88, 504);
-    ctx.fillStyle = '#94a3b8';
-    ctx.font = '15px "JetBrains Mono", monospace';
-    ctx.fillText(`Nguồn tư liệu: ${shard.sourceUrl}`, 88, 529);
+    ctx.font = '600 17px "JetBrains Mono", monospace';
+    ctx.fillText(`DỮ LIỆU LƯỢT CHƠI: ${metric}`, 100, 548, 1080);
 
-    const link = document.createElement('a');
-    link.download = `Vantalumen-${shard.id}.png`;
-    link.href = c.toDataURL('image/png');
-    link.click();
+    if (eph) {
+      ctx.fillStyle = '#38bdf8';
+      ctx.font = '15px "JetBrains Mono", monospace';
+      ctx.fillText(eph.line, 100, 582, 1080);
+    }
+
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '14px "JetBrains Mono", monospace';
+    ctx.fillText(`Nguồn NASA: ${shard.sourceUrl}`, 100, 618, 1080);
+
+    ctx.fillStyle = '#64748b';
+    ctx.font = '13px "JetBrains Mono", monospace';
+    ctx.fillText('VANTALUMEN • KEEPING SPACE EXPLORATION STORIES ALIVE', 74, 686);
+
+    const download = () => {
+      const link = document.createElement('a');
+      link.download = `Vantalumen-${shard.id}.png`;
+      link.href = c.toDataURL('image/png');
+      link.click();
+    };
+
+    const logo = new Image();
+    logo.onload = () => {
+      try {
+        ctx.save();
+        ctx.strokeStyle = 'rgba(245, 158, 11, 0.7)';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(1140, 126, 56, 0, Math.PI * 2);
+        ctx.stroke();
+
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.96)';
+        ctx.beginPath();
+        ctx.arc(1140, 126, 44, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.drawImage(logo, 1140 - 33, 126 - 33, 66, 66);
+        ctx.restore();
+      } catch {}
+      download();
+    };
+    logo.onerror = download;
+    logo.src = 'assets/vantalumen_logo.png';
   }
 
   exportCertificatePNG() {
