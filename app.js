@@ -318,8 +318,8 @@ class EchoesApp {
       '04 · Opportunity',
       '05 · Apollo 12',
       '06 · Tranquility',
-      '07 · Voyager 1',
-      '08 · Cassini'
+      '07 · Rise ★',
+      '08 · Spirit Rescue ★'
     ];
 
     const prevBtn = document.createElement('button');
