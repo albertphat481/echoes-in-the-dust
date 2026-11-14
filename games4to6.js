@@ -547,7 +547,7 @@ class MoonStillRingsGame {
 
   onPointerMove(x) {
     if (this.swiped) return;
-    if (Math.abs(x - this.downX) > 75) {
+    if (Math.abs(x - this.downX) > 55) {
       this.swiped = true;
       this.isEarthMode = !this.isEarthMode;
       window.soundEngine.playPentatonicNote(this.isEarthMode ? 0 : 5, 0.12, 0.6);

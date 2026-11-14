@@ -358,8 +358,8 @@ class UnderTheDustGame {
       }
 
       this.holdTime = 0;
-      const radius = Math.min(72, 28 + speed * 26);
-      this._eraseDustAt(x, y, radius, 0.6);
+      const radius = Math.min(84, 36 + speed * 28);
+      this._eraseDustAt(x, y, radius, 0.68);
 
       window.soundEngine.setBrushWind(Math.min(1, speed * 0.65), Math.min(1, speed * 0.45));
 
@@ -761,9 +761,9 @@ class StillThereGame {
     for (const s of this.sites) {
       const sx = cx + s.u * r;
       const sy = cy + s.v * r;
-      if (Math.hypot(x - sx, y - sy) < 48) {
-        tx = x * 0.55 + sx * 0.45;
-        ty = y * 0.55 + sy * 0.45;
+      if (Math.hypot(x - sx, y - sy) < 64) {
+        tx = x * 0.48 + sx * 0.52;
+        ty = y * 0.48 + sy * 0.52;
         break;
       }
     }
@@ -792,7 +792,7 @@ class StillThereGame {
     }
 
     const waveQuality = 1 - Math.abs(this.chargePhase - 0.72);
-    const hitSite = bestSite && minDist < r * 0.34 && (waveQuality > 0.35 || !this.sites.some(s => s.lit));
+    const hitSite = bestSite && minDist < r * 0.42 && (waveQuality > 0.25 || !this.sites.some(s => s.lit));
 
     const targetX = hitSite ? bestSite.sx : this.aim.x;
     const targetY = hitSite ? bestSite.sy : this.aim.y;
@@ -1117,10 +1117,10 @@ class OneWheelLeftGame {
     if (this.isBogged) {
       this.shakeCount++;
       window.soundEngine.playPentatonicNote(1 + (this.shakeCount % 3), 0.14, 0.4, 0, 'triangle');
-      if (this.shakeCount >= 3) {
+      if (this.shakeCount >= 2) {
         this.isBogged = false;
         this.continuousPushTime = 0;
-        this.roverSpeed = 65;
+        this.roverSpeed = 72;
       }
       return;
     }
@@ -1148,9 +1148,9 @@ class OneWheelLeftGame {
     if (!this.isBogged && sunsetPhase < 0.7) {
       if (this.isPushing) {
         this.continuousPushTime += dt;
-        this.roverSpeed = Math.min(115, this.roverSpeed + dt * 140);
+        this.roverSpeed = Math.min(120, this.roverSpeed + dt * 150);
 
-        if (this.continuousPushTime > 4.2) {
+        if (this.continuousPushTime > 5.5) {
           this.isBogged = true;
           this.isPushing = false;
           this.shakeCount = 0;

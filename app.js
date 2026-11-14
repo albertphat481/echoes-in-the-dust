@@ -139,6 +139,7 @@ class EchoesApp {
 
     this.canvas.addEventListener('pointerdown', e => {
       window.soundEngine.init();
+      this.idleTime = 0;
       if (this.paused || !this.currentGame) return;
       this.canvas.setPointerCapture(e.pointerId);
       const { x, y } = getXY(e);
@@ -153,6 +154,7 @@ class EchoesApp {
       const dt = Math.max(4, now - this.lastPointer.t);
       const vx = (x - this.lastPointer.x) / dt;
       const vy = (y - this.lastPointer.y) / dt;
+      if (Math.hypot(vx, vy) > 0.05) this.idleTime = 0;
       this.lastPointer = { x, y, t: now };
       this.currentGame.onPointerMove(x, y, vx, vy);
     });
@@ -166,12 +168,19 @@ class EchoesApp {
     this.canvas.addEventListener('pointerup', endPointer);
     this.canvas.addEventListener('pointercancel', endPointer);
 
-    // Keyboard Support: Spacebar for Hold, 1-6 for stages, I for Shard, Q for VantaLumen Quiz Deck, M for Mute
+    // Keyboard Support: Spacebar for Hold, ArrowLeft/Right & 1-6 for stages, H/Q/I/M/Esc
     window.addEventListener('keydown', e => {
+      this.idleTime = 0;
       if (e.code === 'Space' && !e.repeat && !this.paused && this.currentGame) {
         e.preventDefault();
         window.soundEngine.init();
         this.currentGame.onPointerDown(window.innerWidth * 0.5, window.innerHeight * 0.5);
+      } else if (e.key === 'ArrowRight' && !this.paused) {
+        window.soundEngine.init();
+        this.mountGame((this.currentIndex + 1) % this.gameClasses.length);
+      } else if (e.key === 'ArrowLeft' && !this.paused) {
+        window.soundEngine.init();
+        this.mountGame((this.currentIndex - 1 + this.gameClasses.length) % this.gameClasses.length);
       } else if (e.key >= '1' && e.key <= '6') {
         window.soundEngine.init();
         this.hideModals();
@@ -368,6 +377,7 @@ class EchoesApp {
       const GameClass = this.gameClasses[index];
       this.currentGame = new GameClass(this);
       this.paused = false;
+      this.idleTime = 0;
       this._refreshNavDots();
     };
 
@@ -391,6 +401,7 @@ class EchoesApp {
       localStorage.setItem('echoes_unlocked_shards', JSON.stringify([...this.unlockedShards]));
     } catch {}
     this._refreshNavDots();
+    window.soundEngine.playSuccessBloom();
 
     setTimeout(() => {
       this.showMemoryShard(this.currentIndex);
@@ -808,6 +819,10 @@ class EchoesApp {
     this.lastFrameTime = now;
 
     if (!this.paused && this.currentGame) {
+      this.idleTime = (this.idleTime || 0) + dt;
+      if (this.idleTime > 5.0 && typeof this.currentGame.ghostAlpha === 'number') {
+        this.currentGame.ghostAlpha = Math.min(0.75, this.currentGame.ghostAlpha + dt * 0.85);
+      }
       this.currentGame.update(dt);
       const w = window.innerWidth;
       const h = window.innerHeight;
