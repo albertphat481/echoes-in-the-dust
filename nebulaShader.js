@@ -284,11 +284,13 @@
         float craters = craterLayer(sp, 3.6) * 0.22;
         return base * 0.75 + canyon + craters;
       } else {
-        // Moon: Maria basins + multi-scale circular impact craters
+        // Moon: Maria basins + multi-scale circular impact craters + fine regolith
         float maria = fbm3(sp * 1.85);
-        float cLarge = craterLayer(sp, 2.8) * 0.34;
-        float cMed = craterLayer(sp + vec3(4.1, 2.3, 1.7), 6.2) * 0.18;
-        return maria * 0.58 + cLarge + cMed;
+        float cLarge = craterLayer(sp, 2.8) * 0.30;
+        float cMed = craterLayer(sp + vec3(4.1, 2.3, 1.7), 6.8) * 0.16;
+        float cMicro = craterLayer(sp + vec3(9.1, 3.7, 6.2), 14.5) * 0.075;
+        float regolith = (fbm3(sp * 18.0) - 0.5) * 0.055;
+        return maria * 0.56 + cLarge + cMed + cMicro + regolith;
       }
     }
 
@@ -329,10 +331,10 @@
       vec3 sp = rotY(rotX(N, uTilt), uSpin);
 
       // Subpixel anti-aliased limb mask
-      float aaEdge = smoothstep(1.0, 0.988, r);
+      float aaEdge = smoothstep(1.0, 0.992, r);
 
-      // Smooth finite-difference 3D bump mapping
-      float eps = 0.016;
+      // High-precision finite-difference 3D bump mapping
+      float eps = (uType == 2) ? 0.0055 : 0.009;
       float h0 = surfaceHeight(sp, uType);
       float hx = surfaceHeight(normalize(sp + vec3(eps, 0.0, 0.0)), uType);
       float hy = surfaceHeight(normalize(sp + vec3(0.0, eps, 0.0)), uType);
@@ -341,7 +343,7 @@
       grad -= sp * dot(grad, sp);
       vec3 worldGrad = rotX(rotY(grad, -uSpin), -uTilt);
 
-      float bumpStrength = (uType == 0) ? 0.09 : ((uType == 1) ? 0.14 : 0.18);
+      float bumpStrength = (uType == 0) ? 0.07 : ((uType == 1) ? 0.11 : 0.12);
       vec3 B = normalize(N - worldGrad * bumpStrength);
 
       float NdotL_geom = dot(N, sunDir);
@@ -422,17 +424,19 @@
 
       } else {
         // === MOON ===
-        float mariaMask = smoothstep(0.42, 0.58, fbm3(sp * 1.9));
-        vec3 maria = vec3(0.16, 0.17, 0.19);
-        vec3 highlands = vec3(0.48, 0.49, 0.52);
-        vec3 ejecta = vec3(0.72, 0.73, 0.75);
+        float mariaMask = smoothstep(0.40, 0.58, fbm3(sp * 1.9));
+        float regolithSpeck = fbm3(sp * 26.0);
+        vec3 maria = vec3(0.11, 0.12, 0.14);
+        vec3 highlands = vec3(0.44, 0.45, 0.48);
+        vec3 ejecta = vec3(0.68, 0.69, 0.72);
 
         vec3 albedo = mix(maria, highlands, mariaMask);
-        albedo = mix(albedo, ejecta, smoothstep(0.66, 0.88, h0));
+        albedo = mix(albedo, ejecta, smoothstep(0.64, 0.86, h0));
+        albedo *= 0.86 + regolithSpeck * 0.28;
 
         // Sharp lunar opposition surge / harsh shadow contrast
-        float lunarDiff = pow(max(0.0, dot(B, sunDir)), 0.92) * smoothstep(-0.02, 0.05, NdotL_geom);
-        col = albedo * (lunarDiff * 1.32 + 0.012);
+        float lunarDiff = pow(max(0.0, dot(B, sunDir)), 0.94) * smoothstep(-0.02, 0.05, NdotL_geom);
+        col = albedo * (lunarDiff * 1.30 + 0.012);
       }
 
       col = acesFilm(col);
@@ -647,8 +651,8 @@
         alpha = 1.0
       } = opts;
 
-      const dpr = Math.min(1.5, window.devicePixelRatio || 1);
-      const targetSize = Math.min(896, Math.max(192, Math.ceil((radius * 2.64 * dpr) / 64) * 64));
+      const dpr = Math.min(2, window.devicePixelRatio || 1);
+      const targetSize = Math.min(1536, Math.max(256, Math.ceil((radius * 2.64 * dpr) / 64) * 64));
       const cacheKey = `${type}_${targetSize}`;
       let entry = this._cache[cacheKey];
       const nowSec = performance.now() * 0.001;
@@ -656,8 +660,8 @@
 
       if (
         !entry ||
-        Math.abs(spin - entry.spin) > 0.003 ||
-        Math.abs(tilt - entry.tilt) > 0.003 ||
+        Math.abs(spin - entry.spin) > 0.0025 ||
+        Math.abs(tilt - entry.tilt) > 0.0025 ||
         cloudDelta > 0.12
       ) {
         if (this.canvas.width !== targetSize || this.canvas.height !== targetSize) {
@@ -696,6 +700,8 @@
       const drawSpan = radius * 2.64;
       ctx.save();
       ctx.globalAlpha = alpha;
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
       ctx.drawImage(entry.canvas, cx - drawSpan * 0.5, cy - drawSpan * 0.5, drawSpan, drawSpan);
       ctx.restore();
       return true;

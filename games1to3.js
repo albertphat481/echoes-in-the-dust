@@ -1006,14 +1006,30 @@ class StillThereGame {
     }
     ctx.restore();
 
-    // 3D RTX Earth Horizon + Laser Observatory Dome
+    // 3D RTX Earth Horizon + Laser Observatory Dome (tilted to show blue ocean/continents, with crisp native-res limb)
     const earthR = Math.max(w * 0.62, h * 0.56);
     const earthCx = w * 0.5;
     const earthCy = h * 0.885 + earthR;
+    ctx.save();
+    // Outer blue atmospheric scatter halo
+    const atmoRim = ctx.createRadialGradient(earthCx, earthCy, earthR * 0.96, earthCx, earthCy, earthR * 1.07);
+    atmoRim.addColorStop(0, 'rgba(56, 189, 248, 0.55)');
+    atmoRim.addColorStop(0.35, 'rgba(14, 165, 233, 0.25)');
+    atmoRim.addColorStop(1, 'rgba(14, 165, 233, 0)');
+    ctx.fillStyle = atmoRim;
+    ctx.beginPath();
+    ctx.arc(earthCx, earthCy, earthR * 1.07, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Native vector clip keeps the curved Earth horizon razor-sharp at any resolution
+    ctx.beginPath();
+    ctx.arc(earthCx, earthCy, earthR, 0, Math.PI * 2);
+    ctx.clip();
+
     const usedRTXEarthHorizon = window.vantaPlanetGL && window.vantaPlanetGL.drawPlanet(ctx, 'earth', earthCx, earthCy, earthR, {
-      spin: this.elapsed * 0.02 + 2.35,
-      tilt: -0.05,
-      sunDir: [-0.45, 0.52, 0.72]
+      spin: this.elapsed * 0.02 + 1.15,
+      tilt: 1.18,
+      sunDir: [-0.42, 0.48, 0.76]
     });
 
     if (!usedRTXEarthHorizon) {
@@ -1022,10 +1038,17 @@ class StillThereGame {
       earthGrad.addColorStop(0.55, '#0369a1');
       earthGrad.addColorStop(1, '#082f49');
       ctx.fillStyle = earthGrad;
-      ctx.beginPath();
-      ctx.arc(earthCx, earthCy, earthR, 0, Math.PI * 2);
-      ctx.fill();
+      ctx.fillRect(0, h * 0.85, w, h * 0.2);
     }
+
+    // Subtle crisp inner atmospheric rim highlight
+    ctx.strokeStyle = 'rgba(125, 211, 252, 0.52)';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.arc(earthCx, earthCy, earthR - 1, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.restore();
+
 
     ctx.save();
     ctx.translate(w * 0.5, h * 0.9);
