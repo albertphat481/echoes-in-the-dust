@@ -1,11 +1,11 @@
 /**
- * Minigame 10: SPIRIT RESCUE — Giải Cứu Rover Spirit (Fictional SpaceX Starship Mission)
+ * Minigame 10: SPIRIT RESCUE — Giải Cứu Rover Spirit (Realistic SpaceX Starship × NASA JPL Overhaul)
  * 5-Phase Interactive Mission:
- *   0. to_mars        — Fly SpaceX Starship from Earth to Mars (hold/tap to burn Raptors)
- *   1. pickup         — Land in Gusev Crater & lift ("bế") Spirit Rover into Starship cargo bay
- *   2. to_earth       — Blast off from Mars & return to Earth Orbital Repair Bay
- *   3. replace_motor  — Remove seized wheel motor & install new Titanium Brushless Motor
- *   4. charge_battery — Hold/tap to super-charge Spirit's battery from 12% to 100%
+ *   0. to_mars        — Hohmann transfer burn in SpaceX Starship (stainless steel + TPS tiles + Raptor shock diamonds)
+ *   1. pickup         — Gusev Crater landing, articulated cargo crane lifting dusty Spirit into Starship bay
+ *   2. to_earth       — Return burn from Mars to Earth Orbital Cleanroom
+ *   3. replace_motor  — JPL Cleanroom: unbolt charred Wheel #1 motor & torque-lock new Titanium Brushless Actuator
+ *   4. charge_battery — Umbilical super-charge & solar array illumination (12% → 100%)
  */
 class SpiritRescueGame {
   constructor(host) {
@@ -20,29 +20,32 @@ class SpiritRescueGame {
     this.finaleTimer = 0;
     this.ghostAlpha = 0.9;
 
-    // Phases: 'to_mars' -> 'pickup' -> 'to_earth' -> 'replace_motor' -> 'charge_battery'
     this.phase = 'to_mars';
     this.phaseTime = 0;
-    this.transitProgress = 0; // 0..1 for to_mars and to_earth
+    this.transitProgress = 0;
     this.isBoosting = false;
 
-    // Pickup phase state
-    this.pickupProgress = 0; // 0..1 lifting Spirit into Starship bay
+    this.pickupProgress = 0;
     this.isLifting = false;
     this.spiritPickedUp = false;
 
-    // Replace motor phase state: 'remove_old' -> 'install_new' -> 'done'
     this.motorStep = 'remove_old';
     this.motorAnim = 0;
     this.wheelSpin = 0;
 
-    // Charge battery phase state
-    this.battery = 12; // 12% -> 100%
+    this.battery = 12;
     this.isCharging = false;
 
     this.particles = [];
     this.sparks = [];
-    this.stars = window.VantaGfx ? window.VantaGfx.createStarfield(180, 0.95) : [];
+    this.stars = window.VantaGfx ? window.VantaGfx.createStarfield(210, 0.96) : [];
+    this.marsRocks = Array.from({ length: 24 }, (_, i) => ({
+      rx: (i * 0.043 + 0.02) % 0.96,
+      ry: 0.015 + ((i * 7) % 10) * 0.022,
+      w: 8 + (i % 5) * 6,
+      h: 4 + (i % 3) * 3,
+      shade: 0.7 + (i % 4) * 0.1
+    }));
     this.pointer = { x: window.innerWidth * 0.5, y: window.innerHeight * 0.5, down: false };
     this.keys = { boost: false };
   }
@@ -53,28 +56,27 @@ class SpiritRescueGame {
     const isNarrow = w < 640;
     return {
       isNarrow,
-      earthPos: { x: w * (isNarrow ? 0.18 : 0.2), y: h * (isNarrow ? 0.74 : 0.72) },
-      marsPos: { x: w * (isNarrow ? 0.82 : 0.8), y: h * (isNarrow ? 0.28 : 0.28) },
-      groundY: h * 0.72,
-      shipLandX: w * (isNarrow ? 0.28 : 0.3),
-      spiritX: w * (isNarrow ? 0.68 : 0.66),
-      hubPos: { x: w * 0.5 - (isNarrow ? 58 : 88), y: h * 0.55 },
-      oldMotorPos: { x: w * 0.5 - (isNarrow ? 58 : 88), y: h * 0.55 },
-      newMotorPos: { x: w * (isNarrow ? 0.76 : 0.72), y: h * 0.52 },
-      chargePadPos: { x: w * 0.5, y: h * (isNarrow ? 0.76 : 0.75) }
+      earthPos: { x: w * (isNarrow ? 0.18 : 0.2), y: h * (isNarrow ? 0.75 : 0.72) },
+      marsPos: { x: w * (isNarrow ? 0.82 : 0.8), y: h * (isNarrow ? 0.29 : 0.28) },
+      groundY: h * 0.73,
+      shipLandX: w * (isNarrow ? 0.27 : 0.28),
+      spiritX: w * (isNarrow ? 0.69 : 0.67),
+      hubPos: { x: w * 0.5 - (isNarrow ? 60 : 94), y: h * 0.565 },
+      newMotorPos: { x: w * (isNarrow ? 0.77 : 0.74), y: h * 0.51 },
+      chargePadPos: { x: w * 0.5, y: h * (isNarrow ? 0.77 : 0.76) }
     };
   }
 
   _spawnExhaust(x, y, vx, vy, color = '#60a5fa', count = 2) {
     for (let i = 0; i < count; i++) {
       this.particles.push({
-        x: x + (Math.random() - 0.5) * 8,
-        y: y + (Math.random() - 0.5) * 8,
-        vx: vx + (Math.random() - 0.5) * 45,
-        vy: vy + (Math.random() - 0.5) * 45,
-        life: 0.45 + Math.random() * 0.35,
-        maxLife: 0.8,
-        r: 2.5 + Math.random() * 4.5,
+        x: x + (Math.random() - 0.5) * 7,
+        y: y + (Math.random() - 0.5) * 7,
+        vx: vx + (Math.random() - 0.5) * 38,
+        vy: vy + (Math.random() - 0.5) * 38,
+        life: 0.4 + Math.random() * 0.35,
+        maxLife: 0.75,
+        r: 2 + Math.random() * 4,
         color
       });
     }
@@ -89,9 +91,9 @@ class SpiritRescueGame {
         y,
         vx: Math.cos(a) * sp,
         vy: Math.sin(a) * sp,
-        life: 0.55 + Math.random() * 0.45,
-        maxLife: 1.0,
-        r: 1.8 + Math.random() * 2.5,
+        life: 0.5 + Math.random() * 0.45,
+        maxLife: 0.95,
+        r: 1.5 + Math.random() * 2.4,
         color
       });
     }
@@ -112,22 +114,20 @@ class SpiritRescueGame {
       this.isBoosting = true;
       window.soundEngine.playUITick();
     } else if (this.phase === 'pickup') {
-      // Tap anywhere near Spirit or the Starship cargo bay, or simply hold anywhere to lift Spirit
       this.isLifting = true;
       window.soundEngine.playUIChime(2);
     } else if (this.phase === 'replace_motor') {
       if (this.motorStep === 'remove_old') {
-        // Generous hit area around wheel hub or anywhere on rover wheel
-        if (Math.hypot(x - L.hubPos.x, y - L.hubPos.y) < 110 || y > h * 0.32) {
+        if (Math.hypot(x - L.hubPos.x, y - L.hubPos.y) < 120 || y > h * 0.32) {
           this.motorStep = 'removing';
           this.motorAnim = 0;
           window.soundEngine.playGravelCrunch();
-          this._spawnSparks(L.hubPos.x, L.hubPos.y, '#fb923c', 18);
+          this._spawnSparks(L.hubPos.x, L.hubPos.y, '#fb923c', 22);
         }
       } else if (this.motorStep === 'install_new') {
         if (
-          Math.hypot(x - L.newMotorPos.x, y - L.newMotorPos.y) < 110 ||
-          Math.hypot(x - L.hubPos.x, y - L.hubPos.y) < 110
+          Math.hypot(x - L.newMotorPos.x, y - L.newMotorPos.y) < 120 ||
+          Math.hypot(x - L.hubPos.x, y - L.hubPos.y) < 120
         ) {
           this.motorStep = 'installing';
           this.motorAnim = 0;
@@ -169,7 +169,7 @@ class SpiritRescueGame {
           this.motorStep = 'removing';
           this.motorAnim = 0;
           window.soundEngine.playGravelCrunch();
-          this._spawnSparks(L.hubPos.x, L.hubPos.y, '#fb923c', 18);
+          this._spawnSparks(L.hubPos.x, L.hubPos.y, '#fb923c', 22);
         } else if (this.motorStep === 'install_new') {
           this.motorStep = 'installing';
           this.motorAnim = 0;
@@ -213,7 +213,6 @@ class SpiritRescueGame {
     const h = window.innerHeight;
     const L = this._getLayout(w, h);
 
-    // Update particles & sparks
     for (let i = this.particles.length - 1; i >= 0; i--) {
       const p = this.particles[i];
       p.x += p.vx * dt;
@@ -232,103 +231,117 @@ class SpiritRescueGame {
 
     if (this.phase === 'to_mars') {
       const active = this.isBoosting || this.keys.boost;
-      const speed = active ? 0.38 : 0.04;
+      const speed = active ? 0.36 : 0.035;
       this.transitProgress = Math.min(1, this.transitProgress + speed * dt);
-      window.soundEngine.setBrushWind(active ? 0.7 : 0, active ? 0.85 : 0.2);
+      window.soundEngine.setBrushWind(active ? 0.72 : 0, active ? 0.88 : 0.2);
 
       const pos = this._getArcPos(L.earthPos, L.marsPos, this.transitProgress, -h * 0.18);
       if (active) {
-        this._spawnExhaust(pos.x - Math.cos(pos.angle) * 24, pos.y - Math.sin(pos.angle) * 24, -Math.cos(pos.angle) * 140, -Math.sin(pos.angle) * 140, '#60a5fa', 2);
+        this._spawnExhaust(
+          pos.x - Math.cos(pos.angle) * 28,
+          pos.y - Math.sin(pos.angle) * 28,
+          -Math.cos(pos.angle) * 155,
+          -Math.sin(pos.angle) * 155,
+          '#93c5fd',
+          2
+        );
       }
 
       if (this.transitProgress >= 1) {
-        this._spawnSparks(L.marsPos.x, L.marsPos.y, '#fb923c', 20);
+        this._spawnSparks(L.marsPos.x, L.marsPos.y, '#fb923c', 22);
         window.soundEngine.playTapeWhoosh();
         this._advancePhase('pickup');
       }
     } else if (this.phase === 'pickup') {
       if (this.isLifting && !this.spiritPickedUp) {
-        this.pickupProgress = Math.min(1, this.pickupProgress + dt * 0.72);
+        this.pickupProgress = Math.min(1, this.pickupProgress + dt * 0.65);
         if (Math.random() < 0.35) {
           const sx = L.spiritX + (L.shipLandX - L.spiritX) * this.pickupProgress;
-          const sy = L.groundY - Math.sin(this.pickupProgress * Math.PI) * 110;
-          this._spawnSparks(sx, sy - 20, '#fcd34d', 2);
+          const sy = L.groundY - Math.sin(this.pickupProgress * Math.PI) * 115;
+          this._spawnSparks(sx, sy - 22, '#fcd34d', 2);
         }
         if (this.pickupProgress >= 1) {
           this.spiritPickedUp = true;
-          this._spawnSparks(L.shipLandX, L.groundY - 70, '#38bdf8', 24);
+          this._spawnSparks(L.shipLandX, L.groundY - 76, '#38bdf8', 26);
           window.soundEngine.playSignatureMotif(2);
           setTimeout(() => {
             if (!this.completed && this.phase === 'pickup') {
               this.transitProgress = 0;
               this._advancePhase('to_earth');
             }
-          }, 700);
+          }, 750);
         }
       } else if (!this.spiritPickedUp && this.pickupProgress > 0) {
-        this.pickupProgress = Math.max(0, this.pickupProgress - dt * 0.25);
+        this.pickupProgress = Math.max(0, this.pickupProgress - dt * 0.22);
       }
     } else if (this.phase === 'to_earth') {
       const active = this.isBoosting || this.keys.boost;
-      const speed = active ? 0.42 : 0.05;
+      const speed = active ? 0.4 : 0.04;
       this.transitProgress = Math.min(1, this.transitProgress + speed * dt);
-      window.soundEngine.setBrushWind(active ? 0.72 : 0, active ? 0.9 : 0.2);
+      window.soundEngine.setBrushWind(active ? 0.74 : 0, active ? 0.92 : 0.2);
 
       const pos = this._getArcPos(L.marsPos, L.earthPos, this.transitProgress, h * 0.16);
       if (active) {
-        this._spawnExhaust(pos.x - Math.cos(pos.angle) * 24, pos.y - Math.sin(pos.angle) * 24, -Math.cos(pos.angle) * 140, -Math.sin(pos.angle) * 140, '#38bdf8', 2);
+        this._spawnExhaust(
+          pos.x - Math.cos(pos.angle) * 28,
+          pos.y - Math.sin(pos.angle) * 28,
+          -Math.cos(pos.angle) * 155,
+          -Math.sin(pos.angle) * 155,
+          '#7dd3fc',
+          2
+        );
       }
 
       if (this.transitProgress >= 1) {
-        this._spawnSparks(L.earthPos.x, L.earthPos.y, '#38bdf8', 22);
+        this._spawnSparks(L.earthPos.x, L.earthPos.y, '#38bdf8', 24);
         window.soundEngine.playTapeWhoosh();
         this._advancePhase('replace_motor');
       }
     } else if (this.phase === 'replace_motor') {
       if (this.motorStep === 'removing') {
-        this.motorAnim += dt * 1.9;
+        this.motorAnim += dt * 1.85;
         if (this.motorAnim >= 1) {
           this.motorStep = 'install_new';
           this.motorAnim = 0;
           window.soundEngine.playUITick();
         }
       } else if (this.motorStep === 'installing') {
-        this.motorAnim += dt * 1.8;
+        this.motorAnim += dt * 1.75;
         if (this.motorAnim >= 1) {
           this.motorStep = 'done';
           this.motorAnim = 1;
-          this._spawnSparks(L.hubPos.x, L.hubPos.y, '#38bdf8', 28);
+          this._spawnSparks(L.hubPos.x, L.hubPos.y, '#38bdf8', 30);
           window.soundEngine.playSuccessBloom();
           setTimeout(() => {
             if (!this.completed && this.phase === 'replace_motor') {
               this._advancePhase('charge_battery');
             }
-          }, 850);
+          }, 900);
         }
       } else if (this.motorStep === 'done') {
-        this.wheelSpin += dt * 5.2;
+        this.wheelSpin += dt * 5.6;
       }
     } else if (this.phase === 'charge_battery') {
-      this.wheelSpin += dt * 3.0;
+      this.wheelSpin += dt * 3.2;
       if (this.isCharging && !this.ending) {
         this.battery = Math.min(100, this.battery + dt * 36);
         if (Math.random() < 0.45) {
-          this._spawnSparks(w * 0.5 + (Math.random() - 0.5) * 90, h * 0.42, '#fcd34d', 2);
+          this._spawnSparks(w * 0.5 + (Math.random() - 0.5) * 90, h * 0.44, '#fcd34d', 2);
         }
       }
       if (this.battery >= 100 && !this.ending) {
         this.battery = 100;
         this.ending = true;
         this.isCharging = false;
-        this._spawnSparks(w * 0.5, h * 0.44, '#fcd34d', 36);
-        this._spawnSparks(w * 0.5, h * 0.44, '#38bdf8', 24);
+        this._spawnSparks(w * 0.5, h * 0.44, '#fcd34d', 38);
+        this._spawnSparks(w * 0.5, h * 0.44, '#38bdf8', 26);
         window.soundEngine.playSignatureMotif(4);
       }
     }
 
     if (this.ending && !this.completed) {
       this.finaleTimer += dt;
-      if (this.finaleTimer >= 1.8) {
+      if (this.finaleTimer >= 1.85) {
         this.completed = true;
         this.host.completeCurrentGame();
       }
@@ -347,133 +360,216 @@ class SpiritRescueGame {
     return { x, y, angle };
   }
 
-  _drawStarship(ctx, x, y, angle, scale = 1, boosting = false) {
+  _drawStarship(ctx, x, y, angle, scale = 1, boosting = false, landed = false, bayOpen = 0) {
     ctx.save();
     ctx.translate(x, y);
     ctx.rotate(angle + Math.PI * 0.5);
     ctx.scale(scale, scale);
 
-    // Raptor methalox flame plume
     if (boosting) {
-      const flicker = 0.85 + Math.sin(this.elapsed * 42) * 0.2;
-      const flameG = ctx.createLinearGradient(0, 26, 0, 26 + 44 * flicker);
-      flameG.addColorStop(0, '#e0f2fe');
-      flameG.addColorStop(0.35, '#60a5fa');
-      flameG.addColorStop(0.7, 'rgba(168, 85, 247, 0.55)');
+      const flicker = 0.88 + Math.sin(this.elapsed * 46) * 0.16;
+      const plumeLen = 58 * flicker;
+      const flameG = ctx.createLinearGradient(0, 28, 0, 28 + plumeLen);
+      flameG.addColorStop(0, '#f0f9ff');
+      flameG.addColorStop(0.25, '#60a5fa');
+      flameG.addColorStop(0.62, 'rgba(139, 92, 246, 0.65)');
       flameG.addColorStop(1, 'rgba(56, 189, 248, 0)');
       ctx.fillStyle = flameG;
       ctx.beginPath();
-      ctx.moveTo(-8, 25);
-      ctx.quadraticCurveTo(0, 26 + 48 * flicker, 8, 25);
+      ctx.moveTo(-9.5, 27);
+      ctx.quadraticCurveTo(-5, 28 + plumeLen * 0.6, 0, 28 + plumeLen);
+      ctx.quadraticCurveTo(5, 28 + plumeLen * 0.6, 9.5, 27);
       ctx.closePath();
       ctx.fill();
+
+      for (let d = 0; d < 3; d++) {
+        const dy = 34 + d * 12 * flicker;
+        const dr = 4.2 - d * 1.1;
+        ctx.fillStyle = `rgba(224, 242, 254, ${0.85 - d * 0.24})`;
+        ctx.beginPath();
+        ctx.moveTo(0, dy - dr);
+        ctx.lineTo(dr * 0.75, dy);
+        ctx.lineTo(0, dy + dr * 1.3);
+        ctx.lineTo(-dr * 0.75, dy);
+        ctx.closePath();
+        ctx.fill();
+      }
     }
 
-    // Aft flaps
-    ctx.fillStyle = '#1e293b';
-    ctx.strokeStyle = '#94a3b8';
-    ctx.lineWidth = 1.2;
-    ctx.beginPath();
-    ctx.moveTo(-11, 8);
-    ctx.lineTo(-21, 23);
-    ctx.lineTo(-11, 25);
-    ctx.closePath();
-    ctx.fill();
-    ctx.stroke();
+    if (landed) {
+      ctx.strokeStyle = '#94a3b8';
+      ctx.lineWidth = 2.1;
+      [[-11, 20, -24, 34], [11, 20, 24, 34], [0, 23, 0, 34]].forEach(([x0, y0, x1, y1]) => {
+        ctx.beginPath();
+        ctx.moveTo(x0, y0);
+        ctx.lineTo(x1, y1);
+        ctx.stroke();
+        ctx.fillStyle = '#334155';
+        ctx.fillRect(x1 - 3.5, y1 - 1.5, 7, 3);
+      });
+    }
 
-    ctx.beginPath();
-    ctx.moveTo(11, 8);
-    ctx.lineTo(21, 23);
-    ctx.lineTo(11, 25);
-    ctx.closePath();
-    ctx.fill();
-    ctx.stroke();
+    ctx.fillStyle = '#0f172a';
+    ctx.fillRect(-10, 23, 20, 4);
+    [-5.5, 0, 5.5].forEach(rx => {
+      ctx.fillStyle = '#334155';
+      ctx.beginPath();
+      ctx.moveTo(rx - 2.3, 26);
+      ctx.lineTo(rx - 3.3, 30);
+      ctx.lineTo(rx + 3.3, 30);
+      ctx.lineTo(rx + 2.3, 26);
+      ctx.closePath();
+      ctx.fill();
+    });
 
-    // Forward flaps
-    ctx.beginPath();
-    ctx.moveTo(-9, -22);
-    ctx.lineTo(-16, -12);
-    ctx.lineTo(-9, -10);
-    ctx.closePath();
-    ctx.fill();
-    ctx.stroke();
+    const drawFlap = (pts) => {
+      ctx.fillStyle = '#111827';
+      ctx.strokeStyle = '#64748b';
+      ctx.lineWidth = 1.1;
+      ctx.beginPath();
+      ctx.moveTo(pts[0][0], pts[0][1]);
+      for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i][0], pts[i][1]);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+    };
+    drawFlap([[-11.5, 6], [-22.5, 22], [-11.5, 24]]);
+    drawFlap([[11.5, 6], [22.5, 22], [11.5, 24]]);
+    drawFlap([[-9.5, -24], [-17.5, -13], [-9.5, -11]]);
+    drawFlap([[9.5, -24], [17.5, -13], [9.5, -11]]);
 
-    ctx.beginPath();
-    ctx.moveTo(9, -22);
-    ctx.lineTo(16, -12);
-    ctx.lineTo(9, -10);
-    ctx.closePath();
-    ctx.fill();
-    ctx.stroke();
-
-    // Stainless steel hull
-    const hull = ctx.createLinearGradient(-11, 0, 11, 0);
-    hull.addColorStop(0, '#475569');
-    hull.addColorStop(0.35, '#e2e8f0');
-    hull.addColorStop(0.7, '#94a3b8');
-    hull.addColorStop(1, '#1e293b');
+    const hull = ctx.createLinearGradient(-12, 0, 12, 0);
+    hull.addColorStop(0, '#0f172a');
+    hull.addColorStop(0.28, '#334155');
+    hull.addColorStop(0.55, '#e2e8f0');
+    hull.addColorStop(0.78, '#f8fafc');
+    hull.addColorStop(1, '#64748b');
     ctx.fillStyle = hull;
     ctx.beginPath();
-    ctx.moveTo(-11, 25);
-    ctx.lineTo(-11, -18);
-    ctx.quadraticCurveTo(-11, -36, 0, -44);
-    ctx.quadraticCurveTo(11, -36, 11, -18);
-    ctx.lineTo(11, 25);
+    ctx.moveTo(-11.5, 25);
+    ctx.lineTo(-11.5, -19);
+    ctx.quadraticCurveTo(-11.5, -39, 0, -47);
+    ctx.quadraticCurveTo(11.5, -39, 11.5, -19);
+    ctx.lineTo(11.5, 25);
     ctx.closePath();
     ctx.fill();
-    ctx.strokeStyle = 'rgba(248, 250, 252, 0.5)';
+
+    ctx.strokeStyle = 'rgba(15, 23, 42, 0.28)';
+    ctx.lineWidth = 0.7;
+    [-14, -4, 6, 16].forEach(ry => {
+      ctx.beginPath();
+      ctx.moveTo(-11, ry);
+      ctx.lineTo(11, ry);
+      ctx.stroke();
+    });
+
+    ctx.strokeStyle = 'rgba(248, 250, 252, 0.55)';
     ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(-11.5, 25);
+    ctx.lineTo(-11.5, -19);
+    ctx.quadraticCurveTo(-11.5, -39, 0, -47);
+    ctx.quadraticCurveTo(11.5, -39, 11.5, -19);
+    ctx.lineTo(11.5, 25);
+    ctx.closePath();
     ctx.stroke();
 
-    // SpaceX stripe & payload window
-    ctx.fillStyle = '#0f172a';
-    ctx.fillRect(-5, -21, 10, 11);
+    ctx.fillStyle = bayOpen > 0 ? '#020617' : '#0f172a';
+    ctx.fillRect(-6, -24, 12, 16);
+    if (bayOpen > 0) {
+      const bayGlow = ctx.createRadialGradient(0, -16, 1, 0, -16, 12);
+      bayGlow.addColorStop(0, 'rgba(56, 189, 248, 0.7)');
+      bayGlow.addColorStop(1, 'rgba(56, 189, 248, 0)');
+      ctx.fillStyle = bayGlow;
+      ctx.fillRect(-6, -24, 12, 16);
+    }
     ctx.strokeStyle = '#38bdf8';
     ctx.lineWidth = 1;
-    ctx.strokeRect(-5, -21, 10, 11);
+    ctx.strokeRect(-6, -24, 12, 16);
 
     ctx.restore();
   }
 
-  _drawPlanetOrb(ctx, x, y, r, isMars) {
-    const halo = ctx.createRadialGradient(x, y, r * 0.7, x, y, r * 1.7);
-    halo.addColorStop(0, isMars ? 'rgba(251, 146, 60, 0.4)' : 'rgba(56, 189, 248, 0.42)');
+  _drawRealisticPlanet(ctx, x, y, r, isMars) {
+    const halo = ctx.createRadialGradient(x, y, r * 0.78, x, y, r * 1.55);
+    halo.addColorStop(0, isMars ? 'rgba(251, 146, 60, 0.42)' : 'rgba(56, 189, 248, 0.52)');
+    halo.addColorStop(0.55, isMars ? 'rgba(194, 65, 12, 0.14)' : 'rgba(14, 165, 233, 0.16)');
     halo.addColorStop(1, 'rgba(0, 0, 0, 0)');
     ctx.fillStyle = halo;
     ctx.beginPath();
-    ctx.arc(x, y, r * 1.7, 0, Math.PI * 2);
+    ctx.arc(x, y, r * 1.55, 0, Math.PI * 2);
     ctx.fill();
 
-    const grad = ctx.createRadialGradient(x - r * 0.32, y - r * 0.32, r * 0.1, x, y, r);
-    if (isMars) {
-      grad.addColorStop(0, '#fdba74');
-      grad.addColorStop(0.45, '#c2410c');
-      grad.addColorStop(1, '#431407');
-    } else {
-      grad.addColorStop(0, '#bae6fd');
-      grad.addColorStop(0.45, '#0284c7');
-      grad.addColorStop(1, '#082f49');
-    }
-    ctx.fillStyle = grad;
+    ctx.save();
     ctx.beginPath();
     ctx.arc(x, y, r, 0, Math.PI * 2);
-    ctx.fill();
+    ctx.clip();
 
-    if (!isMars) {
-      // Subtle green-emerald continents on Earth
-      ctx.save();
+    if (isMars) {
+      const base = ctx.createRadialGradient(x - r * 0.35, y - r * 0.35, r * 0.1, x, y, r * 1.15);
+      base.addColorStop(0, '#fdba74');
+      base.addColorStop(0.42, '#c2410c');
+      base.addColorStop(0.85, '#7c2d12');
+      base.addColorStop(1, '#290d05');
+      ctx.fillStyle = base;
+      ctx.fillRect(x - r, y - r, r * 2, r * 2);
+
+      ctx.fillStyle = 'rgba(67, 20, 7, 0.48)';
       ctx.beginPath();
-      ctx.arc(x, y, r, 0, Math.PI * 2);
-      ctx.clip();
-      ctx.fillStyle = 'rgba(74, 222, 128, 0.38)';
+      ctx.ellipse(x + r * 0.12, y - r * 0.08, r * 0.38, r * 0.22, -0.3, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(41, 13, 5, 0.55)';
+      ctx.lineWidth = Math.max(1.5, r * 0.06);
       ctx.beginPath();
-      ctx.ellipse(x - r * 0.25, y - r * 0.1, r * 0.32, r * 0.22, 0.4, 0, Math.PI * 2);
+      ctx.moveTo(x - r * 0.42, y + r * 0.12);
+      ctx.quadraticCurveTo(x - r * 0.1, y + r * 0.18, x + r * 0.25, y + r * 0.06);
+      ctx.stroke();
+
+      ctx.fillStyle = 'rgba(255, 247, 237, 0.78)';
+      ctx.beginPath();
+      ctx.ellipse(x - r * 0.08, y - r * 0.88, r * 0.32, r * 0.12, -0.1, 0, Math.PI * 2);
+      ctx.fill();
+    } else {
+      const ocean = ctx.createRadialGradient(x - r * 0.35, y - r * 0.35, r * 0.1, x, y, r * 1.15);
+      ocean.addColorStop(0, '#7dd3fc');
+      ocean.addColorStop(0.4, '#0284c7');
+      ocean.addColorStop(0.85, '#0c4a6e');
+      ocean.addColorStop(1, '#041426');
+      ctx.fillStyle = ocean;
+      ctx.fillRect(x - r, y - r, r * 2, r * 2);
+
+      ctx.fillStyle = 'rgba(34, 197, 94, 0.52)';
+      ctx.beginPath();
+      ctx.ellipse(x - r * 0.28, y - r * 0.12, r * 0.34, r * 0.22, 0.35, 0, Math.PI * 2);
       ctx.fill();
       ctx.beginPath();
-      ctx.ellipse(x + r * 0.25, y + r * 0.15, r * 0.22, r * 0.3, -0.3, 0, Math.PI * 2);
+      ctx.ellipse(x + r * 0.24, y + r * 0.18, r * 0.24, r * 0.32, -0.35, 0, Math.PI * 2);
       ctx.fill();
-      ctx.restore();
+
+      ctx.strokeStyle = 'rgba(248, 250, 252, 0.48)';
+      ctx.lineWidth = Math.max(1.4, r * 0.07);
+      ctx.lineCap = 'round';
+      [[-0.5, -0.35, 0.2, -0.25], [-0.3, 0.25, 0.45, 0.05], [-0.15, -0.58, 0.4, -0.52]].forEach(([x0, y0, x1, y1]) => {
+        ctx.beginPath();
+        ctx.moveTo(x + x0 * r, y + y0 * r);
+        ctx.quadraticCurveTo(x, y + (y0 + y1) * 0.45 * r, x + x1 * r, y + y1 * r);
+        ctx.stroke();
+      });
     }
+
+    const term = ctx.createRadialGradient(x - r * 0.36, y - r * 0.32, r * 0.45, x, y, r * 1.05);
+    term.addColorStop(0, 'rgba(0,0,0,0)');
+    term.addColorStop(0.75, 'rgba(2, 6, 18, 0.32)');
+    term.addColorStop(1, 'rgba(2, 4, 12, 0.82)');
+    ctx.fillStyle = term;
+    ctx.fillRect(x - r, y - r, r * 2, r * 2);
+    ctx.restore();
+
+    ctx.strokeStyle = isMars ? 'rgba(253, 186, 116, 0.45)' : 'rgba(125, 211, 252, 0.6)';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.arc(x, y, r, 0, Math.PI * 2);
+    ctx.stroke();
   }
 
   _drawMotorUnit(ctx, x, y, isNew, scale = 1) {
@@ -481,37 +577,51 @@ class SpiritRescueGame {
     ctx.translate(x, y);
     ctx.scale(scale, scale);
 
-    // Glow
-    const g = ctx.createRadialGradient(0, 0, 4, 0, 0, 34);
-    g.addColorStop(0, isNew ? 'rgba(56, 189, 248, 0.42)' : 'rgba(249, 115, 22, 0.35)');
+    const g = ctx.createRadialGradient(0, 0, 4, 0, 0, 38);
+    g.addColorStop(0, isNew ? 'rgba(56, 189, 248, 0.48)' : 'rgba(249, 115, 22, 0.38)');
     g.addColorStop(1, 'rgba(0,0,0,0)');
     ctx.fillStyle = g;
     ctx.beginPath();
-    ctx.arc(0, 0, 34, 0, Math.PI * 2);
+    ctx.arc(0, 0, 38, 0, Math.PI * 2);
     ctx.fill();
 
-    // Cylindrical motor housing
-    ctx.fillStyle = isNew ? '#0f172a' : '#291711';
+    ctx.fillStyle = isNew ? '#1e293b' : '#2c1810';
+    ctx.strokeStyle = isNew ? '#7dd3fc' : '#c2410c';
+    ctx.lineWidth = 1.5;
+    ctx.fillRect(-26, -10, 8, 20);
+    ctx.strokeRect(-26, -10, 8, 20);
+
+    const bodyG = ctx.createLinearGradient(0, -15, 0, 15);
+    if (isNew) {
+      bodyG.addColorStop(0, '#334155');
+      bodyG.addColorStop(0.45, '#0f172a');
+      bodyG.addColorStop(1, '#020617');
+    } else {
+      bodyG.addColorStop(0, '#451a03');
+      bodyG.addColorStop(0.5, '#291208');
+      bodyG.addColorStop(1, '#140804');
+    }
+    ctx.fillStyle = bodyG;
     ctx.strokeStyle = isNew ? '#38bdf8' : '#ea580c';
     ctx.lineWidth = 2;
     ctx.beginPath();
-    ctx.roundRect(-20, -14, 40, 28, 7);
+    ctx.roundRect(-18, -15, 38, 30, 6);
     ctx.fill();
     ctx.stroke();
 
-    // Cooling fins / coils
-    ctx.strokeStyle = isNew ? '#7dd3fc' : '#9a3412';
+    ctx.strokeStyle = isNew ? 'rgba(125, 211, 252, 0.65)' : 'rgba(154, 52, 18, 0.7)';
     ctx.lineWidth = 1.5;
-    for (let i = -10; i <= 10; i += 6.5) {
+    for (let i = -10; i <= 12; i += 5.5) {
       ctx.beginPath();
-      ctx.moveTo(i, -10);
-      ctx.lineTo(i, 10);
+      ctx.moveTo(i, -11);
+      ctx.lineTo(i, 11);
       ctx.stroke();
     }
 
-    // Drive shaft
-    ctx.fillStyle = isNew ? '#e0f2fe' : '#78350f';
-    ctx.fillRect(-28, -4, 8, 8);
+    ctx.fillStyle = isNew ? '#e2e8f0' : '#78350f';
+    ctx.fillRect(-34, -4, 8, 8);
+    ctx.fillStyle = isNew ? '#fcd34d' : '#57280a';
+    ctx.fillRect(20, -5, 5, 10);
 
     ctx.restore();
   }
@@ -519,36 +629,35 @@ class SpiritRescueGame {
   render(ctx, w, h) {
     const L = this._getLayout(w, h);
 
-    // Background per phase
     const bg = ctx.createLinearGradient(0, 0, 0, h);
     if (this.phase === 'pickup') {
-      bg.addColorStop(0, '#09070f');
-      bg.addColorStop(0.5, '#2b130c');
-      bg.addColorStop(1, '#582112');
+      bg.addColorStop(0, '#07050c');
+      bg.addColorStop(0.42, '#2d140e');
+      bg.addColorStop(0.72, '#6b2714');
+      bg.addColorStop(1, '#1a0905');
     } else if (this.phase === 'replace_motor' || this.phase === 'charge_battery') {
-      bg.addColorStop(0, '#040914');
-      bg.addColorStop(0.55, '#0b1628');
-      bg.addColorStop(1, '#08101f');
+      bg.addColorStop(0, '#030712');
+      bg.addColorStop(0.55, '#0b1526');
+      bg.addColorStop(1, '#050b16');
     } else {
-      bg.addColorStop(0, '#03060f');
-      bg.addColorStop(1, '#090e1c');
+      bg.addColorStop(0, '#02050d');
+      bg.addColorStop(1, '#080d1b');
     }
     ctx.fillStyle = bg;
     ctx.fillRect(0, 0, w, h);
 
     if (window.vantaNebulaGL) {
       window.vantaNebulaGL.drawBackdrop(ctx, w, h, {
-        alpha: this.phase === 'pickup' ? 0.35 : 0.68,
+        alpha: this.phase === 'pickup' ? 0.28 : 0.66,
         lumen: 0.9,
-        cyan: this.phase === 'pickup' ? 0.25 : 0.68,
-        stars: 0.72
+        cyan: this.phase === 'pickup' ? 0.22 : 0.68,
+        stars: 0.75
       });
     }
     if (window.VantaGfx) {
-      window.VantaGfx.drawStarfield(ctx, this.stars, w, h, this.elapsed, 0.85);
+      window.VantaGfx.drawStarfield(ctx, this.stars, w, h, this.elapsed, 0.88);
     }
 
-    // Phase-specific rendering
     if (this.phase === 'to_mars' || this.phase === 'to_earth') {
       this._renderTransitPhase(ctx, w, h, L);
     } else if (this.phase === 'pickup') {
@@ -559,7 +668,6 @@ class SpiritRescueGame {
       this._renderBatteryPhase(ctx, w, h, L);
     }
 
-    // Particles & sparks
     this.particles.forEach(p => {
       ctx.save();
       ctx.globalAlpha = Math.max(0, p.life / p.maxLife);
@@ -579,18 +687,14 @@ class SpiritRescueGame {
       ctx.restore();
     });
 
-    // Top-center concise phase progress pills (5 steps)
     this._renderPhaseStepper(ctx, w, h);
-
-    // Bottom action prompt pill
     this._renderPromptPill(ctx, w, h);
 
-    // Celebration Finale Bloom
     if (this.ending) {
-      const p = Math.min(1, this.finaleTimer / 1.8);
+      const p = Math.min(1, this.finaleTimer / 1.85);
       const bloom = ctx.createRadialGradient(w * 0.5, h * 0.48, 10, w * 0.5, h * 0.48, Math.max(w, h) * 0.65 * p);
-      bloom.addColorStop(0, `rgba(253, 224, 71, ${(1 - p) * 0.45})`);
-      bloom.addColorStop(0.5, `rgba(56, 189, 248, ${(1 - p) * 0.22})`);
+      bloom.addColorStop(0, `rgba(253, 224, 71, ${(1 - p) * 0.48})`);
+      bloom.addColorStop(0.5, `rgba(56, 189, 248, ${(1 - p) * 0.24})`);
       bloom.addColorStop(1, 'rgba(0,0,0,0)');
       ctx.fillStyle = bloom;
       ctx.fillRect(0, 0, w, h);
@@ -603,25 +707,34 @@ class SpiritRescueGame {
     const to = isOutbound ? L.marsPos : L.earthPos;
     const arcH = isOutbound ? -h * 0.18 : h * 0.16;
 
-    // Dotted Hohmann transfer trajectory
     ctx.save();
-    ctx.strokeStyle = isOutbound ? 'rgba(251, 146, 60, 0.34)' : 'rgba(56, 189, 248, 0.36)';
+    ctx.strokeStyle = 'rgba(148, 163, 184, 0.14)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.arc(L.earthPos.x, L.earthPos.y, L.isNarrow ? 54 : 74, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(L.marsPos.x, L.marsPos.y, L.isNarrow ? 48 : 66, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.restore();
+
+    ctx.save();
+    ctx.strokeStyle = isOutbound ? 'rgba(251, 146, 60, 0.4)' : 'rgba(56, 189, 248, 0.42)';
     ctx.lineWidth = 2;
     ctx.setLineDash([7, 7]);
     ctx.beginPath();
-    for (let i = 0; i <= 40; i++) {
-      const pt = this._getArcPos(from, to, i / 40, arcH);
+    for (let i = 0; i <= 44; i++) {
+      const pt = this._getArcPos(from, to, i / 44, arcH);
       if (i === 0) ctx.moveTo(pt.x, pt.y);
       else ctx.lineTo(pt.x, pt.y);
     }
     ctx.stroke();
     ctx.restore();
 
-    const orbR = L.isNarrow ? 34 : 46;
-    this._drawPlanetOrb(ctx, L.earthPos.x, L.earthPos.y, orbR, false);
-    this._drawPlanetOrb(ctx, L.marsPos.x, L.marsPos.y, orbR * 0.86, true);
+    const orbR = L.isNarrow ? 36 : 48;
+    this._drawRealisticPlanet(ctx, L.earthPos.x, L.earthPos.y, orbR, false);
+    this._drawRealisticPlanet(ctx, L.marsPos.x, L.marsPos.y, orbR * 0.85, true);
 
-    // Labels
     const en = window.VantaI18n && window.VantaI18n.isEn();
     ctx.save();
     ctx.font = '600 11px "JetBrains Mono", monospace';
@@ -629,19 +742,17 @@ class SpiritRescueGame {
     ctx.fillStyle = '#bae6fd';
     ctx.fillText(en ? 'EARTH' : 'TRÁI ĐẤT', L.earthPos.x, L.earthPos.y + orbR + 20);
     ctx.fillStyle = '#fed7aa';
-    ctx.fillText(en ? 'MARS' : 'SAO HỎA', L.marsPos.x, L.marsPos.y + orbR * 0.86 + 20);
+    ctx.fillText(en ? 'MARS' : 'SAO HỎA', L.marsPos.x, L.marsPos.y + orbR * 0.85 + 20);
     ctx.restore();
 
-    // Starship along arc
     const pos = this._getArcPos(from, to, this.transitProgress, arcH);
     const active = this.isBoosting || this.keys.boost;
-    this._drawStarship(ctx, pos.x, pos.y, pos.angle, L.isNarrow ? 0.82 : 1.0, active);
+    this._drawStarship(ctx, pos.x, pos.y, pos.angle, L.isNarrow ? 0.86 : 1.05, active, false, 0);
 
-    // Distance telemetry
     const km = Math.round((isOutbound ? this.transitProgress : 1 - this.transitProgress) * 225);
     ctx.save();
     ctx.font = '500 12px "JetBrains Mono", monospace';
-    ctx.fillStyle = 'rgba(226, 232, 240, 0.78)';
+    ctx.fillStyle = 'rgba(226, 232, 240, 0.82)';
     ctx.textAlign = 'center';
     ctx.fillText(
       isOutbound ? `SPACEX STARSHIP • EARTH → MARS • ${km}M / 225M KM` : `STARSHIP CARGO: SPIRIT • MARS → EARTH • ${km}M KM`,
@@ -652,48 +763,76 @@ class SpiritRescueGame {
   }
 
   _renderPickupPhase(ctx, w, h, L) {
-    // Martian Gusev Crater terrain
+    ctx.save();
+    ctx.fillStyle = 'rgba(42, 16, 10, 0.72)';
+    ctx.beginPath();
+    ctx.moveTo(0, L.groundY - 10);
+    ctx.lineTo(w * 0.16, L.groundY - 58);
+    ctx.lineTo(w * 0.36, L.groundY - 26);
+    ctx.lineTo(w * 0.58, L.groundY - 68);
+    ctx.lineTo(w * 0.82, L.groundY - 30);
+    ctx.lineTo(w, L.groundY - 48);
+    ctx.lineTo(w, L.groundY + 20);
+    ctx.lineTo(0, L.groundY + 20);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+
     const groundG = ctx.createLinearGradient(0, L.groundY - 12, 0, h);
-    groundG.addColorStop(0, '#7c2d12');
-    groundG.addColorStop(0.3, '#431407');
+    groundG.addColorStop(0, '#8a3415');
+    groundG.addColorStop(0.28, '#4a1709');
     groundG.addColorStop(1, '#1a0905');
     ctx.fillStyle = groundG;
     ctx.beginPath();
     ctx.moveTo(0, L.groundY);
-    ctx.quadraticCurveTo(w * 0.3, L.groundY - 14, w * 0.65, L.groundY + 4);
-    ctx.lineTo(w, L.groundY - 8);
+    ctx.quadraticCurveTo(w * 0.35, L.groundY - 14, w * 0.7, L.groundY + 4);
+    ctx.lineTo(w, L.groundY - 6);
     ctx.lineTo(w, h);
     ctx.lineTo(0, h);
     ctx.closePath();
     ctx.fill();
 
-    // Landed SpaceX Starship on left with open cargo hatch glow
-    this._drawStarship(ctx, L.shipLandX, L.groundY - 34, -Math.PI * 0.5, L.isNarrow ? 1.15 : 1.45, false);
-
-    // Cargo bay target glow
-    ctx.save();
-    ctx.strokeStyle = 'rgba(56, 189, 248, 0.65)';
-    ctx.lineWidth = 1.8;
-    ctx.setLineDash([4, 4]);
-    ctx.beginPath();
-    ctx.arc(L.shipLandX, L.groundY - 56, 26 + Math.sin(this.elapsed * 4) * 3, 0, Math.PI * 2);
-    ctx.stroke();
-    ctx.restore();
-
-    // Spirit Rover being lifted ("bế") into Starship
-    const p = this.pickupProgress;
-    const sx = L.spiritX + (L.shipLandX - L.spiritX) * p;
-    const sy = L.groundY - Math.sin(p * Math.PI) * 115 - p * 46;
-    const spiritScale = (L.isNarrow ? 0.86 : 1.08) * (1 - p * 0.45);
-
-    // Tractor / Rescue Claw beam while lifting
-    if (p > 0.02 && !this.spiritPickedUp) {
-      ctx.save();
-      ctx.strokeStyle = 'rgba(252, 211, 77, 0.65)';
-      ctx.lineWidth = 2.5;
+    this.marsRocks.forEach(rk => {
+      const rx = rk.rx * w;
+      const ry = L.groundY + rk.ry * h;
+      ctx.fillStyle = `rgba(38, 14, 8, ${rk.shade})`;
       ctx.beginPath();
-      ctx.moveTo(L.shipLandX, L.groundY - 56);
-      ctx.lineTo(sx, sy - 24);
+      ctx.ellipse(rx, ry, rk.w, rk.h, 0, 0, Math.PI * 2);
+      ctx.fill();
+    });
+
+    this._drawStarship(ctx, L.shipLandX, L.groundY - 42, -Math.PI * 0.5, L.isNarrow ? 1.2 : 1.52, false, true, 1);
+
+    const bayX = L.shipLandX;
+    const bayY = L.groundY - 66;
+    const p = this.pickupProgress;
+    const sx = L.spiritX + (bayX - L.spiritX) * p;
+    const sy = L.groundY - Math.sin(p * Math.PI) * 118 - p * 46;
+    const spiritScale = (L.isNarrow ? 0.88 : 1.1) * (1 - p * 0.48);
+
+    if (p > 0.01 && !this.spiritPickedUp) {
+      const elbowX = (bayX + sx) * 0.5;
+      const elbowY = Math.min(bayY, sy - 42) - 48;
+      ctx.save();
+      ctx.strokeStyle = '#cbd5e1';
+      ctx.lineWidth = 3.2;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      ctx.beginPath();
+      ctx.moveTo(bayX + 8, bayY);
+      ctx.lineTo(elbowX, elbowY);
+      ctx.lineTo(sx, sy - 38 * spiritScale);
+      ctx.stroke();
+
+      ctx.fillStyle = '#38bdf8';
+      ctx.beginPath();
+      ctx.arc(elbowX, elbowY, 4.5, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.strokeStyle = '#fcd34d';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(sx, sy - 24 * spiritScale, 26 * spiritScale, Math.PI * 0.15, Math.PI * 0.85);
       ctx.stroke();
       ctx.restore();
     }
@@ -704,9 +843,14 @@ class SpiritRescueGame {
       if (window.VantaGfx && window.VantaGfx.drawMERRover) {
         window.VantaGfx.drawMERRover(ctx, { wheelRot: 0, stuckWheel: true, scale: spiritScale });
       }
-      // Pulsing pickup ring around Spirit
-      ctx.strokeStyle = `rgba(252, 211, 77, ${0.45 + 0.45 * Math.sin(this.elapsed * 4)})`;
-      ctx.lineWidth = 2;
+      const blink = 0.4 + 0.6 * Math.abs(Math.sin(this.elapsed * 4.2));
+      ctx.fillStyle = `rgba(251, 113, 133, ${blink})`;
+      ctx.beginPath();
+      ctx.arc(0, -48 * spiritScale, 3.5, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.strokeStyle = `rgba(252, 211, 77, ${0.42 + 0.42 * Math.sin(this.elapsed * 4)})`;
+      ctx.lineWidth = 1.8;
       ctx.beginPath();
       ctx.arc(0, -24 * spiritScale, 52 * spiritScale, 0, Math.PI * 2);
       ctx.stroke();
@@ -715,19 +859,32 @@ class SpiritRescueGame {
   }
 
   _renderMotorPhase(ctx, w, h, L) {
-    // Repair Bay platform grid
     ctx.save();
-    ctx.strokeStyle = 'rgba(56, 189, 248, 0.14)';
-    ctx.lineWidth = 1;
-    const floorY = h * 0.59;
+    const spot = ctx.createRadialGradient(w * 0.5, h * 0.12, 10, w * 0.5, h * 0.56, Math.min(w, h) * 0.55);
+    spot.addColorStop(0, 'rgba(56, 189, 248, 0.16)');
+    spot.addColorStop(1, 'rgba(0, 0, 0, 0)');
+    ctx.fillStyle = spot;
+    ctx.fillRect(0, 0, w, h);
+
+    const floorY = h * 0.60;
+    ctx.strokeStyle = 'rgba(56, 189, 248, 0.35)';
+    ctx.lineWidth = 2;
     ctx.beginPath();
-    ctx.moveTo(w * 0.12, floorY);
-    ctx.lineTo(w * 0.88, floorY);
+    ctx.moveTo(w * 0.14, floorY);
+    ctx.lineTo(w * 0.86, floorY);
     ctx.stroke();
+
+    ctx.strokeStyle = 'rgba(56, 189, 248, 0.1)';
+    ctx.lineWidth = 1;
+    for (let gx = w * 0.18; gx <= w * 0.82; gx += 36) {
+      ctx.beginPath();
+      ctx.moveTo(gx, floorY);
+      ctx.lineTo(gx, floorY + 28);
+      ctx.stroke();
+    }
     ctx.restore();
 
-    // Large Rover Spirit on repair lift
-    const rScale = L.isNarrow ? 1.35 : 1.75;
+    const rScale = L.isNarrow ? 1.4 : 1.82;
     ctx.save();
     ctx.translate(w * 0.5, floorY - 4);
     if (window.VantaGfx && window.VantaGfx.drawMERRover) {
@@ -739,52 +896,62 @@ class SpiritRescueGame {
     }
     ctx.restore();
 
-    // Highlight Wheel #1 Hub
     const hx = L.hubPos.x;
     const hy = L.hubPos.y;
     ctx.save();
     ctx.strokeStyle = this.motorStep === 'done' ? '#38bdf8' : '#fb923c';
     ctx.lineWidth = 2.2;
     ctx.beginPath();
-    ctx.arc(hx, hy, 34 + Math.sin(this.elapsed * 4) * 3, 0, Math.PI * 2);
+    ctx.arc(hx, hy, 36 + Math.sin(this.elapsed * 4) * 3, 0, Math.PI * 2);
     ctx.stroke();
+    for (let b = 0; b < 4; b++) {
+      const ba = (b / 4) * Math.PI * 2 + Math.PI * 0.25;
+      ctx.fillStyle = this.motorStep === 'done' ? '#7dd3fc' : '#fdba74';
+      ctx.beginPath();
+      ctx.arc(hx + Math.cos(ba) * 26, hy + Math.sin(ba) * 26, 2.5, 0, Math.PI * 2);
+      ctx.fill();
+    }
     ctx.restore();
 
-    // Old motor (at hub or flying out)
     if (this.motorStep === 'remove_old') {
-      this._drawMotorUnit(ctx, hx, hy, false, 0.85);
+      this._drawMotorUnit(ctx, hx, hy, false, 0.86);
     } else if (this.motorStep === 'removing') {
       const t = this.motorAnim;
-      this._drawMotorUnit(ctx, hx - t * 110, hy - t * 90, false, 0.85 * (1 - t * 0.4));
+      this._drawMotorUnit(ctx, hx - t * 115, hy - t * 95, false, 0.86 * (1 - t * 0.4));
     }
 
-    // New SpaceX Brushless Motor waiting on right or snapping into hub
     if (this.motorStep === 'install_new') {
       const bob = Math.sin(this.elapsed * 3.5) * 6;
-      this._drawMotorUnit(ctx, L.newMotorPos.x, L.newMotorPos.y + bob, true, 1.05);
-      // Dashed guide line to hub
+      this._drawMotorUnit(ctx, L.newMotorPos.x, L.newMotorPos.y + bob, true, 1.08);
       ctx.save();
-      ctx.strokeStyle = 'rgba(56, 189, 248, 0.5)';
+      ctx.strokeStyle = 'rgba(56, 189, 248, 0.55)';
       ctx.setLineDash([5, 5]);
       ctx.lineWidth = 1.6;
       ctx.beginPath();
-      ctx.moveTo(L.newMotorPos.x - 36, L.newMotorPos.y + bob);
-      ctx.lineTo(hx + 34, hy);
+      ctx.moveTo(L.newMotorPos.x - 40, L.newMotorPos.y + bob);
+      ctx.lineTo(hx + 36, hy);
       ctx.stroke();
       ctx.restore();
     } else if (this.motorStep === 'installing') {
       const t = 0.5 - 0.5 * Math.cos(this.motorAnim * Math.PI);
       const mx = L.newMotorPos.x + (hx - L.newMotorPos.x) * t;
-      const my = L.newMotorPos.y + (hy - L.newMotorPos.y) * t - Math.sin(t * Math.PI) * 45;
-      this._drawMotorUnit(ctx, mx, my, true, 1.05 - t * 0.2);
+      const my = L.newMotorPos.y + (hy - L.newMotorPos.y) * t - Math.sin(t * Math.PI) * 48;
+      this._drawMotorUnit(ctx, mx, my, true, 1.08 - t * 0.22);
     } else if (this.motorStep === 'done') {
-      this._drawMotorUnit(ctx, hx, hy, true, 0.82);
+      this._drawMotorUnit(ctx, hx, hy, true, 0.84);
     }
   }
 
   _renderBatteryPhase(ctx, w, h, L) {
-    const floorY = h * 0.56;
-    const rScale = L.isNarrow ? 1.3 : 1.7;
+    const floorY = h * 0.57;
+    const rScale = L.isNarrow ? 1.35 : 1.75;
+
+    const lampAlpha = 0.08 + (this.battery / 100) * 0.22;
+    const lamp = ctx.createRadialGradient(w * 0.5, floorY - 120, 8, w * 0.5, floorY - 20, 220);
+    lamp.addColorStop(0, `rgba(253, 224, 71, ${lampAlpha})`);
+    lamp.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = lamp;
+    ctx.fillRect(0, 0, w, h);
 
     ctx.save();
     ctx.translate(w * 0.5, floorY);
@@ -795,33 +962,43 @@ class SpiritRescueGame {
         scale: rScale
       });
     }
+    if (this.battery >= 45) {
+      const eyeAlpha = Math.min(1, (this.battery - 45) / 40);
+      ctx.fillStyle = `rgba(56, 189, 248, ${eyeAlpha})`;
+      ctx.beginPath();
+      ctx.arc(17 * rScale, -70.8 * rScale, 2.8, 0, Math.PI * 2);
+      ctx.arc(24 * rScale, -70.8 * rScale, 2.8, 0, Math.PI * 2);
+      ctx.fill();
+    }
     ctx.restore();
 
-    // Energy arcs from charge pad to Spirit solar deck
+    ctx.save();
+    ctx.strokeStyle = '#334155';
+    ctx.lineWidth = 4.5;
+    ctx.beginPath();
+    ctx.moveTo(L.chargePadPos.x, L.chargePadPos.y - 26);
+    ctx.quadraticCurveTo(w * 0.5 - 32, (L.chargePadPos.y + floorY) * 0.5, w * 0.5, floorY - 38);
+    ctx.stroke();
+
     if (this.isCharging || this.battery >= 100) {
-      ctx.save();
-      ctx.strokeStyle = this.battery >= 100 ? '#fcd34d' : '#38bdf8';
-      ctx.lineWidth = 3;
+      ctx.strokeStyle = this.battery >= 100 ? '#4ade80' : '#38bdf8';
+      ctx.lineWidth = 2.4;
+      ctx.setLineDash([8, 8]);
+      ctx.lineDashOffset = -this.elapsed * 90;
       ctx.beginPath();
       ctx.moveTo(L.chargePadPos.x, L.chargePadPos.y - 26);
-      ctx.quadraticCurveTo(
-        w * 0.5 + Math.sin(this.elapsed * 22) * 24,
-        (L.chargePadPos.y + floorY) * 0.5,
-        w * 0.5,
-        floorY - 40
-      );
+      ctx.quadraticCurveTo(w * 0.5 - 32, (L.chargePadPos.y + floorY) * 0.5, w * 0.5, floorY - 38);
       ctx.stroke();
-      ctx.restore();
     }
+    ctx.restore();
 
-    // Battery Gauge Bar
-    const barW = Math.min(280, w * 0.68);
+    const barW = Math.min(290, w * 0.7);
     const barH = 22;
     const bx = w * 0.5 - barW * 0.5;
-    const by = h * 0.26;
+    const by = h * 0.27;
     ctx.save();
-    ctx.fillStyle = 'rgba(15, 23, 42, 0.8)';
-    ctx.strokeStyle = 'rgba(148, 163, 184, 0.4)';
+    ctx.fillStyle = 'rgba(15, 23, 42, 0.84)';
+    ctx.strokeStyle = 'rgba(148, 163, 184, 0.42)';
     ctx.lineWidth = 1.6;
     ctx.beginPath();
     ctx.roundRect(bx, by, barW, barH, 11);
@@ -842,10 +1019,9 @@ class SpiritRescueGame {
     ctx.fillText(`${en ? 'SPIRIT BATTERY' : 'PIN SPIRIT'}: ${Math.round(this.battery)}%`, w * 0.5, by - 10);
     ctx.restore();
 
-    // Glowing Super-Charge Pad button
     const padR = L.isNarrow ? 34 : 38;
     ctx.save();
-    ctx.fillStyle = this.isCharging ? 'rgba(56, 189, 248, 0.35)' : 'rgba(15, 23, 42, 0.78)';
+    ctx.fillStyle = this.isCharging ? 'rgba(56, 189, 248, 0.35)' : 'rgba(15, 23, 42, 0.82)';
     ctx.strokeStyle = this.battery >= 100 ? '#4ade80' : '#38bdf8';
     ctx.lineWidth = 2.2;
     ctx.beginPath();
@@ -853,7 +1029,6 @@ class SpiritRescueGame {
     ctx.fill();
     ctx.stroke();
 
-    // Lightning bolt icon
     ctx.fillStyle = this.battery >= 100 ? '#4ade80' : '#fcd34d';
     ctx.beginPath();
     ctx.moveTo(L.chargePadPos.x + 3, L.chargePadPos.y - 16);
@@ -876,7 +1051,7 @@ class SpiritRescueGame {
     const activeIdx = phases.indexOf(this.phase);
     const y = Math.max(88, h * 0.135);
     const stepW = Math.min(82, (w - 40) / 5);
-    const startX = w * 0.5 - (stepW * 5) * 0.5 + stepW * 0.5;
+    const startX = w * 0.5 - stepW * 5 * 0.5 + stepW * 0.5;
 
     ctx.save();
     ctx.textAlign = 'center';
@@ -921,8 +1096,8 @@ class SpiritRescueGame {
     ctx.font = w < 640 ? '500 11px "JetBrains Mono", monospace' : '500 12px "JetBrains Mono", monospace';
     const tw = Math.min(w - 32, ctx.measureText(text).width + 36);
     const py = h - (w < 640 ? 48 : 40);
-    ctx.fillStyle = 'rgba(8, 13, 26, 0.8)';
-    ctx.strokeStyle = 'rgba(252, 211, 77, 0.35)';
+    ctx.fillStyle = 'rgba(8, 13, 26, 0.82)';
+    ctx.strokeStyle = 'rgba(252, 211, 77, 0.38)';
     ctx.lineWidth = 1.2;
     ctx.beginPath();
     ctx.roundRect(w * 0.5 - tw * 0.5, py - 16, tw, 32, 16);
