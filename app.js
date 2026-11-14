@@ -712,8 +712,10 @@ class EchoesApp {
       this.openQuizDeck(qIdx >= 0 ? qIdx : 0);
     };
 
-    container.querySelector('#btn-expand-quiz-deck').addEventListener('click', openFullDeck);
-    container.querySelector('#shard-quiz-thumb').addEventListener('click', openFullDeck);
+    const expandBtn = container.querySelector('#btn-expand-quiz-deck');
+    if (expandBtn) expandBtn.addEventListener('click', openFullDeck);
+    const thumbEl = container.querySelector('#shard-quiz-thumb');
+    if (thumbEl) thumbEl.addEventListener('click', openFullDeck);
   }
 
   _markQuizSolved(quizId) {
