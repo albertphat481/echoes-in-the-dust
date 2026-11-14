@@ -98,7 +98,24 @@
 
       <div class="shard-body-grid">
         <div class="shard-col-left">
+          <div class="shard-visual-tabs">
+            <button type="button" id="tab-shard-diagram" class="visual-tab active">Sơ đồ Phần cứng</button>
+            <button type="button" id="tab-shard-nasa-photo" class="visual-tab">Ảnh Thật NASA (API)</button>
+          </div>
           <div id="shard-visual" class="shard-visual"></div>
+          <div id="shard-photo-wrap" class="shard-photo-wrap" style="display: none;">
+            <img id="shard-nasa-img" alt="NASA Official Mission Archive" />
+            <div class="shard-photo-caption">
+              <span id="shard-nasa-badge" class="nasa-id-badge">PIA24664</span>
+              <span id="shard-nasa-title">Loading NASA Archive...</span>
+            </div>
+          </div>
+
+          <div id="shard-ephemeris" class="shard-ephemeris-box">
+            <div id="shard-eph-badge" class="eph-badge">LIVE EPHEMERIS</div>
+            <div id="shard-eph-line" class="eph-line"></div>
+          </div>
+
           <!-- Hardware Specs & Live Player Session Telemetry -->
           <div id="shard-specs" class="shard-specs-grid"></div>
           <div class="shard-meta">
@@ -292,6 +309,7 @@
 
   <script src="audio.js"></script>
   <script src="shards.js"></script>
+  <script src="nasaData.js"></script>
   <script src="guides.js"></script>
   <script src="quizzes.js"></script>
   <script src="games1to3.js"></script>

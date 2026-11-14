@@ -447,6 +447,54 @@ class EchoesApp {
     document.getElementById('shard-subtitle').textContent = shard.subtitle;
     document.getElementById('shard-story').textContent = shard.story;
 
+    // Live Astronomical Ephemeris & Telemetry
+    if (window.NASA_TELEMETRY) {
+      const eph = window.NASA_TELEMETRY.getLiveMissionTelemetry(shard.id);
+      const ephBadge = document.getElementById('shard-eph-badge');
+      const ephLine = document.getElementById('shard-eph-line');
+      if (ephBadge) ephBadge.textContent = eph.badge;
+      if (ephLine) ephLine.textContent = eph.line;
+    }
+
+    // Visual mode switcher: Vector Hardware Diagram <-> Real NASA Archive Photo (Live API)
+    const tabDiagram = document.getElementById('tab-shard-diagram');
+    const tabPhoto = document.getElementById('tab-shard-nasa-photo');
+    const visualEl = document.getElementById('shard-visual');
+    const photoWrap = document.getElementById('shard-photo-wrap');
+    const nasaImg = document.getElementById('shard-nasa-img');
+    const nasaBadge = document.getElementById('shard-nasa-badge');
+    const nasaTitle = document.getElementById('shard-nasa-title');
+
+    const showDiagram = () => {
+      if (tabDiagram) tabDiagram.classList.add('active');
+      if (tabPhoto) tabPhoto.classList.remove('active');
+      if (visualEl) visualEl.style.display = 'flex';
+      if (photoWrap) photoWrap.style.display = 'none';
+    };
+
+    const loadAndShowPhoto = async () => {
+      if (tabPhoto) tabPhoto.classList.add('active');
+      if (tabDiagram) tabDiagram.classList.remove('active');
+      if (visualEl) visualEl.style.display = 'none';
+      if (photoWrap) photoWrap.style.display = 'block';
+      if (window.NASA_TELEMETRY) {
+        if (nasaBadge) nasaBadge.textContent = 'NASA API';
+        if (nasaTitle) nasaTitle.textContent = 'Đang tải tư liệu NASA...';
+        const data = await window.NASA_TELEMETRY.fetchMissionPhoto(shard.id);
+        if (nasaImg) nasaImg.src = data.imageUrl;
+        if (nasaBadge) nasaBadge.textContent = data.nasaId;
+        if (nasaTitle) nasaTitle.textContent = `${data.title} (${data.date}) • ${data.source}`;
+      }
+    };
+
+    showDiagram();
+    if (tabDiagram) tabDiagram.onclick = showDiagram;
+    if (tabPhoto) tabPhoto.onclick = loadAndShowPhoto;
+    // Prefetch NASA archive photo silently for instant tab switching
+    if (window.NASA_TELEMETRY) {
+      window.NASA_TELEMETRY.fetchMissionPhoto(shard.id);
+    }
+
     // Populate Hardware Telemetry & Live Player Metric
     const specsContainer = document.getElementById('shard-specs');
     specsContainer.innerHTML = '';
