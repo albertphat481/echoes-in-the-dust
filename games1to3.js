@@ -1085,7 +1085,7 @@ class OneWheelLeftGame {
   reset() {
     this.elapsed = 0;
     this.fallbackDuration = 22;
-    this.goalX = 1120; // Golden Sunset Silica Crest destination
+    this.goalX = 760; // Golden Sunset Silica Crest destination
     this.goalReached = false;
     this.finaleTimer = 0;
     this.completed = false;
@@ -1103,6 +1103,7 @@ class OneWheelLeftGame {
     this.cameraZoomOut = 0;
     this.trenchPoints = [];
     this.silicaSparkles = [];
+    this.dustPuffs = [];
     this.noteMilestone = 200;
     this.noteIdx = 0;
   }
@@ -1184,9 +1185,9 @@ class OneWheelLeftGame {
 
     if (!this.goalReached) {
       if (pushingForward) {
-        this.roverSpeed = Math.min(165, this.roverSpeed + dt * 260);
+        this.roverSpeed = Math.min(76, this.roverSpeed + dt * 135);
       } else if (pushingBackward) {
-        this.roverSpeed = Math.max(-115, this.roverSpeed - dt * 220);
+        this.roverSpeed = Math.max(-52, this.roverSpeed - dt * 120);
       } else {
         this.roverSpeed *= Math.pow(0.08, dt);
       }
@@ -1197,19 +1198,43 @@ class OneWheelLeftGame {
     this.roverX = Math.max(80, this.roverX + this.roverSpeed * dt);
     if (this.roverX <= 80 && this.roverSpeed < 0) this.roverSpeed = 0;
 
-    if (Math.abs(this.roverSpeed) > 22) window.soundEngine.playGravelCrunch();
+    if (Math.abs(this.roverSpeed) > 12) window.soundEngine.playGravelCrunch();
 
-    if (Math.abs(this.roverSpeed) > 10) {
+    if (Math.abs(this.roverSpeed) > 6) {
       const last = this.trenchPoints[this.trenchPoints.length - 1];
-      if (!last || Math.abs(this.roverX - last.x) > 10) {
-        this.trenchPoints.push({ x: this.roverX - 30, glow: 1.0 });
+      if (!last || Math.abs(this.roverX - last.x) > 7) {
+        this.trenchPoints.push({ x: this.roverX - 28, glow: 1.0 });
         this.silicaSparkles.push({
-          x: this.roverX - 30,
-          vy: -20 - Math.random() * 28,
+          x: this.roverX - 28,
+          vy: -16 - Math.random() * 22,
           yOff: 0,
           life: 1.0
         });
       }
+      // Billowing Martian red dust + white silica dust puffs when moving
+      if (Math.random() < 0.65) {
+        const dirSign = this.roverSpeed >= 0 ? -1 : 1;
+        const isSilica = Math.random() < 0.42;
+        this.dustPuffs.push({
+          x: this.roverX + dirSign * (18 + Math.random() * 22),
+          yOff: -2 - Math.random() * 6,
+          vx: dirSign * (12 + Math.random() * 22),
+          vy: -14 - Math.random() * 24,
+          r: 4 + Math.random() * 5,
+          life: 1.0,
+          silica: isSilica
+        });
+      }
+    }
+
+    for (let i = this.dustPuffs.length - 1; i >= 0; i--) {
+      const dp = this.dustPuffs[i];
+      dp.x += dp.vx * dt;
+      dp.yOff += dp.vy * dt;
+      dp.vy *= Math.pow(0.45, dt);
+      dp.r += dt * 14;
+      dp.life -= dt * 1.1;
+      if (dp.life <= 0) this.dustPuffs.splice(i, 1);
     }
 
     for (let i = this.silicaSparkles.length - 1; i >= 0; i--) {
@@ -1332,9 +1357,9 @@ class OneWheelLeftGame {
     ctx.closePath();
     ctx.fill();
 
-    // Foreground Terrain (no neon yellow stroke wire)
+    // Foreground Terrain + White Silica Subsurface Stratum ("lớp silicon trắng" beneath red Martian dust)
     const groundGrad = ctx.createLinearGradient(0, h * 0.65, 0, h * 1.2);
-    groundGrad.addColorStop(0, '#3d1c14');
+    groundGrad.addColorStop(0, '#4a2116');
     groundGrad.addColorStop(0.35, '#24100d');
     groundGrad.addColorStop(1, '#0c0607');
     ctx.fillStyle = groundGrad;
@@ -1347,6 +1372,29 @@ class OneWheelLeftGame {
     ctx.lineTo(w * 1.5, h * 1.3);
     ctx.closePath();
     ctx.fill();
+
+    // Bright white silica soil layer lying just below the thin red Martian crust
+    ctx.save();
+    const silicaGrad = ctx.createLinearGradient(0, h * 0.67, 0, h * 0.78);
+    silicaGrad.addColorStop(0, 'rgba(241, 245, 249, 0.88)');
+    silicaGrad.addColorStop(0.55, 'rgba(226, 232, 240, 0.72)');
+    silicaGrad.addColorStop(1, 'rgba(148, 163, 184, 0.16)');
+    ctx.fillStyle = silicaGrad;
+    ctx.beginPath();
+    for (let sx = -w * 0.5; sx <= w * 1.5; sx += 14) {
+      const wx = sx + camX;
+      const topY = this._terrainHeight(wx, h) + 10;
+      if (sx === -w * 0.5) ctx.moveTo(sx, topY);
+      else ctx.lineTo(sx, topY);
+    }
+    for (let sx = w * 1.5; sx >= -w * 0.5; sx -= 14) {
+      const wx = sx + camX;
+      const botY = this._terrainHeight(wx, h) + 28 + Math.sin(wx * 0.025) * 4;
+      ctx.lineTo(sx, botY);
+    }
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
 
     // Glowing Sunset Silica Beacon Crystal at Goal Crest (clear wordless destination!)
     const bx = this.goalX - camX;
@@ -1371,13 +1419,13 @@ class OneWheelLeftGame {
     ctx.fill();
     ctx.restore();
 
-    // Luminous Silica Trench
+    // Exposed White Silica Trench dug by Spirit's jammed wheel
     if (this.trenchPoints.length > 1) {
       ctx.save();
-      ctx.strokeStyle = '#a5f3fc';
-      ctx.shadowColor = '#38bdf8';
-      ctx.shadowBlur = 22;
-      ctx.lineWidth = 7;
+      ctx.strokeStyle = 'rgba(248, 250, 252, 0.94)';
+      ctx.shadowColor = 'rgba(226, 232, 240, 0.65)';
+      ctx.shadowBlur = 10;
+      ctx.lineWidth = 7.5;
       ctx.lineCap = 'round';
       ctx.beginPath();
       this.trenchPoints.forEach((pt, idx) => {
@@ -1391,9 +1439,21 @@ class OneWheelLeftGame {
     }
 
     for (const sp of this.silicaSparkles) {
-      ctx.fillStyle = `rgba(165, 243, 252, ${sp.life * 0.9})`;
+      ctx.fillStyle = `rgba(248, 250, 252, ${sp.life * 0.9})`;
       ctx.beginPath();
-      ctx.arc(sp.x - camX, this._terrainHeight(sp.x, h) + sp.yOff, 2.3, 0, Math.PI * 2);
+      ctx.arc(sp.x - camX, this._terrainHeight(sp.x, h) + sp.yOff, 2.2, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // Billowing Dust Plumes (Martian rust dust + white silica dust)
+    for (const dp of this.dustPuffs) {
+      const dx = dp.x - camX;
+      const dy = this._terrainHeight(dp.x, h) + dp.yOff;
+      ctx.fillStyle = dp.silica
+        ? `rgba(241, 245, 249, ${dp.life * 0.45})`
+        : `rgba(194, 98, 48, ${dp.life * 0.42})`;
+      ctx.beginPath();
+      ctx.arc(dx, dy, dp.r, 0, Math.PI * 2);
       ctx.fill();
     }
 
@@ -1415,11 +1475,11 @@ class OneWheelLeftGame {
       });
     }
 
-    if (Math.abs(this.roverSpeed) > 18) {
-      ctx.fillStyle = 'rgba(165, 243, 252, 0.85)';
-      for (let i = 0; i < 5; i++) {
+    if (Math.abs(this.roverSpeed) > 8) {
+      ctx.fillStyle = 'rgba(241, 245, 249, 0.78)';
+      for (let i = 0; i < 4; i++) {
         ctx.beginPath();
-        ctx.arc(-32 - Math.random() * 18, -2 - Math.random() * 12, 2.3, 0, Math.PI * 2);
+        ctx.arc(-28 - Math.random() * 16, -2 - Math.random() * 10, 2.1, 0, Math.PI * 2);
         ctx.fill();
       }
     }
