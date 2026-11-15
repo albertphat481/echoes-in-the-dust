@@ -1297,20 +1297,17 @@
 
       const dpr = Math.min(1.5, window.devicePixelRatio || 1);
       const isHorizonEarth = type === 'earth' && radius > 350;
-      const maxSize = isHorizonEarth ? Math.min(1024, this.maxTexSize || 1024) : (this.maxTexSize || 1536);
+      const maxSize = isHorizonEarth ? Math.min(896, this.maxTexSize || 896) : (this.maxTexSize || 1536);
       const targetSize = Math.min(maxSize, Math.max(192, Math.ceil((radius * 2.64 * dpr) / 64) * 64));
       const cacheKey = `${type}_${targetSize}`;
       let entry = this._cache[cacheKey];
       const nowSec = performance.now() * 0.001;
-      const age = entry ? Math.abs(nowSec - entry.time) : 999;
-      const angleThresh = isHorizonEarth ? 0.0008 : 0.0002;
+      const angleThresh = 0.0002;
       const angleChanged = !entry || Math.abs(spin - entry.spin) > angleThresh || Math.abs(tilt - entry.tilt) > angleThresh;
-      const needsRender = isHorizonEarth
-        ? (!entry || age > 0.032 || !entry.canvas)
-        : (!(entry && !angleChanged && (entry.canvas || this._lastDrawnKey === cacheKey)) && (!entry || angleChanged || age > 0.015 || !entry.canvas));
-
+      const canReuseDirect = this._lastDrawnKey === cacheKey && entry && !angleChanged && Math.abs(nowSec - entry.time) <= 0.015;
       const drawSpan = radius * 2.64;
-      if (needsRender) {
+
+      if (!canReuseDirect) {
         if (targetSize > this.canvas.width || targetSize > this.canvas.height) {
           this.canvas.width = targetSize;
           this.canvas.height = targetSize;
@@ -1365,7 +1362,7 @@
         gl.drawElements(gl.TRIANGLES, this.sphereIndexCount, gl.UNSIGNED_SHORT, 0);
 
         if (!entry) {
-          entry = { canvas: null, ctx: null, spin, tilt, time: nowSec };
+          entry = { spin, tilt, time: nowSec };
           this._cache[cacheKey] = entry;
         } else {
           entry.spin = spin;
@@ -1373,47 +1370,23 @@
           entry.time = nowSec;
         }
         this._lastDrawnKey = cacheKey;
-
-        // Draw straight from WebGL buffer to 2D canvas (avoids redundant offscreen copy at 60fps+)
-        ctx.save();
-        ctx.globalAlpha = alpha;
-        ctx.imageSmoothingEnabled = true;
-        ctx.imageSmoothingQuality = 'high';
-        ctx.drawImage(
-          this.canvas,
-          0,
-          this.canvas.height - targetSize,
-          targetSize,
-          targetSize,
-          cx - drawSpan * 0.5,
-          cy - drawSpan * 0.5,
-          drawSpan,
-          drawSpan
-        );
-        ctx.restore();
-
-        // Cache into sprite canvas when static/paused or horizon Earth (30fps) so skipped frames cost 0 GPU draws
-        if (!angleChanged || isHorizonEarth) {
-          if (!entry.canvas) {
-            const c = document.createElement('canvas');
-            c.width = targetSize;
-            c.height = targetSize;
-            entry.canvas = c;
-            entry.ctx = c.getContext('2d');
-          }
-          entry.ctx.globalCompositeOperation = 'copy';
-          entry.ctx.drawImage(this.canvas, 0, this.canvas.height - targetSize, targetSize, targetSize, 0, 0, targetSize, targetSize);
-        }
-        return true;
       }
 
-      const srcCanvas = entry.canvas || this.canvas;
-      const srcY = entry.canvas ? 0 : (this.canvas.height - targetSize);
       ctx.save();
       ctx.globalAlpha = alpha;
       ctx.imageSmoothingEnabled = true;
       ctx.imageSmoothingQuality = 'high';
-      ctx.drawImage(srcCanvas, 0, srcY, targetSize, targetSize, cx - drawSpan * 0.5, cy - drawSpan * 0.5, drawSpan, drawSpan);
+      ctx.drawImage(
+        this.canvas,
+        0,
+        this.canvas.height - targetSize,
+        targetSize,
+        targetSize,
+        cx - drawSpan * 0.5,
+        cy - drawSpan * 0.5,
+        drawSpan,
+        drawSpan
+      );
       ctx.restore();
       return true;
     }
