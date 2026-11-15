@@ -106,10 +106,10 @@ class UnderTheDustGame {
         color: 'rgba(253, 186, 116, 0.45)',
         starColor: '#fed7aa',
         nodes: [
-          { x: 0.39, y: 0.22, r: 1.8 },
-          { x: 0.46, y: 0.24, r: 2.1 },
-          { x: 0.54, y: 0.23, r: 2.0 },
-          { x: 0.61, y: 0.21, r: 1.8 }
+          { x: 0.39, y: 0.12, r: 1.8 },
+          { x: 0.46, y: 0.14, r: 2.1 },
+          { x: 0.54, y: 0.13, r: 2.0 },
+          { x: 0.61, y: 0.11, r: 1.8 }
         ],
         edges: [[0, 1], [1, 2], [2, 3]]
       }
@@ -140,257 +140,36 @@ class UnderTheDustGame {
     const h = window.innerHeight;
     this.maskCanvas.width = w;
     this.maskCanvas.height = h;
-    this.panelCanvas.width = w;
-    this.panelCanvas.height = h;
+    this.panelCanvas.width = 1;
+    this.panelCanvas.height = 1;
 
-    const pctx = this.panelCtx;
-    const horizonY = Math.round(h * 0.29);
     const cx = w * 0.5;
-    const cy = h * 0.59;
-    const tiltY = 0.74;
-    const radius = Math.min(w, h) * (w < 640 ? 0.33 : 0.30);
-    this.panelGeometry = { cx, cy, radius, horizonY, tiltY };
+    const cy = h * 0.52;
+    const radius = Math.min(w, h) * (w < 640 ? 0.34 : 0.29);
+    this.panelGeometry = { cx, cy, radius, horizonY: Math.round(h * 0.29), tiltY: 1.0 };
 
-    // 0. Authentic Martian Twilight Sky above Elysium Planitia (dusty plum-rose -> burnt copper dusk)
-    const skyGrad = pctx.createLinearGradient(0, 0, 0, horizonY + 26);
-    skyGrad.addColorStop(0, '#07040d');
-    skyGrad.addColorStop(0.55, '#1d0d19');
-    skyGrad.addColorStop(0.84, '#3f1916');
-    skyGrad.addColorStop(1, '#5b2416');
-    pctx.fillStyle = skyGrad;
-    pctx.fillRect(0, 0, w, h);
-
-    // Distant hazy Martian mesa silhouette layer behind main ridge
-    pctx.save();
-    this._traceMarsRidge(pctx, w, horizonY - 11, true, horizonY + 40);
-    pctx.fillStyle = 'rgba(42, 17, 17, 0.82)';
-    pctx.fill();
-    pctx.restore();
-
-    // 1. Elysium Planitia Twilight Ground with Regolith Micro-Grain (clipped below Martian dune ridge)
-    pctx.save();
-    this._traceMarsRidge(pctx, w, horizonY, true, h);
-    pctx.clip();
-
-    const bgGrad = pctx.createRadialGradient(cx, cy, radius * 0.2, cx, cy, Math.max(w, h) * 0.85);
-    bgGrad.addColorStop(0, '#3a1f15');
-    bgGrad.addColorStop(0.55, '#190f0e');
-    bgGrad.addColorStop(1, '#08070c');
-    pctx.fillStyle = bgGrad;
-    pctx.fillRect(0, horizonY - 28, w, h - horizonY + 28);
-
-    // Warm atmospheric dust transition mist softening the ridge into foreground regolith
-    const mistGrad = pctx.createLinearGradient(0, horizonY - 18, 0, horizonY + 52);
-    mistGrad.addColorStop(0, 'rgba(92, 38, 22, 0.65)');
-    mistGrad.addColorStop(1, 'rgba(58, 31, 21, 0)');
-    pctx.fillStyle = mistGrad;
-    pctx.fillRect(0, horizonY - 18, w, 70);
-
-    if (window.VantaGfx) {
-      const grain = window.VantaGfx.getGrainPattern(pctx, 0.08, true);
-      if (grain) {
-        pctx.fillStyle = grain;
-        pctx.fillRect(0, horizonY - 28, w, h - horizonY + 28);
-      }
-    }
-
-    // Weathered Martian basalt rocks & wind-eroded dust tails
-    for (let i = 0; i < 64; i++) {
-      const ang = Math.random() * Math.PI * 2;
-      const dist = radius * (1.07 + Math.random() * 0.85);
-      const rx = cx + Math.cos(ang) * dist;
-      const ry = cy + Math.sin(ang) * dist * tiltY;
-      if (ry < horizonY + 18) continue;
-      const rw = 4 + Math.random() * 14;
-      const rh = rw * (0.52 + Math.random() * 0.35);
-
-      // Wind-tail drift shadow
-      pctx.fillStyle = 'rgba(0, 0, 0, 0.48)';
-      pctx.beginPath();
-      pctx.ellipse(rx + rw * 0.45, ry + rh * 0.3, rw * 1.15, rh * 0.85, 0.2, 0, Math.PI * 2);
-      pctx.fill();
-
-      // Faceted rock polygon
-      pctx.save();
-      pctx.translate(rx, ry);
-      pctx.rotate(ang);
-      const rGrad = pctx.createLinearGradient(-rw, -rh, rw, rh);
-      rGrad.addColorStop(0, '#9a5233');
-      rGrad.addColorStop(0.5, '#562b1a');
-      rGrad.addColorStop(1, '#1a0e0b');
-      pctx.fillStyle = rGrad;
-      pctx.beginPath();
-      const pts = 7;
-      for (let k = 0; k < pts; k++) {
-        const ka = (k / pts) * Math.PI * 2;
-        const kr = 0.78 + 0.32 * (window.VantaGfx ? window.VantaGfx.hash2(i, k, 51) : Math.random());
-        const px = Math.cos(ka) * rw * kr;
-        const py = Math.sin(ka) * rh * kr;
-        if (k === 0) pctx.moveTo(px, py);
-        else pctx.lineTo(px, py);
-      }
-      pctx.closePath();
-      pctx.fill();
-      pctx.strokeStyle = 'rgba(253, 186, 116, 0.16)';
-      pctx.lineWidth = 0.8;
-      pctx.stroke();
-      pctx.restore();
-    }
-    pctx.restore();
-
-    // 2. Solar Wing Drop Shadow (matching 3/4 Martian plain perspective)
-    pctx.save();
-    pctx.translate(cx + 12, cy + 14);
-    pctx.scale(1, tiltY);
-    pctx.fillStyle = 'rgba(0, 0, 0, 0.72)';
-    pctx.beginPath();
-    const sides = 10;
-    for (let i = 0; i <= sides; i++) {
-      const a = (i / sides) * Math.PI * 2 - Math.PI / 2;
-      const px = Math.cos(a) * radius;
-      const py = Math.sin(a) * radius;
-      if (i === 0) pctx.moveTo(px, py);
-      else pctx.lineTo(px, py);
-    }
-    pctx.closePath();
-    pctx.fill();
-    pctx.restore();
-
-    // 3. InSight UltraFlex Decagonal Solar Wing
-    pctx.save();
-    pctx.translate(cx, cy);
-    pctx.scale(1, tiltY);
-    pctx.beginPath();
-    for (let i = 0; i <= sides; i++) {
-      const a = (i / sides) * Math.PI * 2 - Math.PI / 2;
-      const px = Math.cos(a) * radius;
-      const py = Math.sin(a) * radius;
-      if (i === 0) pctx.moveTo(px, py);
-      else pctx.lineTo(px, py);
-    }
-    pctx.closePath();
-    pctx.clip();
-
-    const waferGrad = pctx.createRadialGradient(-radius * 0.28, -radius * 0.28, 12, 0, 0, radius);
-    waferGrad.addColorStop(0, '#224f88');
-    waferGrad.addColorStop(0.55, '#112a4f');
-    waferGrad.addColorStop(1, '#071225');
-    pctx.fillStyle = waferGrad;
-    pctx.fillRect(-radius, -radius, radius * 2, radius * 2);
-
-    // Copper-gold photovoltaic traces
-    pctx.strokeStyle = 'rgba(251, 191, 36, 0.2)';
-    pctx.lineWidth = 1;
-    for (let ring = 0.25; ring <= 0.92; ring += 0.14) {
-      pctx.beginPath();
-      for (let i = 0; i <= sides; i++) {
-        const a = (i / sides) * Math.PI * 2 - Math.PI / 2;
-        const px = Math.cos(a) * radius * ring;
-        const py = Math.sin(a) * radius * ring;
-        if (i === 0) pctx.moveTo(px, py);
-        else pctx.lineTo(px, py);
-      }
-      pctx.stroke();
-    }
-
-    pctx.strokeStyle = 'rgba(125, 211, 252, 0.14)';
-    pctx.lineWidth = 0.9;
-    for (let g = -radius; g <= radius; g += 22) {
-      pctx.beginPath();
-      pctx.moveTo(-radius, g);
-      pctx.lineTo(radius, g);
-      pctx.stroke();
-    }
-
-    // 10 Spoke Spars
-    for (let i = 0; i < sides; i++) {
-      const a = (i / sides) * Math.PI * 2 - Math.PI / 2;
-      const ex = Math.cos(a) * radius;
-      const ey = Math.sin(a) * radius;
-
-      pctx.strokeStyle = 'rgba(0, 0, 0, 0.5)';
-      pctx.lineWidth = 5;
-      pctx.beginPath();
-      pctx.moveTo(2, 2);
-      pctx.lineTo(ex + 2, ey + 2);
-      pctx.stroke();
-
-      pctx.strokeStyle = 'rgba(251, 191, 36, 0.78)';
-      pctx.lineWidth = 2.2;
-      pctx.beginPath();
-      pctx.moveTo(0, 0);
-      pctx.lineTo(ex, ey);
-      pctx.stroke();
-    }
-
-    // Glass specular streak
-    const specGrad = pctx.createLinearGradient(-radius, -radius * 0.6, radius * 0.5, radius);
-    specGrad.addColorStop(0, 'rgba(255, 255, 255, 0)');
-    specGrad.addColorStop(0.47, 'rgba(254, 243, 199, 0.1)');
-    specGrad.addColorStop(0.51, 'rgba(255, 255, 255, 0.22)');
-    specGrad.addColorStop(0.56, 'rgba(56, 189, 248, 0.08)');
-    specGrad.addColorStop(1, 'rgba(255, 255, 255, 0)');
-    pctx.fillStyle = specGrad;
-    pctx.fillRect(-radius, -radius, radius * 2, radius * 2);
-
-    pctx.font = '600 11.5px "JetBrains Mono", monospace';
-    pctx.fillStyle = 'rgba(252, 211, 77, 0.68)';
-    pctx.fillText('JPL-NSY-04 // ♥ E.K.', radius * 0.16, radius * 0.42);
-    pctx.fillText('SN-1805-INSIGHT', -radius * 0.58, radius * 0.31);
-
-    // Center Gimbal Spindle (machined dark titanium, no stove-burner yellow dots)
-    const hubR = radius * 0.13;
-    const hubGrad = pctx.createRadialGradient(-hubR * 0.25, -hubR * 0.25, 2, 0, 0, hubR);
-    hubGrad.addColorStop(0, '#475569');
-    hubGrad.addColorStop(0.65, '#1e293b');
-    hubGrad.addColorStop(1, '#090d16');
-    pctx.beginPath();
-    pctx.arc(0, 0, hubR, 0, Math.PI * 2);
-    pctx.fillStyle = hubGrad;
-    pctx.fill();
-    pctx.strokeStyle = 'rgba(226, 232, 240, 0.45)';
-    pctx.lineWidth = 1.2;
-    pctx.stroke();
-
-    pctx.beginPath();
-    pctx.arc(0, 0, hubR * 0.42, 0, Math.PI * 2);
-    pctx.strokeStyle = 'rgba(148, 163, 184, 0.35)';
-    pctx.lineWidth = 0.9;
-    pctx.stroke();
-    pctx.restore();
-
-    // Anodized Perimeter Frame
-    pctx.save();
-    pctx.translate(cx, cy);
-    pctx.scale(1, tiltY);
-    pctx.beginPath();
-    for (let i = 0; i <= sides; i++) {
-      const a = (i / sides) * Math.PI * 2 - Math.PI / 2;
-      const px = Math.cos(a) * radius;
-      const py = Math.sin(a) * radius;
-      if (i === 0) pctx.moveTo(px, py);
-      else pctx.lineTo(px, py);
-    }
-    pctx.strokeStyle = 'rgba(217, 119, 6, 0.55)';
-    pctx.lineWidth = 2.2;
-    pctx.stroke();
-    pctx.restore();
-
-    // 4. Sculpted Wind-Swept Martian Dust Mask (softly feathered over dune ridge)
+    // Sculpted Wind-Swept Martian Dust Storm Veil clipped to the 3D Mars globe
     const mctx = this.maskCtx;
     mctx.clearRect(0, 0, w, h);
     mctx.save();
-    this._traceMarsRidge(mctx, w, horizonY, true, h);
+    mctx.beginPath();
+    mctx.arc(cx, cy, radius * 1.01, 0, Math.PI * 2);
     mctx.clip();
 
     mctx.globalCompositeOperation = 'source-over';
-    const dustGrad = mctx.createLinearGradient(0, horizonY - 16, 0, h);
-    dustGrad.addColorStop(0, 'rgba(92, 42, 20, 0)');
-    dustGrad.addColorStop(0.10, 'rgba(84, 38, 18, 0.88)');
-    dustGrad.addColorStop(0.45, 'rgba(64, 28, 13, 0.94)');
-    dustGrad.addColorStop(1, 'rgba(32, 14, 8, 0.96)');
+    const dustGrad = mctx.createRadialGradient(
+      cx - radius * 0.3,
+      cy - radius * 0.25,
+      radius * 0.1,
+      cx,
+      cy,
+      radius * 1.05
+    );
+    dustGrad.addColorStop(0, 'rgba(168, 78, 34, 0.50)');
+    dustGrad.addColorStop(0.55, 'rgba(116, 48, 20, 0.60)');
+    dustGrad.addColorStop(1, 'rgba(38, 15, 9, 0.68)');
     mctx.fillStyle = dustGrad;
-    mctx.fillRect(0, horizonY - 28, w, h - horizonY + 28);
+    mctx.fillRect(cx - radius - 4, cy - radius - 4, radius * 2 + 8, radius * 2 + 8);
 
     if (window.VantaGfx) {
       const dw = Math.max(64, Math.floor(w * 0.25));
@@ -403,12 +182,12 @@ class UnderTheDustGame {
       const dd = img.data;
       for (let py = 0; py < dh; py++) {
         for (let px = 0; px < dw; px++) {
-          const n = window.VantaGfx.fbm(px * 0.04 + py * 0.012, py * 0.05, 4, 202);
+          const n = window.VantaGfx.fbm(px * 0.045 + py * 0.016, py * 0.055, 4, 202);
           const idx = (py * dw + px) * 4;
-          dd[idx] = 148 + n * 42;
-          dd[idx + 1] = 68 + n * 24;
-          dd[idx + 2] = 32 + n * 14;
-          dd[idx + 3] = Math.floor(18 + n * 38);
+          dd[idx] = 172 + n * 48;
+          dd[idx + 1] = 84 + n * 28;
+          dd[idx + 2] = 38 + n * 16;
+          dd[idx + 3] = Math.floor(24 + n * 58);
         }
       }
       dctx.putImageData(img, 0, 0);
@@ -417,7 +196,7 @@ class UnderTheDustGame {
       const dustGrain = window.VantaGfx.getGrainPattern(mctx, 0.08, true);
       if (dustGrain) {
         mctx.fillStyle = dustGrain;
-        mctx.fillRect(0, horizonY - 24, w, h - horizonY + 24);
+        mctx.fillRect(cx - radius - 4, cy - radius - 4, radius * 2 + 8, radius * 2 + 8);
       }
     }
     mctx.restore();
@@ -675,25 +454,23 @@ class UnderTheDustGame {
   }
 
   render(ctx, w, h) {
-    ctx.drawImage(this.panelCanvas, 0, 0);
-
-    const { cx, cy, radius, horizonY = Math.round(h * 0.29), tiltY = 0.74 } = this.panelGeometry;
+    const { cx, cy, radius } = this.panelGeometry;
     const progress = Math.min(1, this.cleanRatio / this.targetClean);
     const now = performance.now() * 0.001;
 
-    // Starry Martian Twilight Sky + Constellations strictly above the Martian ridge
-    ctx.save();
-    this._traceMarsRidge(ctx, w, horizonY + 2, false);
-    ctx.lineTo(w, 0);
-    ctx.lineTo(0, 0);
-    ctx.closePath();
-    ctx.clip();
+    // 1. Deep Space Backdrop (matching Game 2 StillThereGame)
+    const spaceGrad = ctx.createRadialGradient(cx, cy * 0.9, 60, cx, cy, Math.max(w, h) * 0.9);
+    spaceGrad.addColorStop(0, '#0c1324');
+    spaceGrad.addColorStop(0.55, '#060913');
+    spaceGrad.addColorStop(1, '#02040a');
+    ctx.fillStyle = spaceGrad;
+    ctx.fillRect(0, 0, w, h);
 
     if (window.vantaNebulaGL) {
-      window.vantaNebulaGL.drawBackdrop(ctx, w, horizonY + 28, {
-        alpha: 0.56,
-        lumen: 1.15 + progress * 0.3,
-        cyan: 0.12,
+      window.vantaNebulaGL.drawBackdrop(ctx, w, h, {
+        alpha: 0.42,
+        lumen: 1.0 + progress * 0.25,
+        cyan: 0.16,
         stars: 0.85,
         composite: 'screen'
       });
@@ -702,45 +479,83 @@ class UnderTheDustGame {
       window.VantaGfx.drawStarfield(ctx, this.stars, w, h, now, 0.92);
     }
     this._drawConstellations(ctx, w, h, now, progress);
-    ctx.restore();
 
-    // Warm Solar Activation Bloom underneath dust
-    if (this.cleanRatio > 0.04 || this.goalReached) {
-      ctx.save();
-      ctx.translate(cx, cy);
-      ctx.scale(1, tiltY);
-      const glowAlpha = Math.min(0.65, progress * 0.42 + this.heartPulseVisual * 0.25);
-      const glow = ctx.createRadialGradient(0, 0, radius * 0.08, 0, 0, radius * 1.15);
+    // 2. Hero 524,288-Polygon RTX 3D Mars Globe
+    const renderedMars3D = window.vantaPlanetGL && window.vantaPlanetGL.drawPlanet(ctx, 'mars', cx, cy, radius, {
+      spin: now * 0.000018 + 0.45,
+      tilt: 0.16,
+      sunDir: [-0.62, 0.42, 0.66],
+      alpha: 1.0
+    });
+    if (!renderedMars3D) {
+      const mGrad = ctx.createRadialGradient(cx - radius * 0.35, cy - radius * 0.3, radius * 0.1, cx, cy, radius);
+      mGrad.addColorStop(0, '#d97745');
+      mGrad.addColorStop(0.65, '#8c3b1e');
+      mGrad.addColorStop(1, '#1a0a06');
+      ctx.fillStyle = mGrad;
+      ctx.beginPath();
+      ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // 3. Wind-Swept Martian Dust Storm Blanket over Mars (wiped away by player)
+    ctx.drawImage(this.maskCanvas, 0, 0);
+
+    // 4. InSight Elysium Planitia Solar Wing Beacon + Golden Orbital Power Arc
+    const bx = cx - radius * 0.16;
+    const by = cy + radius * 0.10;
+    const beaconR = Math.max(18, radius * 0.14);
+
+    if (this.cleanRatio > 0.03 || this.goalReached) {
+      const glowAlpha = Math.min(0.65, progress * 0.48 + this.heartPulseVisual * 0.28);
+      const glow = ctx.createRadialGradient(bx, by, beaconR * 0.2, bx, by, beaconR * 3.4);
       glow.addColorStop(0, `rgba(252, 211, 77, ${glowAlpha})`);
-      glow.addColorStop(0.55, `rgba(251, 146, 60, ${glowAlpha * 0.35})`);
+      glow.addColorStop(0.55, `rgba(251, 146, 60, ${glowAlpha * 0.32})`);
       glow.addColorStop(1, 'rgba(245, 158, 11, 0)');
       ctx.fillStyle = glow;
       ctx.beginPath();
-      ctx.arc(0, 0, radius * 1.15, 0, Math.PI * 2);
+      ctx.arc(bx, by, beaconR * 3.4, 0, Math.PI * 2);
       ctx.fill();
-      ctx.restore();
     }
 
-    // Wind-rippled Martian dust blanket (strictly over terrain & solar panel below horizon)
-    ctx.drawImage(this.maskCanvas, 0, 0);
-
-    // Wordless Golden Orbital Power Arc around center hub (aligned with 3/4 solar wing tilt)
+    // Mini decagonal solar wing + hub on Mars surface
     ctx.save();
-    ctx.translate(cx, cy);
-    ctx.scale(1, tiltY);
+    ctx.translate(bx, by);
     ctx.beginPath();
-    ctx.arc(0, 0, radius * 0.23, 0, Math.PI * 2);
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.14)';
-    ctx.lineWidth = 3;
+    for (let i = 0; i <= 10; i++) {
+      const a = (i / 10) * Math.PI * 2 - Math.PI / 2;
+      const px = Math.cos(a) * beaconR;
+      const py = Math.sin(a) * beaconR;
+      if (i === 0) ctx.moveTo(px, py);
+      else ctx.lineTo(px, py);
+    }
+    ctx.closePath();
+    ctx.fillStyle = 'rgba(17, 42, 79, 0.92)';
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(252, 211, 77, 0.85)';
+    ctx.lineWidth = 1.6;
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.arc(0, 0, beaconR * 0.28, 0, Math.PI * 2);
+    ctx.fillStyle = '#fcd34d';
+    ctx.fill();
+    ctx.restore();
+
+    // Wordless Golden Orbital Power Arc around Mars beacon
+    ctx.save();
+    ctx.translate(bx, by);
+    ctx.beginPath();
+    ctx.arc(0, 0, beaconR * 1.48, 0, Math.PI * 2);
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.16)';
+    ctx.lineWidth = 2.4;
     ctx.stroke();
 
     if (progress > 0.01) {
       ctx.beginPath();
-      ctx.arc(0, 0, radius * 0.23, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * progress);
+      ctx.arc(0, 0, beaconR * 1.48, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * progress);
       ctx.strokeStyle = '#fcd34d';
-      ctx.shadowColor = '#f59e0b';
-      ctx.shadowBlur = 16;
-      ctx.lineWidth = 4;
+      ctx.lineWidth = 3.5;
       ctx.lineCap = 'round';
       ctx.stroke();
     }
@@ -771,16 +586,16 @@ class UnderTheDustGame {
       ctx.fill();
     }
 
-    // Heartbeat ripple (tilted with 3/4 solar wing plane)
-    ctx.save();
-    ctx.translate(cx, cy);
-    ctx.scale(1, tiltY);
-    ctx.beginPath();
-    ctx.arc(0, 0, radius * (0.16 + (1 - this.heartPulseVisual) * 0.28), 0, Math.PI * 2);
-    ctx.strokeStyle = `rgba(252, 211, 77, ${this.heartPulseVisual * (0.4 + progress * 0.55)})`;
-    ctx.lineWidth = 2.6;
-    ctx.stroke();
-    ctx.restore();
+    // Heartbeat ripple radiating from InSight landing beacon
+    if (this.heartPulseVisual > 0.01) {
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(bx, by, beaconR * (1.2 + (1 - this.heartPulseVisual) * 2.8), 0, Math.PI * 2);
+      ctx.strokeStyle = `rgba(252, 211, 77, ${this.heartPulseVisual * (0.42 + progress * 0.52)})`;
+      ctx.lineWidth = 2.4;
+      ctx.stroke();
+      ctx.restore();
+    }
 
     if (this.finaleTimer > 0) {
       const f = Math.min(1, this.finaleTimer / 1.65);
@@ -790,8 +605,8 @@ class UnderTheDustGame {
 
     if (this.ghostAlpha > 0.01) {
       const t = performance.now() * 0.0028;
-      const gx = cx + Math.sin(t) * (radius * 0.48);
-      const gy = cy + Math.cos(t * 1.8) * (radius * 0.2);
+      const gx = cx + Math.sin(t) * (radius * 0.55);
+      const gy = cy + Math.cos(t * 1.8) * (radius * 0.28);
       drawGhostHand(ctx, gx, gy, this.ghostAlpha, 1, false);
     }
   }
