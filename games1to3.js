@@ -1357,7 +1357,7 @@ class OneWheelLeftGame {
     ctx.closePath();
     ctx.fill();
 
-    // Foreground Terrain + White Silica Subsurface Stratum ("lớp silicon trắng" beneath red Martian dust)
+    // Foreground Martian Terrain
     const groundGrad = ctx.createLinearGradient(0, h * 0.65, 0, h * 1.2);
     groundGrad.addColorStop(0, '#4a2116');
     groundGrad.addColorStop(0.35, '#24100d');
@@ -1372,29 +1372,6 @@ class OneWheelLeftGame {
     ctx.lineTo(w * 1.5, h * 1.3);
     ctx.closePath();
     ctx.fill();
-
-    // Bright white silica soil layer lying just below the thin red Martian crust
-    ctx.save();
-    const silicaGrad = ctx.createLinearGradient(0, h * 0.67, 0, h * 0.78);
-    silicaGrad.addColorStop(0, 'rgba(241, 245, 249, 0.88)');
-    silicaGrad.addColorStop(0.55, 'rgba(226, 232, 240, 0.72)');
-    silicaGrad.addColorStop(1, 'rgba(148, 163, 184, 0.16)');
-    ctx.fillStyle = silicaGrad;
-    ctx.beginPath();
-    for (let sx = -w * 0.5; sx <= w * 1.5; sx += 14) {
-      const wx = sx + camX;
-      const topY = this._terrainHeight(wx, h) + 10;
-      if (sx === -w * 0.5) ctx.moveTo(sx, topY);
-      else ctx.lineTo(sx, topY);
-    }
-    for (let sx = w * 1.5; sx >= -w * 0.5; sx -= 14) {
-      const wx = sx + camX;
-      const botY = this._terrainHeight(wx, h) + 28 + Math.sin(wx * 0.025) * 4;
-      ctx.lineTo(sx, botY);
-    }
-    ctx.closePath();
-    ctx.fill();
-    ctx.restore();
 
     // Glowing Sunset Silica Beacon Crystal at Goal Crest (clear wordless destination!)
     const bx = this.goalX - camX;
