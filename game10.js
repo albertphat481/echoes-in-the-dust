@@ -1064,6 +1064,9 @@ class SpiritRescueGame {
     }
     if (window.VantaGfx) {
       window.VantaGfx.drawStarfield(ctx, this.stars, w, h, this.elapsed, 0.88);
+      if ((this.phase === 'to_mars' || this.phase === 'to_earth') && window.VantaGfx.drawSpaceMeteors) {
+        window.VantaGfx.drawSpaceMeteors(ctx, w, h, this.elapsed, { alpha: 0.92, rocks: 7 });
+      }
     }
 
     if (this.phase === 'to_mars' || this.phase === 'to_earth') {
@@ -1154,26 +1157,51 @@ class SpiritRescueGame {
       ctx.restore();
     });
 
-    this.hazards.forEach(hz => {
+    this.hazards.forEach((hz, idx) => {
       if (hz.hit) return;
       const hp = this._getArcPos(from, to, hz.t, arcH, hz.off * 76);
-      ctx.save();
-      ctx.translate(hp.x, hp.y);
-      ctx.rotate(this.elapsed * 1.4);
-      ctx.fillStyle = '#451a03';
-      ctx.strokeStyle = '#fb923c';
-      ctx.lineWidth = 1.6;
-      ctx.beginPath();
-      for (let k = 0; k < 7; k++) {
-        const a = (k / 7) * Math.PI * 2;
-        const rad = hz.r * (0.72 + (k % 2) * 0.28);
-        if (k === 0) ctx.moveTo(Math.cos(a) * rad, Math.sin(a) * rad);
-        else ctx.lineTo(Math.cos(a) * rad, Math.sin(a) * rad);
+      if (window.VantaGfx && window.VantaGfx.drawAsteroidRock) {
+        // Ember plasma wake trailing behind hazard asteroid
+        ctx.save();
+        const wakeGrad = ctx.createLinearGradient(hp.x, hp.y, hp.x + hz.r * 2.4, hp.y - hz.r * 1.1);
+        wakeGrad.addColorStop(0, 'rgba(251, 146, 60, 0.42)');
+        wakeGrad.addColorStop(1, 'rgba(234, 88, 12, 0)');
+        ctx.strokeStyle = wakeGrad;
+        ctx.lineWidth = hz.r * 0.55;
+        ctx.lineCap = 'round';
+        ctx.beginPath();
+        ctx.moveTo(hp.x, hp.y);
+        ctx.lineTo(hp.x + hz.r * 2.4, hp.y - hz.r * 1.1);
+        ctx.stroke();
+        ctx.restore();
+        window.VantaGfx.drawAsteroidRock(
+          ctx,
+          hp.x,
+          hp.y,
+          hz.r * 1.04,
+          this.elapsed * (idx % 2 ? 1.15 : -1.35) + idx * 1.7,
+          idx + 7,
+          true
+        );
+      } else {
+        ctx.save();
+        ctx.translate(hp.x, hp.y);
+        ctx.rotate(this.elapsed * 1.4);
+        ctx.fillStyle = '#451a03';
+        ctx.strokeStyle = '#fb923c';
+        ctx.lineWidth = 1.6;
+        ctx.beginPath();
+        for (let k = 0; k < 7; k++) {
+          const a = (k / 7) * Math.PI * 2;
+          const rad = hz.r * (0.72 + (k % 2) * 0.28);
+          if (k === 0) ctx.moveTo(Math.cos(a) * rad, Math.sin(a) * rad);
+          else ctx.lineTo(Math.cos(a) * rad, Math.sin(a) * rad);
+        }
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+        ctx.restore();
       }
-      ctx.closePath();
-      ctx.fill();
-      ctx.stroke();
-      ctx.restore();
     });
 
     const orbR = L.isNarrow ? 36 : 48;

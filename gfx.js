@@ -589,5 +589,178 @@
     ctx.restore();
   };
 
+  /**
+   * 3D-shaded cratered rocky asteroid / meteoroid silhouette.
+   */
+  G.drawAsteroidRock = function (ctx, x, y, r, rot = 0, seed = 1, warmGlow = false) {
+    ctx.save();
+    ctx.translate(x, y);
+
+    // Subtle heated entry/solar rim halo when enabled
+    if (warmGlow) {
+      const aura = ctx.createRadialGradient(0, 0, r * 0.25, 0, 0, r * 1.9);
+      aura.addColorStop(0, 'rgba(251, 146, 60, 0.34)');
+      aura.addColorStop(0.6, 'rgba(234, 88, 12, 0.12)');
+      aura.addColorStop(1, 'rgba(0, 0, 0, 0)');
+      ctx.fillStyle = aura;
+      ctx.beginPath();
+      ctx.arc(0, 0, r * 1.9, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    ctx.rotate(rot);
+    const pts = 11;
+    ctx.beginPath();
+    for (let i = 0; i < pts; i++) {
+      const a = (i / pts) * Math.PI * 2;
+      const jitter = 0.68 + G.hash2(i * 17, seed * 31, 91) * 0.38;
+      const px = Math.cos(a) * r * jitter;
+      const py = Math.sin(a) * r * jitter * (0.86 + G.hash2(seed, i, 19) * 0.24);
+      if (i === 0) ctx.moveTo(px, py);
+      else ctx.lineTo(px, py);
+    }
+    ctx.closePath();
+
+    // Directional solar gradient in rock local frame (rotated smoothly)
+    const lx = Math.cos(-rot - 0.7) * r;
+    const ly = Math.sin(-rot - 0.7) * r;
+    const rockGrad = ctx.createLinearGradient(lx, ly, -lx, -ly);
+    if (warmGlow) {
+      rockGrad.addColorStop(0, '#fed7aa');
+      rockGrad.addColorStop(0.35, '#9a5b3c');
+      rockGrad.addColorStop(0.75, '#43281c');
+      rockGrad.addColorStop(1, '#140c09');
+    } else {
+      rockGrad.addColorStop(0, '#cbd5e1');
+      rockGrad.addColorStop(0.38, '#64748b');
+      rockGrad.addColorStop(0.78, '#292524');
+      rockGrad.addColorStop(1, '#0c0a09');
+    }
+    ctx.fillStyle = rockGrad;
+    ctx.fill();
+
+    ctx.strokeStyle = warmGlow ? 'rgba(251, 146, 60, 0.72)' : 'rgba(148, 163, 184, 0.36)';
+    ctx.lineWidth = Math.max(0.9, r * 0.08);
+    ctx.stroke();
+
+    // Surface impact craters
+    ctx.save();
+    ctx.clip();
+    for (let c = 0; c < 3; c++) {
+      const ca = G.hash2(seed + c, 11, 7) * Math.PI * 2;
+      const cd = r * (0.2 + G.hash2(c, seed + 5, 13) * 0.34);
+      const cr = r * (0.14 + G.hash2(seed, c * 9, 3) * 0.14);
+      const cx = Math.cos(ca) * cd;
+      const cy = Math.sin(ca) * cd;
+      ctx.fillStyle = 'rgba(8, 7, 10, 0.45)';
+      ctx.beginPath();
+      ctx.arc(cx, cy, cr, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = warmGlow ? 'rgba(253, 186, 116, 0.25)' : 'rgba(203, 213, 225, 0.22)';
+      ctx.lineWidth = 0.7;
+      ctx.stroke();
+    }
+    ctx.restore();
+    ctx.restore();
+  };
+
+  /**
+   * Deep-space fiery shooting stars & drifting rocky meteoroids streaking across view.
+   */
+  G.drawSpaceMeteors = function (ctx, w, h, timeSec, opts = {}) {
+    const alpha = opts.alpha ?? 0.92;
+    const diag = Math.hypot(w, h);
+    ctx.save();
+    ctx.globalAlpha = alpha;
+
+    // 1) Blazing Mars-orange & white-gold shooting meteors ("sao lửa / sao băng")
+    for (let i = 0; i < 5; i++) {
+      const period = 4.6 + i * 1.15;
+      const tNorm = ((timeSec + i * 1.87) % period) / period;
+      if (tNorm > 0.56) continue;
+      const cycle = Math.floor((timeSec + i * 1.87) / period);
+      const fade = Math.sin((tNorm / 0.56) * Math.PI);
+
+      const angle = (152 + (G.hash2(cycle, i, 71) - 0.5) * 18) * (Math.PI / 180);
+      const vx = Math.cos(angle);
+      const vy = Math.sin(angle);
+      const sx = w * (0.38 + G.hash2(cycle, i, 17) * 0.72);
+      const sy = h * (-0.08 + G.hash2(i, cycle, 29) * 0.58);
+      const dist = tNorm * diag * (1.15 + G.hash2(i, cycle, 43) * 0.35);
+      const hx = sx + vx * dist;
+      const hy = sy + vy * dist;
+      const tailLen = 75 + G.hash2(cycle, i, 83) * 105;
+      const tx = hx - vx * tailLen;
+      const ty = hy - vy * tailLen;
+
+      const isMarsFire = i % 2 === 0 || G.hash2(cycle, i, 59) > 0.38;
+      ctx.save();
+      ctx.globalAlpha = alpha * fade * 0.9;
+      const grad = ctx.createLinearGradient(hx, hy, tx, ty);
+      if (isMarsFire) {
+        grad.addColorStop(0, 'rgba(255, 244, 214, 0.96)');
+        grad.addColorStop(0.22, 'rgba(251, 146, 60, 0.85)');
+        grad.addColorStop(0.6, 'rgba(234, 88, 12, 0.32)');
+        grad.addColorStop(1, 'rgba(154, 52, 18, 0)');
+      } else {
+        grad.addColorStop(0, 'rgba(240, 249, 255, 0.95)');
+        grad.addColorStop(0.25, 'rgba(125, 211, 252, 0.75)');
+        grad.addColorStop(0.65, 'rgba(251, 146, 60, 0.25)');
+        grad.addColorStop(1, 'rgba(56, 189, 248, 0)');
+      }
+      ctx.strokeStyle = grad;
+      ctx.lineWidth = isMarsFire ? 2.8 : 2.1;
+      ctx.lineCap = 'round';
+      ctx.beginPath();
+      ctx.moveTo(tx, ty);
+      ctx.lineTo(hx, hy);
+      ctx.stroke();
+
+      // Blazing head coma + ember sparks
+      const headGlow = ctx.createRadialGradient(hx, hy, 0, hx, hy, isMarsFire ? 9 : 6.5);
+      headGlow.addColorStop(0, '#ffffff');
+      headGlow.addColorStop(0.4, isMarsFire ? 'rgba(251, 146, 60, 0.8)' : 'rgba(125, 211, 252, 0.75)');
+      headGlow.addColorStop(1, 'rgba(0, 0, 0, 0)');
+      ctx.fillStyle = headGlow;
+      ctx.beginPath();
+      ctx.arc(hx, hy, isMarsFire ? 9 : 6.5, 0, Math.PI * 2);
+      ctx.fill();
+
+      G.drawAsteroidRock(ctx, hx, hy, isMarsFire ? 3.2 : 2.4, timeSec * 4.5 + i, i + 3, isMarsFire);
+      ctx.restore();
+    }
+
+    // 2) Parallax tumbling rocky asteroids ("thiên thạch") gliding across deep space
+    const rockCount = opts.rocks ?? 6;
+    for (let j = 0; j < rockCount; j++) {
+      const speed = 18 + G.hash2(j, 3, 101) * 26;
+      const pad = 40;
+      const spanX = w + pad * 2;
+      const spanY = h + pad * 2;
+      const xRaw = (G.hash2(j, 7, 13) * spanX - timeSec * speed) % spanX;
+      const yRaw = (G.hash2(j, 11, 23) * spanY + timeSec * speed * (0.28 + G.hash2(j, 5, 31) * 0.22)) % spanY;
+      const rx = (xRaw < 0 ? xRaw + spanX : xRaw) - pad;
+      const ry = (yRaw < 0 ? yRaw + spanY : yRaw) - pad;
+      const rr = 4.5 + G.hash2(j, 19, 47) * 7.5;
+      const warm = j % 3 === 0;
+
+      if (warm) {
+        const wake = ctx.createLinearGradient(rx, ry, rx + rr * 3.8, ry - rr * 1.4);
+        wake.addColorStop(0, 'rgba(251, 146, 60, 0.28)');
+        wake.addColorStop(1, 'rgba(251, 146, 60, 0)');
+        ctx.strokeStyle = wake;
+        ctx.lineWidth = rr * 0.75;
+        ctx.lineCap = 'round';
+        ctx.beginPath();
+        ctx.moveTo(rx, ry);
+        ctx.lineTo(rx + rr * 3.8, ry - rr * 1.4);
+        ctx.stroke();
+      }
+      G.drawAsteroidRock(ctx, rx, ry, rr, timeSec * (0.45 + (j % 3) * 0.28) * (j % 2 ? 1 : -1), j + 11, warm);
+    }
+
+    ctx.restore();
+  };
+
   window.VantaGfx = G;
 })();

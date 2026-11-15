@@ -105,6 +105,52 @@
       return starCol * (pinpoint + halo + rays) * twinkle * densityMask * brightness;
     }
 
+    // Procedural fiery meteors & shooting stars streaking diagonally across deep space
+    vec3 meteorStreakLayer(vec2 uv, float time) {
+      vec3 acc = vec3(0.0);
+      for (int i = 0; i < 6; i++) {
+        float fi = float(i);
+        float slotPeriod = 5.4 + fi * 1.15;
+        float cycle = floor((time + fi * 2.13) / slotPeriod);
+        float phase = fract((time + fi * 2.13) / slotPeriod);
+
+        float life = smoothstep(0.0, 0.08, phase) * (1.0 - smoothstep(0.28, 0.44, phase));
+        if (life > 0.002) {
+          vec2 rnd = hash22(vec2(cycle * 13.7 + fi * 5.1, fi * 29.3 + 7.4));
+          vec2 dir = normalize(vec2(-0.88 - 0.14 * rnd.x, -0.34 - 0.24 * rnd.y));
+          vec2 ortho = vec2(-dir.y, dir.x);
+
+          vec2 startPos = vec2(
+            mix(0.35, 1.05, rnd.x) * 1.25,
+            mix(-0.22, 0.62, rnd.y)
+          );
+          float travel = phase * (2.6 + rnd.y * 0.9);
+          vec2 head = startPos + dir * travel;
+
+          vec2 rel = uv - head;
+          float along = dot(rel, -dir);
+          float across = abs(dot(rel, ortho));
+
+          float tailLen = 0.24 + 0.18 * rnd.x;
+          float inTail = smoothstep(-0.015, 0.02, along) * (1.0 - smoothstep(0.04, tailLen, along));
+          float width = mix(0.0042, 0.0006, clamp(along / tailLen, 0.0, 1.0));
+          float streak = exp(-across / max(0.0004, width)) * inTail;
+
+          float dHead = length(rel);
+          float core = exp(-dHead * 115.0) * 1.65 + exp(-dHead * 28.0) * 0.45;
+
+          float isFire = max(1.0 - mod(fi, 2.0), step(0.35, rnd.x));
+          vec3 headCol = mix(vec3(0.92, 0.97, 1.0), vec3(1.0, 0.88, 0.62), isFire);
+          vec3 coolTail = mix(vec3(0.58, 0.84, 1.0), vec3(0.95, 0.52, 0.22), clamp(along / tailLen, 0.0, 1.0));
+          vec3 fireTail = mix(vec3(1.0, 0.56, 0.18), vec3(0.86, 0.24, 0.06), clamp(along / tailLen, 0.0, 1.0));
+          vec3 tailCol = mix(coolTail, fireTail, isFire);
+
+          acc += (headCol * core + tailCol * streak * 0.85) * life;
+        }
+      }
+      return acc;
+    }
+
     void main() {
       vec2 aspect = vec2(uResolution.x / max(1.0, uResolution.y), 1.0);
       vec2 uv = (vUv - 0.5) * aspect;
@@ -147,18 +193,13 @@
       godRay *= galacticBand * (0.45 + 0.55 * (1.0 - dustRift));
       col += mix(vec3(0.04, 0.16, 0.34), vec3(0.26, 0.15, 0.05), f) * godRay * (0.26 + 0.30 * uLumenIntensity);
 
-      // Subtle deep-nebula electrostatic lightning flash inside dense clouds
-      float nebBoltPhase = fract(uTime * 0.27);
-      float nebBoltFlash = exp(-abs(nebBoltPhase - 0.14) * 58.0) + exp(-abs(nebBoltPhase - 0.21) * 72.0) * 0.7;
-      float nebArcCore = pow(max(0.0, 1.0 - abs(noise(p * 4.5 + vec2(uTime * 0.4, -uTime * 0.3)) * 2.0 - 1.0)), 10.0);
-      col += vec3(0.42, 0.76, 1.0) * nebArcCore * nebBoltFlash * smoothstep(0.58, 0.86, f) * galacticBand * 0.55;
-
-      // Crisp 3-layer parallax starfield
+      // Crisp 3-layer parallax starfield + blazing deep-space shooting meteors
       vec3 stars = vec3(0.0);
       stars += starLayer(uv + mouseOffset * 0.12 + vec2(t * 0.02, 0.0), 16.0, 13.7, uTime, 1.05);
       stars += starLayer(uv + mouseOffset * 0.28 - vec2(0.0, t * 0.015), 32.0, 47.3, uTime * 1.2, 0.72);
       stars += starLayer(uv + mouseOffset * 0.45, 56.0, 91.1, uTime * 0.9, 0.42);
       col += stars * (0.35 + 0.65 * dustRift);
+      col += meteorStreakLayer(uv + mouseOffset * 0.25, uTime) * 0.95;
 
       // Subtle optical vignette
       float vig = 1.0 - smoothstep(0.55, 1.45, length(uv));
@@ -483,15 +524,15 @@
         vec3 litSurface = albedo * (diffuse * (1.0 - cloudShadow * 0.44) * 1.34 + 0.024) + rtxSkyGI;
         litSurface += vec3(1.0, 0.96, 0.88) * spec * 0.82 * (1.0 - clouds * 0.82);
 
-        // Cloud subsurface scattering + storm supercell LIGHTNING!
-        float stormMask = smoothstep(0.46, 0.78, cloudRaw);
-        float bolt = stormBoltPulse(cloudP * 7.2, 1.4, 0.30) * stormMask;
-        float nightWeight = 0.48 + 1.05 * smoothstep(0.35, -0.32, NdotL_geom);
-        vec3 stormFlash = mix(vec3(0.38, 0.78, 1.0), vec3(0.95, 0.99, 1.0), clamp(bolt, 0.0, 1.0)) * bolt * nightWeight * 3.1;
+        // Subtle Earth night-hemisphere supercell storm glint only (no harsh space-wide flashes)
+        float nightMaskStorm = smoothstep(0.08, -0.34, NdotL_geom);
+        float stormMask = smoothstep(0.54, 0.82, cloudRaw);
+        float bolt = stormBoltPulse(cloudP * 7.2, 1.4, 0.30) * stormMask * nightMaskStorm;
+        vec3 stormFlash = mix(vec3(0.38, 0.78, 1.0), vec3(0.95, 0.99, 1.0), clamp(bolt, 0.0, 1.0)) * bolt * 1.15;
 
         vec3 cloudScatter = vec3(0.96, 0.98, 1.0) * (max(0.0, NdotL_geom) * 1.20 + 0.032) + stormFlash;
         litSurface = mix(litSurface, cloudScatter, clouds);
-        litSurface += stormFlash * 0.65;
+        litSurface += stormFlash * 0.35;
 
         // Night-side city lights on land
         float nightMask = smoothstep(0.06, -0.22, NdotL_geom);
@@ -507,7 +548,7 @@
         col = litSurface + rayleigh + sunset;
 
       } else if (uType == 1) {
-        // === MARS (RTX Ray-Marched Canyons + Dust GI + Static Storm Lightning) ===
+        // === MARS (RTX Ray-Marched Canyons + Dust GI + Rusty Limb Bloom) ===
         float basalt = smoothstep(0.36, 0.58, fbm3(sp * 2.8 + vec3(2.1, 4.4, 1.7)));
         float polarCap = smoothstep(0.84, 0.93, abs(sp.y) + (h0 - 0.5) * 0.12);
 
@@ -523,12 +564,10 @@
         vec3 dustGI = vec3(0.30, 0.11, 0.045) * (1.0 - shadowRay) * smoothstep(-0.06, 0.35, NdotL_geom) * 0.42;
         vec3 litSurface = albedo * (diffuse * 1.34 + 0.022) + dustGI;
 
-        // Martian electrostatic dry-storm lightning in shadowed dust squalls
+        // Subtle windblown dust haze veil along warm equatorial ridges (no blue space lightning)
         vec3 dustP = rotY(N, uSpin * 1.08 + uTime * 0.01);
-        float squall = smoothstep(0.46, 0.76, fbm3(dustP * 3.6));
-        float marsBolt = stormBoltPulse(dustP * 6.2, 1.15, 0.34) * squall;
-        float marsNight = 0.38 + 0.95 * smoothstep(0.32, -0.32, NdotL_geom);
-        litSurface += vec3(0.62, 0.84, 1.0) * marsBolt * marsNight * 1.85;
+        float squall = smoothstep(0.52, 0.84, fbm3(dustP * 3.4));
+        litSurface += vec3(0.82, 0.40, 0.18) * squall * max(0.0, NdotL_geom) * 0.16;
 
         // Volumetric rusty atmospheric limb bloom
         float sunLimb = clamp(NdotL_geom * 0.72 + 0.42, 0.0, 1.0);
