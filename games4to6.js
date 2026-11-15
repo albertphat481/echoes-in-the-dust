@@ -1372,18 +1372,6 @@ class EternalFootprintGame {
       y: 0.3 + Math.random() * 0.65,
       r: 8 + Math.random() * 26
     }));
-
-    this.strangerPrints = [];
-    for (let i = 0; i < 180; i++) {
-      const angle = i * 0.24;
-      const rad = 70 + i * 4.2;
-      this.strangerPrints.push({
-        x: Math.cos(angle) * rad,
-        y: Math.sin(angle) * rad * 0.65,
-        rot: angle + Math.PI * 0.5,
-        seed: (i * 7919) % 999
-      });
-    }
   }
 
   onResize() {}
@@ -1636,7 +1624,7 @@ class EternalFootprintGame {
     // Footprints Field Camera Zoom (strictly clipped to Moon regolith surface)
     const cx = w * 0.5;
     const cy = h * 0.54;
-    const zoom = 1 - this.cameraZoomOut * 0.62;
+    const zoom = 1 - this.cameraZoomOut * 0.28;
 
     ctx.save();
     ctx.beginPath();
@@ -1649,12 +1637,6 @@ class EternalFootprintGame {
 
     ctx.translate(cx, cy);
     ctx.scale(zoom, zoom);
-
-    if (this.cameraZoomOut > 0.02) {
-      for (const sp of this.strangerPrints) {
-        this._drawBootprint(ctx, sp, false, this.sunAngle, this.cameraZoomOut);
-      }
-    }
 
     for (const pp of this.playerPrints) {
       this._drawBootprint(ctx, pp, true, this.sunAngle, this.cameraZoomOut);
