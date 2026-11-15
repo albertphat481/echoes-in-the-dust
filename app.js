@@ -48,6 +48,10 @@ class EchoesApp {
     this.mountGame(0);
     this._runPreloader();
 
+    if (window.vantaPlanetGL && window.vantaPlanetGL.prewarm) {
+      setTimeout(() => window.vantaPlanetGL.prewarm(), 80);
+    }
+
     requestAnimationFrame(t => this._loop(t));
   }
 
@@ -124,7 +128,7 @@ class EchoesApp {
 
   _setupCanvas() {
     const resize = () => {
-      const dpr = Math.min(1.5, window.devicePixelRatio || 1);
+      const dpr = Math.min(2.0, window.devicePixelRatio || 1);
       this.viewW = window.innerWidth;
       this.viewH = window.innerHeight;
       this.canvas.width = Math.floor(this.viewW * dpr);
@@ -1816,7 +1820,7 @@ class EchoesApp {
       requestAnimationFrame(t => this._loop(t));
       return;
     }
-    const dt = Math.min(0.05, (now - this.lastFrameTime) / 1000);
+    const dt = Math.max(0.0001, Math.min(0.05, (now - this.lastFrameTime) / 1000));
     this.lastFrameTime = now;
 
     if (!this.paused && this.currentGame) {
@@ -1843,11 +1847,11 @@ class EchoesApp {
       const ctx = this.ctx;
       const tSec = now * 0.001;
       ctx.save();
+      ctx.fillStyle = '#fcd34d';
       for (const m of this._ambientMotes) {
         m.x = (m.x + m.vx * dt + 1) % 1;
         m.y = (m.y + m.vy * dt + 1) % 1;
-        const alpha = 0.12 + 0.16 * Math.sin(tSec * 1.4 + m.phase);
-        ctx.fillStyle = `rgba(252, 211, 77, ${alpha})`;
+        ctx.globalAlpha = 0.12 + 0.16 * Math.sin(tSec * 1.4 + m.phase);
         ctx.beginPath();
         ctx.arc(m.x * w, m.y * h, m.r, 0, Math.PI * 2);
         ctx.fill();

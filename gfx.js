@@ -89,21 +89,31 @@
         bright: tier > 0.96
       });
     }
+    stars.sort((a, b) => (a.color < b.color ? -1 : a.color > b.color ? 1 : 0));
     return stars;
   };
 
   G.drawStarfield = function (ctx, stars, w, h, timeSec, globalAlpha = 1) {
     ctx.save();
+    let lastColor = '';
     for (let i = 0; i < stars.length; i++) {
       const s = stars[i];
       const tw = 0.55 + 0.45 * Math.sin(timeSec * s.speed + s.phase);
       const sx = s.x * w;
       const sy = s.y * h;
       ctx.globalAlpha = globalAlpha * (0.25 + 0.7 * tw);
-      ctx.fillStyle = s.color;
-      ctx.beginPath();
-      ctx.arc(sx, sy, s.r, 0, Math.PI * 2);
-      ctx.fill();
+      if (s.color !== lastColor) {
+        lastColor = s.color;
+        ctx.fillStyle = lastColor;
+      }
+      if (s.r < 0.78) {
+        const d = s.r * 2;
+        ctx.fillRect(sx - s.r, sy - s.r, d, d);
+      } else {
+        ctx.beginPath();
+        ctx.arc(sx, sy, s.r, 0, Math.PI * 2);
+        ctx.fill();
+      }
     }
     ctx.restore();
   };

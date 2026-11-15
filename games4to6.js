@@ -751,13 +751,15 @@ class UnsentGame {
       ctx.rotate(c.tilt);
 
       if (!isDream) {
+        ctx.fillStyle = c.launching ? 'rgba(252, 211, 77, 0.35)' : 'rgba(0, 0, 0, 0.34)';
+        ctx.beginPath();
+        ctx.roundRect(-c.w * 0.5 + 3, -c.h * 0.5 + 4, c.w, c.h, 7);
+        ctx.fill();
+
         ctx.fillStyle = '#f8fafc';
-        ctx.shadowColor = c.launching ? 'rgba(252, 211, 77, 0.85)' : 'rgba(0, 0, 0, 0.55)';
-        ctx.shadowBlur = c.launching ? 22 : 16;
         ctx.beginPath();
         ctx.roundRect(-c.w * 0.5, -c.h * 0.5, c.w, c.h, 6);
         ctx.fill();
-        ctx.shadowBlur = 0;
         this._drawPolaroidArt(ctx, c.art, c.w, c.h);
       } else {
         ctx.strokeStyle = `rgba(148, 163, 184, ${0.25 + 0.12 * Math.sin(now + c.floatPhase)})`;
