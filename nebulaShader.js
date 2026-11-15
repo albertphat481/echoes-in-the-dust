@@ -200,7 +200,7 @@
     float fbm3(vec3 p) {
       float v = 0.0;
       float a = 0.5;
-      for (int i = 0; i < 4; i++) {
+      for (int i = 0; i < 3; i++) {
         v += a * noise3(p);
         p = p * 2.05 + vec3(13.1, 7.7, 5.3);
         a *= 0.5;
@@ -211,7 +211,7 @@
     float ridged3(vec3 p) {
       float v = 0.0;
       float a = 0.5;
-      for (int i = 0; i < 4; i++) {
+      for (int i = 0; i < 3; i++) {
         float n = 1.0 - abs(noise3(p) * 2.0 - 1.0);
         v += a * n * n;
         p = p * 2.12 + vec3(4.3, 9.1, 2.7);
@@ -284,15 +284,13 @@
         float craters = craterLayer(sp, 3.6) * 0.22;
         return base * 0.75 + canyon + craters;
       } else {
-        // Moon: Maria basins + 4-scale impact craters + highland ridges + fine regolith
+        // Moon: Maria basins + 3-scale impact craters + highland ridges (fast 4-tap normal)
         float maria = fbm3(sp * 1.85);
-        float cLarge = craterLayer(sp, 2.8) * 0.28;
-        float cMed = craterLayer(sp + vec3(4.1, 2.3, 1.7), 6.8) * 0.15;
-        float cMicro = craterLayer(sp + vec3(9.1, 3.7, 6.2), 14.5) * 0.075;
-        float cFine = craterLayer(sp + vec3(3.3, 8.1, 1.9), 26.0) * 0.045;
-        float ridges = ridged3(sp * 8.5) * 0.065;
-        float regolith = (fbm3(sp * 38.0) - 0.5) * 0.045;
-        return maria * 0.52 + cLarge + cMed + cMicro + cFine + ridges + regolith;
+        float cLarge = craterLayer(sp, 2.8) * 0.30;
+        float cMed = craterLayer(sp + vec3(4.1, 2.3, 1.7), 7.2) * 0.16;
+        float cMicro = craterLayer(sp + vec3(9.1, 3.7, 6.2), 16.0) * 0.08;
+        float ridges = ridged3(sp * 7.5) * 0.06;
+        return maria * 0.54 + cLarge + cMed + cMicro + ridges;
       }
     }
 
@@ -429,8 +427,8 @@
       } else {
         // === MOON ===
         float mariaMask = smoothstep(0.39, 0.58, fbm3(sp * 1.9));
-        float mareMottle = fbm3(sp * 9.5);
-        float regolithSpeck = fbm3(sp * 42.0);
+        float mareMottle = noise3(sp * 10.5);
+        float regolithSpeck = noise3(sp * 42.0);
         float rays = pow(max(0.0, ridged3(sp * 4.5 + vec3(1.2, 3.4, 0.7))), 3.5) * 0.32;
         vec3 maria = vec3(0.085, 0.095, 0.115) * (0.85 + mareMottle * 0.35);
         vec3 highlands = vec3(0.42, 0.43, 0.46);
@@ -524,7 +522,7 @@
                 this.canvas.getContext('webgl', { alpha: false, antialias: false, depth: false });
       this.ready = false;
       this.mouse = { x: 0.5, y: 0.5, tx: 0.5, ty: 0.5 };
-      this.renderScale = 0.85;
+      this.renderScale = 0.55;
 
       if (this.gl) {
         this._initGL();
@@ -563,7 +561,7 @@
 
     _resize() {
       if (!this.gl) return;
-      this.renderScale = 0.85;
+      this.renderScale = 0.55;
       const w = Math.max(512, Math.floor(window.innerWidth * this.renderScale));
       const h = Math.max(512, Math.floor(window.innerHeight * this.renderScale));
       if (this.canvas.width !== w || this.canvas.height !== h) {
@@ -608,8 +606,8 @@
   class VantaPlanetGL {
     constructor() {
       this.canvas = document.createElement('canvas');
-      this.canvas.width = 384;
-      this.canvas.height = 384;
+      this.canvas.width = 512;
+      this.canvas.height = 512;
       this.gl = this.canvas.getContext('webgl2', { alpha: true, premultipliedAlpha: true, antialias: true, depth: false }) ||
                 this.canvas.getContext('webgl', { alpha: true, premultipliedAlpha: true, antialias: true, depth: false });
       this.ready = false;
@@ -659,27 +657,20 @@
         alpha = 1.0
       } = opts;
 
-      const dpr = Math.min(2, window.devicePixelRatio || 1);
-      const targetSize = Math.min(1536, Math.max(256, Math.ceil((radius * 2.64 * dpr) / 64) * 64));
+      const dpr = Math.min(1.5, window.devicePixelRatio || 1);
+      const targetSize = Math.min(512, Math.max(192, Math.ceil((radius * 2.64 * dpr) / 64) * 64));
       const cacheKey = `${type}_${targetSize}`;
       let entry = this._cache[cacheKey];
       const nowSec = performance.now() * 0.001;
-      const cloudDelta = type === 'earth' ? Math.abs(nowSec - (entry ? entry.time : 0)) : 0;
+      const age = entry ? Math.abs(nowSec - entry.time) : 999;
+      const angleThresh = type === 'moon' ? 0.008 : 0.015;
+      const angleChanged = !entry || Math.abs(spin - entry.spin) > angleThresh || Math.abs(tilt - entry.tilt) > angleThresh;
+      const needsRender = !entry || (type === 'earth' ? (age > 0.35 || (angleChanged && age > 0.05)) : (angleChanged && age > 0.032));
 
-      if (
-        !entry ||
-        Math.abs(spin - entry.spin) > 0.0025 ||
-        Math.abs(tilt - entry.tilt) > 0.0025 ||
-        cloudDelta > 0.12
-      ) {
-        if (this.canvas.width !== targetSize || this.canvas.height !== targetSize) {
-          this.canvas.width = targetSize;
-          this.canvas.height = targetSize;
-          this.gl.viewport(0, 0, targetSize, targetSize);
-        }
-
+      if (needsRender) {
         const typeId = type === 'mars' ? 1 : (type === 'moon' ? 2 : 0);
         const gl = this.gl;
+        gl.viewport(0, 0, targetSize, targetSize);
         gl.useProgram(this.program);
         gl.clearColor(0, 0, 0, 0);
         gl.clear(gl.COLOR_BUFFER_BIT);
@@ -697,12 +688,12 @@
           entry = { canvas: c, ctx: c.getContext('2d'), spin, tilt, time: nowSec };
           this._cache[cacheKey] = entry;
         } else {
-          entry.ctx.clearRect(0, 0, targetSize, targetSize);
           entry.spin = spin;
           entry.tilt = tilt;
           entry.time = nowSec;
         }
-        entry.ctx.drawImage(this.canvas, 0, 0);
+        entry.ctx.globalCompositeOperation = 'copy';
+        entry.ctx.drawImage(this.canvas, 0, 512 - targetSize, targetSize, targetSize, 0, 0, targetSize, targetSize);
       }
 
       const drawSpan = radius * 2.64;
