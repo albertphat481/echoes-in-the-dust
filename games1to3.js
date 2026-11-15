@@ -847,7 +847,9 @@ class StillThereGame {
       ? window.VantaGfx.createStarfield(210, 0.9)
       : [];
 
-    this._renderProceduralMoon();
+    if (!(window.vantaPlanetGL && window.vantaPlanetGL.ready)) {
+      this._renderProceduralMoon();
+    }
   }
 
   _renderProceduralMoon() {
@@ -1083,6 +1085,7 @@ class StillThereGame {
       tilt: -this.moonPitch,
       sunDir: [-0.48, 0.24, 0.84]
     }))) {
+      if (!this.moonCanvas.width) this._renderProceduralMoon();
       ctx.save();
       ctx.translate(cx, cy);
       ctx.rotate(((this.moonSpin || 0) + this.moonYaw) * 0.25);
@@ -1090,14 +1093,10 @@ class StillThereGame {
       ctx.restore();
     }
 
-    // Constellation Triangle Lines connecting visible lit retroreflectors
+    // Constellation Triangle Lines connecting visible lit retroreflectors (fast multi-stroke glow, zero shadowBlur)
     const litSites = this.sites.filter(s => s.lit && this._getSitePos(s, cx, cy, r).visible);
     if (litSites.length >= 2) {
       ctx.save();
-      ctx.strokeStyle = 'rgba(252, 211, 77, 0.7)';
-      ctx.shadowColor = '#f59e0b';
-      ctx.shadowBlur = 14;
-      ctx.lineWidth = 2;
       ctx.beginPath();
       litSites.forEach((s, i) => {
         const { sx, sy } = this._getSitePos(s, cx, cy, r);
@@ -1105,6 +1104,11 @@ class StillThereGame {
         else ctx.lineTo(sx, sy);
       });
       if (litSites.length === 3) ctx.closePath();
+      ctx.strokeStyle = 'rgba(245, 158, 11, 0.28)';
+      ctx.lineWidth = 7;
+      ctx.stroke();
+      ctx.strokeStyle = 'rgba(252, 211, 77, 0.82)';
+      ctx.lineWidth = 2;
       ctx.stroke();
       ctx.restore();
     }
@@ -1115,7 +1119,6 @@ class StillThereGame {
       if (!visible) continue;
       const pulse = 0.55 + 0.45 * Math.sin(now * 2 + s.id * 1.8);
 
-      // Faint orbital beacon ring even before lit so players clearly see targets!
       ctx.save();
       ctx.beginPath();
       ctx.arc(sx, sy, s.lit ? 11 : 9 + pulse * 3, 0, Math.PI * 2);
@@ -1123,11 +1126,13 @@ class StillThereGame {
       ctx.lineWidth = s.lit ? 2 : 1.4;
       ctx.stroke();
 
-      ctx.fillStyle = s.lit ? '#fef3c7' : `rgba(186, 230, 253, ${0.5 + pulse * 0.4})`;
       if (s.lit) {
-        ctx.shadowColor = '#fcd34d';
-        ctx.shadowBlur = 18;
+        ctx.fillStyle = 'rgba(252, 211, 77, 0.26)';
+        ctx.beginPath();
+        ctx.arc(sx, sy, 12, 0, Math.PI * 2);
+        ctx.fill();
       }
+      ctx.fillStyle = s.lit ? '#fef3c7' : `rgba(186, 230, 253, ${0.5 + pulse * 0.4})`;
       ctx.beginPath();
       ctx.arc(sx, sy, s.lit ? 5 : 3.2, 0, Math.PI * 2);
       ctx.fill();
@@ -1153,15 +1158,17 @@ class StillThereGame {
       ctx.restore();
     }
 
-    // Traveling Photon Orbs
+    // Traveling Photon Orbs (fast soft outer halo, zero shadowBlur)
     for (const orb of this.photonOrbs) {
       const t = orb.returning ? 1 - orb.progress : orb.progress;
       const px = orb.x0 + (orb.x1 - orb.x0) * t;
       const py = orb.y0 + (orb.y1 - orb.y0) * t;
       ctx.save();
+      ctx.fillStyle = orb.returning ? 'rgba(245, 158, 11, 0.32)' : 'rgba(52, 211, 153, 0.32)';
+      ctx.beginPath();
+      ctx.arc(px, py, 14, 0, Math.PI * 2);
+      ctx.fill();
       ctx.fillStyle = orb.returning ? '#fcd34d' : '#6ee7b7';
-      ctx.shadowColor = orb.returning ? '#f59e0b' : '#34d399';
-      ctx.shadowBlur = 22;
       ctx.beginPath();
       ctx.arc(px, py, 6, 0, Math.PI * 2);
       ctx.fill();
@@ -1253,9 +1260,11 @@ class StillThereGame {
     ctx.fill();
     ctx.stroke();
 
+    ctx.fillStyle = 'rgba(245, 158, 11, 0.35)';
+    ctx.beginPath();
+    ctx.arc(0, -6, 5.2, 0, Math.PI * 2);
+    ctx.fill();
     ctx.fillStyle = '#fcd34d';
-    ctx.shadowColor = '#f59e0b';
-    ctx.shadowBlur = 10;
     ctx.beginPath();
     ctx.arc(0, -6, 2.2, 0, Math.PI * 2);
     ctx.fill();

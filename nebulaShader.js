@@ -368,8 +368,8 @@
       } else {
         vec3 nBase = normalize(aPos3d);
         vec3 sp = rotY(rotX(nBase, uTilt), uSpin);
-        float h = (uType == 2) ? 0.45 : surfaceHeight(sp, uType);
-        float dispAmp = (uType == 0) ? 0.010 : ((uType == 1) ? 0.024 : 0.002);
+        float h = (uType == 1) ? surfaceHeight(sp, uType) : 0.45;
+        float dispAmp = (uType == 1) ? 0.024 : ((uType == 2) ? 0.002 : 0.0);
         vec3 pos = nBase * (1.0 + (h - 0.45) * dispAmp);
         vQuadPos = pos.xy / 1.32;
         vSpherePos = nBase;
@@ -394,6 +394,7 @@
     uniform float uTilt;
     uniform vec3 uSunDir;
     uniform sampler2D uMoonTex;
+    uniform sampler2D uEarthTex;
 
     ${PLANET_NOISE_GLSL}
 
@@ -547,8 +548,86 @@
         return;
       }
 
-      // Finite-difference 3D normal mapping synced with vertex elevation (Earth & Mars)
-      float eps = (uType == 0) ? 0.0040 : 0.0075;
+      if (uType == 0) {
+        // === EARTH (Fast Pre-baked Blue Marble Map + Swirled Cloud Fronts) ===
+        vec4 eSamp = texture2D(uEarthTex, sphereToUV(sp));
+        float h0 = eSamp.r;
+        float arid = eSamp.g;
+        float oceanDepth = eSamp.b;
+
+        vec3 upRef = abs(sp.y) < 0.96 ? vec3(0.0, 1.0, 0.0) : vec3(1.0, 0.0, 0.0);
+        vec3 T = normalize(cross(upRef, sp));
+        vec3 Bt = cross(sp, T);
+        float epsE = 0.0035;
+        float hT = texture2D(uEarthTex, sphereToUV(normalize(sp + T * epsE))).r;
+        float hB = texture2D(uEarthTex, sphereToUV(normalize(sp + Bt * epsE))).r;
+        vec3 gradE = T * ((hT - h0) / epsE) + Bt * ((hB - h0) / epsE);
+        vec3 B = normalize(N - rotX(rotY(gradE, -uSpin), -uTilt) * 0.10);
+
+        float diffuse = clamp((dot(B, sunDir) + 0.05) / 1.05, 0.0, 1.0) * smoothstep(-0.08, 0.14, NdotL_geom);
+        float landMask = smoothstep(0.495, 0.522, h0);
+        float lat = abs(sp.y);
+        float polarIce = smoothstep(0.87, 0.96, lat + (h0 - 0.5) * 0.10);
+
+        vec3 abyssOcean = vec3(0.002, 0.011, 0.068);
+        vec3 deepOcean = vec3(0.004, 0.028, 0.135);
+        vec3 coastalShelf = vec3(0.008, 0.115, 0.235);
+        vec3 oceanCol = mix(abyssOcean, deepOcean, smoothstep(0.28, 0.72, oceanDepth));
+        oceanCol = mix(oceanCol, coastalShelf, smoothstep(0.455, 0.496, h0) * 0.65);
+
+        vec3 deepForest = vec3(0.015, 0.115, 0.032);
+        vec3 lushGreen = vec3(0.048, 0.225, 0.052);
+        vec3 desert = vec3(0.44, 0.32, 0.17);
+        vec3 alpine = vec3(0.22, 0.21, 0.20);
+        vec3 snowPeak = vec3(0.86, 0.90, 0.96);
+        vec3 greenLand = mix(deepForest, lushGreen, smoothstep(0.49, 0.67, h0));
+        vec3 landCol = mix(greenLand, desert, smoothstep(0.54, 0.76, arid) * (1.0 - lat * 0.48));
+        landCol = mix(landCol, alpine, smoothstep(0.66, 0.79, h0));
+        landCol = mix(landCol, snowPeak, smoothstep(0.76, 0.87, h0));
+
+        vec3 albedo = mix(oceanCol, landCol, landMask);
+        albedo = mix(albedo, vec3(0.88, 0.93, 0.98), polarIce);
+
+        vec3 H = normalize(sunDir + viewDir);
+        float spec = (pow(max(0.0, dot(B, H)), 110.0) + pow(max(0.0, dot(B, H)), 26.0) * 0.14) * (1.0 - landMask) * (1.0 - polarIce);
+
+        // Lightweight swirled orbital cloud layer (2-octave fbm + wispy detail)
+        vec3 cloudP = rotY(sp, uSpin * 0.08 + uTime * 0.008);
+        vec3 cloudShear = vec3(sin(cloudP.y * 5.8) * 0.22, cos(cloudP.x * 4.5) * 0.10, 0.0);
+        float cWarp = noise3(cloudP * 2.6 + cloudShear);
+        vec3 cw = cloudP * 3.1 + cloudShear + vec3(cWarp, cWarp * 0.7, -cWarp * 0.5) * 0.42;
+        float cloudRaw = fbm3(cw * 1.45) * 0.74 + noise3(cw * 12.0) * 0.18 + noise3(cw * 28.0) * 0.08;
+        float clouds = smoothstep(0.48, 0.74, cloudRaw) * 0.78;
+        float cloudShadow = smoothstep(0.49, 0.76, fbm3((cw - rotY(sunDir, uSpin) * 0.032) * 1.45) * 0.74 + 0.14) * 0.66;
+
+        vec3 litSurface = albedo * (diffuse * (1.0 - cloudShadow * 0.52) * 1.32 + 0.020);
+        litSurface += vec3(1.0, 0.96, 0.88) * spec * 0.76 * (1.0 - clouds * 0.88);
+
+        float cloudTopShade = smoothstep(-0.06, 0.18, NdotL_geom) * (0.82 + 0.18 * noise3(cw * 18.0));
+        vec3 cloudScatter = vec3(0.95, 0.97, 1.0) * (cloudTopShade * 1.18 + 0.024);
+        litSurface = mix(litSurface, cloudScatter, clouds);
+
+        // Night-side city lights on coastal land
+        float nightMask = smoothstep(0.08, -0.18, NdotL_geom);
+        float cityNoise = pow(noise3(sp * 30.0), 4.0);
+        float coastal = smoothstep(0.60, 0.49, h0) * landMask * (1.0 - polarIce);
+        litSurface += vec3(1.0, 0.72, 0.32) * cityNoise * coastal * nightMask * 0.95 * (1.0 - clouds * 0.65);
+
+        float sunLimb = clamp(NdotL_geom * 0.75 + 0.45, 0.0, 1.0);
+        float viewN = max(0.0, dot(N, viewDir));
+        vec3 rayleigh = vec3(0.08, 0.42, 1.0) * pow(1.0 - viewN, 6.2) * sunLimb * 0.92
+          + vec3(0.022, 0.095, 0.30) * pow(1.0 - viewN, 2.8) * sunLimb * 0.24;
+        vec3 sunset = vec3(0.96, 0.36, 0.12) * exp(-pow(NdotL_geom * 6.5, 2.0)) * pow(1.0 - viewN, 3.6) * 0.44;
+        col = litSurface + rayleigh + sunset;
+
+        col = acesFilm(col);
+        col = pow(col, vec3(1.0 / 2.2));
+        gl_FragColor = vec4(col, 1.0);
+        return;
+      }
+
+      // Finite-difference 3D normal mapping synced with vertex elevation (Mars)
+      float eps = 0.0075;
       float h0 = surfaceHeight(sp, uType);
       float hx = surfaceHeight(normalize(sp + vec3(eps, 0.0, 0.0)), uType);
       float hy = surfaceHeight(normalize(sp + vec3(0.0, eps, 0.0)), uType);
@@ -557,8 +636,7 @@
       grad -= sp * dot(grad, sp);
       vec3 worldGrad = rotX(rotY(grad, -uSpin), -uTilt);
 
-      float bumpStrength = (uType == 0) ? 0.13 : 0.13;
-      vec3 B = normalize(N - worldGrad * bumpStrength);
+      vec3 B = normalize(N - worldGrad * 0.13);
 
       float shadowRay = traceTerrainShadow(N, sunDir, h0, uType, uSpin, uTilt);
       float wrap = 0.05;
@@ -567,90 +645,7 @@
 
       float fresnel = pow(1.0 - max(0.0, dot(N, viewDir)), 3.4);
 
-      if (uType == 0) {
-        // === EARTH (Crisp Orbital Blue Marble + Multi-Scale Cloud Fronts) ===
-        float landMask = smoothstep(0.495, 0.522, h0);
-        float lat = abs(sp.y);
-        float polarIce = smoothstep(0.87, 0.96, lat + (h0 - 0.5) * 0.10);
-
-        float oceanDepth = fbm3(sp * 5.2);
-        vec3 abyssOcean = vec3(0.002, 0.011, 0.068);
-        vec3 deepOcean = vec3(0.004, 0.028, 0.135);
-        vec3 coastalShelf = vec3(0.008, 0.115, 0.235);
-        vec3 oceanCol = mix(abyssOcean, deepOcean, smoothstep(0.32, 0.68, oceanDepth));
-        float reefMask = smoothstep(0.455, 0.496, h0) * smoothstep(0.45, 0.72, noise3(sp * 15.0));
-        oceanCol = mix(oceanCol, coastalShelf, reefMask * 0.75);
-
-        float arid = fbm3(sp * 4.2 + vec3(9.2, 1.4, 3.7));
-        float microVeg = noise3(sp * 34.0);
-        vec3 deepForest = vec3(0.015, 0.115, 0.032);
-        vec3 lushGreen = vec3(0.048, 0.225, 0.052);
-        vec3 desert = vec3(0.44, 0.32, 0.17);
-        vec3 alpine = vec3(0.22, 0.21, 0.20);
-        vec3 snowPeak = vec3(0.86, 0.90, 0.96);
-        vec3 greenLand = mix(deepForest, lushGreen, smoothstep(0.49, 0.67, h0) * (0.72 + microVeg * 0.45));
-        vec3 landCol = mix(greenLand, desert, smoothstep(0.55, 0.77, arid) * (1.0 - lat * 0.48));
-        landCol = mix(landCol, alpine, smoothstep(0.66, 0.79, h0));
-        landCol = mix(landCol, snowPeak, smoothstep(0.76, 0.87, h0));
-
-        vec3 albedo = mix(oceanCol, landCol, landMask);
-        albedo = mix(albedo, vec3(0.88, 0.93, 0.98), polarIce);
-
-        // Dual-lobe RTX ocean specular sun glint
-        vec3 H = normalize(sunDir + viewDir);
-        float specTight = pow(max(0.0, dot(B, H)), 120.0);
-        float specBroad = pow(max(0.0, dot(B, H)), 26.0) * 0.14;
-        float spec = (specTight + specBroad) * (1.0 - landMask) * (1.0 - polarIce) * shadowRay;
-
-        // Swirled domain-warped multi-scale orbital cloud fronts (sharp cirrus & cumulus)
-        vec3 cloudP = rotY(sp, uSpin * 0.08 + uTime * 0.008);
-        vec3 cloudShear = vec3(sin(cloudP.y * 5.8) * 0.22, cos(cloudP.x * 4.5) * 0.10, 0.0);
-        vec3 cloudWarp = vec3(
-          fbm3(cloudP * 2.5 + cloudShear),
-          fbm3(cloudP * 2.5 + vec3(5.2, 1.3, 8.7)),
-          fbm3(cloudP * 2.5 + vec3(2.1, 7.4, 3.3))
-        ) * 0.46;
-        vec3 cw = cloudP * 2.9 + cloudShear + cloudWarp;
-        float cloudMacro = fbm3(cw * 1.45);
-        float cloudWisp = ridged3(cw * 4.4) * 0.26 + noise3(cw * 15.0) * 0.14 + noise3(cw * 36.0) * 0.07;
-        float cloudRaw = cloudMacro * 0.72 + cloudWisp;
-        float clouds = smoothstep(0.48, 0.74, cloudRaw) * 0.78;
-        float cloudShadow = smoothstep(0.49, 0.76, fbm3((cw - rotY(sunDir, uSpin) * 0.035) * 1.45) * 0.72 + cloudWisp * 0.85) * 0.72;
-
-        // RTX Indirect Sky GI bounce into mountain shadows
-        vec3 rtxSkyGI = vec3(0.025, 0.095, 0.26) * (1.0 - shadowRay) * smoothstep(-0.08, 0.25, NdotL_geom) * 0.28;
-        vec3 litSurface = albedo * (diffuse * (1.0 - cloudShadow * 0.55) * 1.32 + 0.018) + rtxSkyGI;
-        litSurface += vec3(1.0, 0.96, 0.88) * spec * 0.78 * (1.0 - clouds * 0.88);
-
-        // Subtle Earth night-hemisphere supercell storm glint only
-        float nightMaskStorm = smoothstep(0.08, -0.34, NdotL_geom);
-        float stormMask = smoothstep(0.56, 0.82, cloudRaw);
-        float bolt = stormBoltPulse(cloudP * 7.2, 1.4, 0.34) * stormMask * nightMaskStorm;
-        vec3 stormFlash = mix(vec3(0.38, 0.78, 1.0), vec3(0.95, 0.99, 1.0), clamp(bolt, 0.0, 1.0)) * bolt * 1.05;
-
-        float cloudTopShade = smoothstep(-0.06, 0.18, NdotL_geom) * (0.78 + 0.22 * noise3(cw * 22.0));
-        vec3 cloudScatter = vec3(0.95, 0.97, 1.0) * (cloudTopShade * 1.18 + 0.024) + stormFlash;
-        litSurface = mix(litSurface, cloudScatter, clouds);
-        litSurface += stormFlash * 0.28;
-
-        // Night-side city lights on land
-        float nightMask = smoothstep(0.08, -0.18, NdotL_geom);
-        float cityNoise = pow(noise3(sp * 32.0), 4.0) * smoothstep(0.46, 0.62, fbm3(sp * 7.8));
-        float coastal = smoothstep(0.60, 0.49, h0) * landMask * (1.0 - polarIce);
-        litSurface += vec3(1.0, 0.72, 0.32) * cityNoise * coastal * nightMask * 1.05 * (1.0 - clouds * 0.65);
-
-        // Tight Orbital Rayleigh horizon band + warm terminator sunset scatter (preserves deep sapphire Earth)
-        float sunLimb = clamp(NdotL_geom * 0.75 + 0.45, 0.0, 1.0);
-        float viewN = max(0.0, dot(N, viewDir));
-        float limbTight = pow(1.0 - viewN, 6.2);
-        float limbSoft = pow(1.0 - viewN, 2.8);
-        vec3 rayleigh = vec3(0.08, 0.42, 1.0) * limbTight * sunLimb * 0.92
-          + vec3(0.022, 0.095, 0.30) * limbSoft * sunLimb * 0.24;
-        float terminator = exp(-pow(NdotL_geom * 6.5, 2.0));
-        vec3 sunset = vec3(0.96, 0.36, 0.12) * terminator * pow(1.0 - viewN, 3.6) * 0.44;
-        col = litSurface + rayleigh + sunset;
-
-      } else if (uType == 1) {
+      if (uType == 1) {
         // === MARS (RTX Ray-Marched Canyons + Dust GI + Rusty Limb Bloom) ===
         float basalt = smoothstep(0.36, 0.58, fbm3(sp * 2.8 + vec3(2.1, 4.4, 1.7)));
         float polarCap = smoothstep(0.84, 0.93, abs(sp.y) + (h0 - 0.5) * 0.12);
@@ -794,9 +789,9 @@
 
     _resize() {
       if (!this.gl) return;
-      this.renderScale = 0.78;
-      const w = Math.min(1600, Math.max(640, Math.floor(window.innerWidth * this.renderScale)));
-      const h = Math.min(1000, Math.max(480, Math.floor(window.innerHeight * this.renderScale)));
+      this.renderScale = 0.62;
+      const w = Math.min(1280, Math.max(512, Math.floor(window.innerWidth * this.renderScale)));
+      const h = Math.min(720, Math.max(384, Math.floor(window.innerHeight * this.renderScale)));
       if (this.canvas.width !== w || this.canvas.height !== h) {
         this.canvas.width = w;
         this.canvas.height = h;
@@ -920,12 +915,14 @@
         uSpin: gl.getUniformLocation(prog, 'uSpin'),
         uTilt: gl.getUniformLocation(prog, 'uTilt'),
         uSunDir: gl.getUniformLocation(prog, 'uSunDir'),
-        uMoonTex: gl.getUniformLocation(prog, 'uMoonTex')
+        uMoonTex: gl.getUniformLocation(prog, 'uMoonTex'),
+        uEarthTex: gl.getUniformLocation(prog, 'uEarthTex')
       };
 
       const vpDims = gl.getParameter(gl.MAX_VIEWPORT_DIMS) || [1536, 1536];
       this.maxTexSize = Math.min(1536, vpDims[0] || 1536, vpDims[1] || 1536);
       this.moonTex = null;
+      this.earthTex = null;
       gl.viewport(0, 0, this.canvas.width, this.canvas.height);
       this.ready = true;
     }
@@ -933,7 +930,102 @@
     prewarm() {
       if (this.ready && this.gl) {
         this._ensureMoonTexture(this.gl);
+        this._ensureEarthTexture(this.gl);
       }
+    }
+
+    _ensureEarthTexture(gl) {
+      if (this.earthTex) return;
+      const W = 768;
+      const H = 384;
+      const N = W * H;
+      const clamp01 = v => (v < 0 ? 0 : v > 1 ? 1 : v);
+      const smooth = (a, b, x) => {
+        const t = clamp01((x - a) / (b - a));
+        return t * t * (3 - 2 * t);
+      };
+      const hash3 = (x, y, z, s) => {
+        let h = Math.imul(x, 374761393) + Math.imul(y, 668265263) + Math.imul(z, 2147483647) + Math.imul(s, 1597334677);
+        h = (h ^ (h >>> 13)) | 0;
+        h = Math.imul(h, 1274126177);
+        return ((h ^ (h >>> 16)) >>> 0) / 4294967296;
+      };
+      const noise3d = (x, y, z, s) => {
+        const ix = Math.floor(x), iy = Math.floor(y), iz = Math.floor(z);
+        const fx = x - ix, fy = y - iy, fz = z - iz;
+        const ux = fx * fx * (3 - 2 * fx), uy = fy * fy * (3 - 2 * fy), uz = fz * fz * (3 - 2 * fz);
+        const c000 = hash3(ix, iy, iz, s), c100 = hash3(ix + 1, iy, iz, s);
+        const c010 = hash3(ix, iy + 1, iz, s), c110 = hash3(ix + 1, iy + 1, iz, s);
+        const c001 = hash3(ix, iy, iz + 1, s), c101 = hash3(ix + 1, iy, iz + 1, s);
+        const c011 = hash3(ix, iy + 1, iz + 1, s), c111 = hash3(ix + 1, iy + 1, iz + 1, s);
+        const x00 = c000 + (c100 - c000) * ux, x10 = c010 + (c110 - c010) * ux;
+        const x01 = c001 + (c101 - c001) * ux, x11 = c011 + (c111 - c011) * ux;
+        return (x00 + (x10 - x00) * uy) + ((x01 + (x11 - x01) * uy) - (x00 + (x10 - x00) * uy)) * uz;
+      };
+      const fbm3d = (x, y, z, oct, s) => {
+        let v = 0, a = 0.5, sum = 0;
+        for (let k = 0; k < oct; k++) {
+          v += a * noise3d(x, y, z, s + k * 17);
+          sum += a;
+          x = x * 2.05 + 13.1; y = y * 2.05 + 7.7; z = z * 2.05 + 5.3;
+          a *= 0.5;
+        }
+        return v / sum;
+      };
+      const ridged3d = (x, y, z, oct, s) => {
+        let v = 0, a = 0.5, sum = 0;
+        for (let k = 0; k < oct; k++) {
+          const n = 1 - Math.abs(noise3d(x, y, z, s + k * 23) * 2 - 1);
+          v += a * n * n;
+          sum += a;
+          x = x * 2.12 + 4.3; y = y * 2.12 + 9.1; z = z * 2.12 + 2.7;
+          a *= 0.5;
+        }
+        return v / sum;
+      };
+
+      const pixels = new Uint8Array(N * 4);
+      for (let py = 0; py < H; py++) {
+        const lat = (0.5 - (py + 0.5) / H) * Math.PI;
+        const cLat = Math.cos(lat);
+        const sLat = Math.sin(lat);
+        for (let px = 0; px < W; px++) {
+          const lon = ((px + 0.5) / W - 0.5) * 2 * Math.PI;
+          const dx = cLat * Math.sin(lon);
+          const dy = sLat;
+          const dz = cLat * Math.cos(lon);
+
+          const wx = dx + (fbm3d(dx * 2.6 + 1.7, dy * 2.6 + 3.2, dz * 2.6 + 0.9, 3, 11) - 0.5) * 0.24;
+          const wy = dy + (fbm3d(dx * 2.6 + 5.4, dy * 2.6 + 1.1, dz * 2.6 + 4.3, 3, 29) - 0.5) * 0.24;
+          const wz = dz + (fbm3d(dx * 2.6 + 2.9, dy * 2.6 + 6.1, dz * 2.6 + 2.4, 3, 47) - 0.5) * 0.24;
+          const wl = Math.hypot(wx, wy, wz) || 1;
+          const sx = wx / wl, sy = wy / wl, sz = wz / wl;
+
+          const cont = fbm3d(sx * 2.15, sy * 2.15, sz * 2.15, 4, 61)
+            + (noise3d(sx * 9.0, sy * 9.0, sz * 9.0, 73) - 0.5) * 0.16
+            + (noise3d(sx * 22.0, sy * 22.0, sz * 22.0, 89) - 0.5) * 0.07;
+          const ridge = ridged3d(sx * 6.8, sy * 6.8, sz * 6.8, 3, 101) * smooth(0.47, 0.71, cont) * 0.34;
+          const h = clamp01(cont + ridge);
+          const arid = clamp01(fbm3d(sx * 4.2 + 9.2, sy * 4.2 + 1.4, sz * 4.2 + 3.7, 3, 131));
+          const oceanDepth = clamp01(fbm3d(dx * 5.2, dy * 5.2, dz * 5.2, 3, 157));
+
+          const o = (py * W + px) * 4;
+          pixels[o] = Math.round(h * 255);
+          pixels[o + 1] = Math.round(arid * 255);
+          pixels[o + 2] = Math.round(oceanDepth * 255);
+          pixels[o + 3] = 255;
+        }
+      }
+
+      const tex = gl.createTexture();
+      gl.activeTexture(gl.TEXTURE1);
+      gl.bindTexture(gl.TEXTURE_2D, tex);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, W, H, 0, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
+      this.earthTex = tex;
     }
 
     _ensureMoonTexture(gl) {
@@ -1203,17 +1295,19 @@
         alpha = 1.0
       } = opts;
 
-      const dpr = Math.min(2.0, window.devicePixelRatio || 1);
-      const maxSize = this.maxTexSize || 1536;
+      const dpr = Math.min(1.5, window.devicePixelRatio || 1);
+      const isHorizonEarth = type === 'earth' && radius > 350;
+      const maxSize = isHorizonEarth ? Math.min(1024, this.maxTexSize || 1024) : (this.maxTexSize || 1536);
       const targetSize = Math.min(maxSize, Math.max(192, Math.ceil((radius * 2.64 * dpr) / 64) * 64));
       const cacheKey = `${type}_${targetSize}`;
       let entry = this._cache[cacheKey];
       const nowSec = performance.now() * 0.001;
       const age = entry ? Math.abs(nowSec - entry.time) : 999;
-      const angleThresh = 0.0002;
+      const angleThresh = isHorizonEarth ? 0.0008 : 0.0002;
       const angleChanged = !entry || Math.abs(spin - entry.spin) > angleThresh || Math.abs(tilt - entry.tilt) > angleThresh;
-      const canReuseCache = entry && !angleChanged && (entry.canvas || this._lastDrawnKey === cacheKey);
-      const needsRender = !canReuseCache && (!entry || angleChanged || age > 0.015 || !entry.canvas);
+      const needsRender = isHorizonEarth
+        ? (!entry || age > 0.032 || !entry.canvas)
+        : (!(entry && !angleChanged && (entry.canvas || this._lastDrawnKey === cacheKey)) && (!entry || angleChanged || age > 0.015 || !entry.canvas));
 
       const drawSpan = radius * 2.64;
       if (needsRender) {
@@ -1227,6 +1321,10 @@
           this._ensureMoonTexture(gl);
           gl.activeTexture(gl.TEXTURE0);
           gl.bindTexture(gl.TEXTURE_2D, this.moonTex);
+        } else if (typeId === 0) {
+          this._ensureEarthTexture(gl);
+          gl.activeTexture(gl.TEXTURE1);
+          gl.bindTexture(gl.TEXTURE_2D, this.earthTex);
         }
         gl.viewport(0, 0, targetSize, targetSize);
         gl.useProgram(this.program);
@@ -1240,6 +1338,7 @@
         gl.uniform1f(this.locs.uTilt, tilt);
         gl.uniform3f(this.locs.uSunDir, sunDir[0], sunDir[1], sunDir[2]);
         if (this.locs.uMoonTex) gl.uniform1i(this.locs.uMoonTex, 0);
+        if (this.locs.uEarthTex) gl.uniform1i(this.locs.uEarthTex, 1);
 
         gl.enableVertexAttribArray(this.posLoc);
 
@@ -1293,8 +1392,8 @@
         );
         ctx.restore();
 
-        // Cache into sprite canvas only if static/paused so subsequent paused frames cost 0 GPU draws
-        if (!angleChanged) {
+        // Cache into sprite canvas when static/paused or horizon Earth (30fps) so skipped frames cost 0 GPU draws
+        if (!angleChanged || isHorizonEarth) {
           if (!entry.canvas) {
             const c = document.createElement('canvas');
             c.width = targetSize;
