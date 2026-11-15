@@ -368,8 +368,8 @@
       } else {
         vec3 nBase = normalize(aPos3d);
         vec3 sp = rotY(rotX(nBase, uTilt), uSpin);
-        float h = surfaceHeight(sp, uType);
-        float dispAmp = (uType == 0) ? 0.010 : ((uType == 1) ? 0.024 : 0.032);
+        float h = (uType == 2) ? 0.45 : surfaceHeight(sp, uType);
+        float dispAmp = (uType == 0) ? 0.010 : ((uType == 1) ? 0.024 : 0.002);
         vec3 pos = nBase * (1.0 + (h - 0.45) * dispAmp);
         vQuadPos = pos.xy / 1.32;
         vSpherePos = nBase;
@@ -393,8 +393,31 @@
     uniform float uSpin;
     uniform float uTilt;
     uniform vec3 uSunDir;
+    uniform sampler2D uMoonTex;
 
     ${PLANET_NOISE_GLSL}
+
+    vec2 sphereToUV(vec3 p) {
+      float pz = (abs(p.x) < 1e-5 && abs(p.z) < 1e-5) ? 1e-5 : p.z;
+      float lon = atan(p.x, pz);
+      float lat = asin(clamp(p.y, -1.0, 1.0));
+      return vec2(lon / 6.28318530718 + 0.5, 0.5 - lat / 3.14159265359);
+    }
+
+    float traceLunarShadow(vec3 N, vec3 sunDir, float h0, float spin, float tilt) {
+      float ndl = dot(N, sunDir);
+      if (ndl <= -0.02) return 0.0;
+      float occ = 0.0;
+      float raySlope = max(0.020, ndl * 1.55);
+      for (int i = 1; i <= 5; i++) {
+        float t = float(i) * 0.0040;
+        vec3 sampleSp = rotY(rotX(normalize(N + sunDir * t), tilt), spin);
+        float sh = texture2D(uMoonTex, sphereToUV(sampleSp)).r;
+        float rayH = h0 + (t * raySlope) / 0.022;
+        occ = max(occ, clamp((sh - rayH) * 7.0, 0.0, 1.0));
+      }
+      return 1.0 - occ * 0.88;
+    }
 
     vec3 acesFilm(vec3 x) {
       return clamp((x * (2.51 * x + 0.03)) / (x * (2.43 * x + 0.59) + 0.14), 0.0, 1.0);
@@ -461,9 +484,9 @@
           haloCol = vec3(0.95, 0.48, 0.24);
           haloAlpha = exp(-limbDist * 17.0) * 0.36 * sunSide * (0.88 + 0.12 * coronaRays);
         } else {
-          // Subtle lunar solar corona & rim scatter
-          haloCol = vec3(0.76, 0.84, 0.98);
-          haloAlpha = exp(-limbDist * 22.0) * 0.16 * pow(sunSide, 1.4) * coronaRays;
+          // Moon has no atmosphere: only imperceptible telescope diffraction on sunlit limb
+          haloCol = vec3(0.82, 0.85, 0.92);
+          haloAlpha = exp(-limbDist * 38.0) * 0.045 * pow(sunSide, 2.2);
         }
         gl_FragColor = vec4(haloCol * haloAlpha, haloAlpha);
         return;
@@ -472,9 +495,60 @@
       // PASS 1: 57,344-Polygon Displaced 3D Sphere Surface
       vec3 N = normalize(vSpherePos);
       vec3 sp = rotY(rotX(N, uTilt), uSpin);
+      float NdotL_geom = dot(N, sunDir);
+      vec3 col = vec3(0.0);
 
-      // Finite-difference 3D normal mapping synced with vertex elevation
-      float eps = (uType == 2) ? 0.0036 : ((uType == 0) ? 0.0040 : 0.0075);
+      if (uType == 2) {
+        // === MOON (1024x512 NASA Selenographic Height/Albedo/Maria Map + Lommel-Seeliger BRDF) ===
+        vec4 moonSample = texture2D(uMoonTex, sphereToUV(sp));
+        float h0 = moonSample.r;
+        float texAlbedo = moonSample.g;
+        float mareMask = moonSample.b;
+
+        vec3 upRef = abs(sp.y) < 0.96 ? vec3(0.0, 1.0, 0.0) : vec3(1.0, 0.0, 0.0);
+        vec3 T = normalize(cross(upRef, sp));
+        vec3 Bt = cross(sp, T);
+        float epsM = 0.0028;
+        float hT = texture2D(uMoonTex, sphereToUV(normalize(sp + T * epsM))).r;
+        float hB = texture2D(uMoonTex, sphereToUV(normalize(sp + Bt * epsM))).r;
+        vec3 gradM = T * ((hT - h0) / epsM) + Bt * ((hB - h0) / epsM);
+        vec3 worldGrad = rotX(rotY(gradM, -uSpin), -uTilt);
+
+        // Micro-regolith normal grain + fine albedo dust grit
+        float regA = noise3(sp * 68.0);
+        float regB = noise3(sp * 155.0);
+        float microSlope = (regA - 0.5) * 0.042 + (regB - 0.5) * 0.022;
+        vec3 microGrad = T * microSlope + Bt * ((noise3(sp * 68.0 + vec3(3.1, 7.4, 2.2)) - 0.5) * 0.042);
+        vec3 B = normalize(N - worldGrad * 0.135 - rotX(rotY(microGrad, -uSpin), -uTilt) * (1.0 - mareMask * 0.5));
+
+        float lunarShadow = traceLunarShadow(N, sunDir, h0, uSpin, uTilt);
+        float mu0 = max(0.0, dot(B, sunDir));
+        float mu = max(0.06, dot(N, viewDir));
+        float lommel = mu0 / (mu0 + mu + 0.002);
+        float termMask = smoothstep(-0.025, 0.055, NdotL_geom);
+        float refl = (lommel * 1.42 + mu0 * 0.20) * termMask * mix(0.24, 1.0, lunarShadow);
+
+        // Natural mineral palette: cool titanium basaltic maria vs warm feldspathic highlands
+        vec3 rockTint = mix(vec3(1.02, 0.99, 0.95), vec3(0.88, 0.92, 0.98), mareMask);
+        float grainMod = 0.89 + regA * 0.14 + regB * 0.08;
+        vec3 albedo = rockTint * (texAlbedo * grainMod);
+
+        // Subtle sunlit crater rim bounce inside crater shadows & muted Earthshine on night crescent
+        vec3 craterBounce = albedo * (1.0 - lunarShadow) * smoothstep(0.0, 0.35, NdotL_geom) * 0.075;
+        vec3 earthBounceDir = normalize(vec3(0.38, -0.24, 0.88));
+        float earthshine = max(0.0, dot(B, earthBounceDir)) * smoothstep(0.12, -0.35, NdotL_geom);
+        vec3 earthshineGI = vec3(0.022, 0.055, 0.14) * albedo * earthshine * 0.48;
+
+        col = albedo * (refl + 0.004) + craterBounce + earthshineGI;
+
+        col = acesFilm(col);
+        col = pow(col, vec3(1.0 / 2.2));
+        gl_FragColor = vec4(col, 1.0);
+        return;
+      }
+
+      // Finite-difference 3D normal mapping synced with vertex elevation (Earth & Mars)
+      float eps = (uType == 0) ? 0.0040 : 0.0075;
       float h0 = surfaceHeight(sp, uType);
       float hx = surfaceHeight(normalize(sp + vec3(eps, 0.0, 0.0)), uType);
       float hy = surfaceHeight(normalize(sp + vec3(0.0, eps, 0.0)), uType);
@@ -483,17 +557,15 @@
       grad -= sp * dot(grad, sp);
       vec3 worldGrad = rotX(rotY(grad, -uSpin), -uTilt);
 
-      float bumpStrength = (uType == 0) ? 0.13 : ((uType == 1) ? 0.13 : 0.145);
+      float bumpStrength = (uType == 0) ? 0.13 : 0.13;
       vec3 B = normalize(N - worldGrad * bumpStrength);
 
-      float NdotL_geom = dot(N, sunDir);
       float shadowRay = traceTerrainShadow(N, sunDir, h0, uType, uSpin, uTilt);
-      float wrap = (uType == 2) ? 0.0 : 0.05;
+      float wrap = 0.05;
       float diffuse = clamp((dot(B, sunDir) + wrap) / (1.0 + wrap), 0.0, 1.0);
       diffuse *= smoothstep(-0.08, 0.14, NdotL_geom) * mix(0.25, 1.0, shadowRay);
 
       float fresnel = pow(1.0 - max(0.0, dot(N, viewDir)), 3.4);
-      vec3 col = vec3(0.0);
 
       if (uType == 0) {
         // === EARTH (Crisp Orbital Blue Marble + Multi-Scale Cloud Fronts) ===
@@ -604,37 +676,6 @@
         float sunLimb = clamp(NdotL_geom * 0.72 + 0.42, 0.0, 1.0);
         litSurface += vec3(0.98, 0.54, 0.28) * fresnel * sunLimb * 0.46;
         col = litSurface;
-
-      } else {
-        // === MOON (30,720-Poly Displaced Craters + RTX Earthshine GI + Crater Shadows) ===
-        float mariaMask = smoothstep(0.39, 0.58, fbm3(sp * 1.9));
-        float mareMottle = noise3(sp * 10.5);
-        float regolithSpeck = noise3(sp * 42.0);
-        float rays = pow(max(0.0, ridged3(sp * 4.5 + vec3(1.2, 3.4, 0.7))), 3.5) * 0.32;
-        vec3 maria = vec3(0.085, 0.095, 0.115) * (0.85 + mareMottle * 0.35);
-        vec3 highlands = vec3(0.43, 0.44, 0.47);
-        vec3 ejecta = vec3(0.78, 0.79, 0.82);
-
-        vec3 albedo = mix(maria, highlands, mariaMask);
-        albedo = mix(albedo, ejecta, clamp(smoothstep(0.62, 0.85, h0) + rays, 0.0, 1.0));
-        albedo *= 0.82 + regolithSpeck * 0.34;
-        albedo *= 0.76 + 0.24 * smoothstep(0.28, 0.54, h0);
-
-        // RTX ray-marched crater bowl shadows + sunlit rim inter-reflection bounce
-        float lunarDiff = pow(max(0.0, dot(B, sunDir)), 0.92) * smoothstep(-0.02, 0.05, NdotL_geom) * mix(0.14, 1.0, shadowRay);
-        vec3 craterGI = albedo * (1.0 - shadowRay) * smoothstep(0.0, 0.35, NdotL_geom) * 0.16;
-
-        // RTX Earthshine blue-sapphire GI illuminating Moon's night hemisphere
-        vec3 earthBounceDir = normalize(vec3(0.38, -0.24, 0.88));
-        float earthshine = max(0.0, dot(B, earthBounceDir)) * smoothstep(0.15, -0.35, NdotL_geom);
-        vec3 earthshineGI = vec3(0.045, 0.125, 0.30) * albedo * earthshine * 0.85;
-
-        // Subtle silicate regolith specular sparkle + electrostatic micrometeorite rim sheen
-        vec3 H = normalize(sunDir + viewDir);
-        float regGlint = pow(max(0.0, dot(B, H)), 38.0) * smoothstep(0.55, 0.85, regolithSpeck) * shadowRay * 0.18;
-        float rimSpark = fresnel * smoothstep(0.05, 0.55, NdotL_geom) * 0.14;
-
-        col = albedo * (lunarDiff * 1.38 + 0.012) + craterGI + earthshineGI + vec3(0.95, 0.97, 1.0) * (regGlint + rimSpark);
       }
 
       col = acesFilm(col);
@@ -876,13 +917,263 @@
         uTime: gl.getUniformLocation(prog, 'uTime'),
         uSpin: gl.getUniformLocation(prog, 'uSpin'),
         uTilt: gl.getUniformLocation(prog, 'uTilt'),
-        uSunDir: gl.getUniformLocation(prog, 'uSunDir')
+        uSunDir: gl.getUniformLocation(prog, 'uSunDir'),
+        uMoonTex: gl.getUniformLocation(prog, 'uMoonTex')
       };
 
       const vpDims = gl.getParameter(gl.MAX_VIEWPORT_DIMS) || [1280, 1280];
       this.maxTexSize = Math.min(1280, vpDims[0] || 1280, vpDims[1] || 1280);
+      this.moonTex = null;
       gl.viewport(0, 0, this.canvas.width, this.canvas.height);
       this.ready = true;
+    }
+
+    _ensureMoonTexture(gl) {
+      if (this.moonTex) return;
+      const W = 1024;
+      const H = 512;
+      const N = W * H;
+      const clamp01 = v => (v < 0 ? 0 : v > 1 ? 1 : v);
+      const smooth = (a, b, x) => {
+        const t = clamp01((x - a) / (b - a));
+        return t * t * (3 - 2 * t);
+      };
+      const hash3 = (x, y, z, s) => {
+        let h = Math.imul(x, 374761393) + Math.imul(y, 668265263) + Math.imul(z, 2147483647) + Math.imul(s, 1597334677);
+        h = (h ^ (h >>> 13)) | 0;
+        h = Math.imul(h, 1274126177);
+        return ((h ^ (h >>> 16)) >>> 0) / 4294967296;
+      };
+      const noise3d = (x, y, z, s) => {
+        const ix = Math.floor(x), iy = Math.floor(y), iz = Math.floor(z);
+        const fx = x - ix, fy = y - iy, fz = z - iz;
+        const ux = fx * fx * (3 - 2 * fx), uy = fy * fy * (3 - 2 * fy), uz = fz * fz * (3 - 2 * fz);
+        const c000 = hash3(ix, iy, iz, s), c100 = hash3(ix + 1, iy, iz, s);
+        const c010 = hash3(ix, iy + 1, iz, s), c110 = hash3(ix + 1, iy + 1, iz, s);
+        const c001 = hash3(ix, iy, iz + 1, s), c101 = hash3(ix + 1, iy, iz + 1, s);
+        const c011 = hash3(ix, iy + 1, iz + 1, s), c111 = hash3(ix + 1, iy + 1, iz + 1, s);
+        const x00 = c000 + (c100 - c000) * ux, x10 = c010 + (c110 - c010) * ux;
+        const x01 = c001 + (c101 - c001) * ux, x11 = c011 + (c111 - c011) * ux;
+        return (x00 + (x10 - x00) * uy) + ((x01 + (x11 - x01) * uy) - (x00 + (x10 - x00) * uy)) * uz;
+      };
+      const fbm3d = (x, y, z, oct, s) => {
+        let v = 0, a = 0.5, sum = 0;
+        for (let k = 0; k < oct; k++) {
+          v += a * noise3d(x, y, z, s + k * 19);
+          sum += a;
+          x = x * 2.04 + 11.7; y = y * 2.04 + 5.3; z = z * 2.04 + 8.9;
+          a *= 0.5;
+        }
+        return v / sum;
+      };
+      const proj = (lon, lat) => {
+        const lo = (lon * Math.PI) / 180;
+        const la = (lat * Math.PI) / 180;
+        return { x: Math.cos(la) * Math.sin(lo), y: Math.sin(la), z: Math.cos(la) * Math.cos(lo) };
+      };
+
+      // Real Near-Side + Far-Side Lunar Maria (NASA selenographic coordinates)
+      const MARIA = [
+        [-16, 33, 19, 17, 1.0], [-16, 33, 21, 19, 0.72], // Mare Imbrium (+ outer shelf)
+        [17.5, 28, 11, 10, 0.96],                         // Mare Serenitatis
+        [31, 8.5, 14, 10, 0.96], [27, 14, 7, 6, 0.9],     // Mare Tranquillitatis
+        [59, 17, 9, 7.5, 1.0],                            // Mare Crisium
+        [51, -8, 7, 11, 0.85],                            // Mare Fecunditatis
+        [35, -15, 5.5, 5.5, 0.85],                        // Mare Nectaris
+        [-57, 20, 15, 22, 0.92], [-45, -2, 13, 16, 0.88], // Oceanus Procellarum
+        [-17, -21, 10, 8, 0.82], [-39, -24, 6, 6, 0.90],  // Mare Nubium & Humorum
+        [-23, -10, 7, 6, 0.76], [-30, 7, 8, 7, 0.78],     // Cognitum & Insularum
+        [3.6, 13, 4.5, 4, 0.86], [-68, -5, 3, 3.5, 1.0],  // Vaporum & Grimaldi
+        [-38, 57, 6, 4, 0.72], [-22, 56, 6, 4, 0.76],     // Mare Frigoris belt
+        [-6, 56, 6, 4, 0.76], [10, 57, 6, 4, 0.76], [26, 58, 6, 4, 0.72],
+        [10, 37, 5, 4, 0.82], [40, 22, 4, 4, 0.76], [69, 2, 4, 6, 0.7],
+        [148, 27, 7, 6.5, 0.88], [129, -20, 4.2, 4.2, 0.9], // Far side: Moscoviense & Tsiolkovskiy
+        [-93, -19, 8.5, 8.5, 0.78], [-155, -48, 18, 16, 0.35] // Orientale & South Pole-Aitken
+      ].map(([lon, lat, ax, ay, dark]) => {
+        const p = proj(lon, lat);
+        return { ...p, ax: (ax * 1.24 * Math.PI) / 180, ay: (ay * 1.24 * Math.PI) / 180, dark };
+      });
+
+      const height = new Float32Array(N);
+      const albedo = new Float32Array(N);
+      const mare = new Float32Array(N);
+      const sx = new Float32Array(N);
+      const sy = new Float32Array(N);
+      const sz = new Float32Array(N);
+
+      const imb = MARIA[0];
+      for (let py = 0; py < H; py++) {
+        const lat = (0.5 - (py + 0.5) / H) * Math.PI;
+        const cLat = Math.cos(lat);
+        const sLat = Math.sin(lat);
+        for (let px = 0; px < W; px++) {
+          const lon = ((px + 0.5) / W - 0.5) * 2 * Math.PI;
+          const dx = cLat * Math.sin(lon);
+          const dy = sLat;
+          const dz = cLat * Math.cos(lon);
+          const i = py * W + px;
+          sx[i] = dx; sy[i] = dy; sz[i] = dz;
+
+          const warp = (fbm3d(dx * 2.5, dy * 2.5, dz * 2.5, 4, 41) - 0.5) * 1.02 +
+                       (noise3d(dx * 10, dy * 10, dz * 10, 43) - 0.5) * 0.24;
+          let m = 0;
+          for (let k = 0; k < MARIA.length; k++) {
+            const M = MARIA[k];
+            const ex = dx - M.x, ey = dy - M.y, ez = dz - M.z;
+            const q = Math.sqrt((ex * ex + ez * ez) / (M.ax * M.ax) + (ey * ey) / (M.ay * M.ay));
+            const v = (1 - smooth(0.55, 1.15, q + warp * 0.62)) * M.dark;
+            if (v > m) m = v;
+          }
+          mare[i] = m;
+
+          const mottle = fbm3d(dx * 7.5 + 3.3, dy * 7.5 + 5.1, dz * 7.5, 3, 77);
+          const fine = noise3d(dx * 32 + 1.7, dy * 32 + 9.4, dz * 32, 133);
+          const hl = 0.62 + (mottle - 0.5) * 0.16 + (fine - 0.5) * 0.08;
+          const ma = 0.115 + (mottle - 0.5) * 0.075 + (fine - 0.5) * 0.03;
+          albedo[i] = hl + (ma - hl) * m;
+
+          // Apennine basin rim uplift + smooth mare lava plains + highland relief
+          const qi = Math.sqrt(((dx - imb.x) * (dx - imb.x) + (dz - imb.z) * (dz - imb.z)) / (imb.ax * imb.ax) + ((dy - imb.y) * (dy - imb.y)) / (imb.ay * imb.ay));
+          const rimMontes = Math.exp(-Math.pow((qi + warp * 0.45 - 1.05) / 0.16, 2)) * 0.016 * (1 - m * 0.7);
+          const dorsum = m > 0.35 ? Math.pow(Math.max(0, 1 - Math.abs(noise3d(dx * 16, dy * 16, dz * 16, 211) * 2 - 1)), 5) * 0.005 * m : 0;
+          height[i] = (fbm3d(dx * 5.5 + 2.2, dy * 5.5 + 8.8, dz * 5.5, 4, 301) - 0.5) * 0.032 * (1 - m * 0.82) + rimMontes + dorsum - m * 0.018;
+        }
+      }
+
+      const stampCrater3D = (cx3, cy3, cz3, R, depth, fresh, darkFloor = 0, seed = 0) => {
+        const angR = Math.min(Math.PI * 0.44, R * 1.68);
+        const cLat = Math.asin(Math.max(-1, Math.min(1, cy3)));
+        const cLon = Math.atan2(cx3, cz3);
+        const py0 = Math.max(0, Math.floor((0.5 - (cLat + angR) / Math.PI) * H));
+        const py1 = Math.min(H - 1, Math.ceil((0.5 - (cLat - angR) / Math.PI) * H));
+        const fullBand = Math.abs(cLat) + angR >= 1.38;
+        const dLon = fullBand ? Math.PI : angR / Math.max(0.15, Math.cos(cLat));
+        const kx0 = fullBand ? 0 : Math.floor(((cLon - dLon) / (2 * Math.PI) + 0.5) * W);
+        const kx1 = fullBand ? W - 1 : Math.ceil(((cLon + dLon) / (2 * Math.PI) + 0.5) * W);
+
+        for (let py = py0; py <= py1; py++) {
+          for (let kx = kx0; kx <= kx1; kx++) {
+            const px = ((kx % W) + W) % W;
+            const i = py * W + px;
+            const ex = sx[i] - cx3, ey = sy[i] - cy3, ez = sz[i] - cz3;
+            const d2 = ex * ex + ey * ey + ez * ez;
+            if (d2 >= angR * angR) continue;
+            const ang = Math.atan2(ey, ex * cz3 - ez * cx3 + 1e-6);
+            const warpRim = 1 + 0.042 * Math.sin(ang * 3 + seed) + 0.025 * Math.cos(ang * 5 - seed * 1.7);
+            const t = (Math.sqrt(d2) / R) * warpRim;
+            if (t >= 1.62) continue;
+            if (t < 1.0) {
+              if (R > 0.048) {
+                const wall = smooth(0.62, 1.0, t);
+                height[i] += (wall - 1.0) * depth * R * 0.34;
+              } else {
+                const peak = R > 0.022 ? Math.exp(-t * t * 22.0) * depth * R * 0.24 : 0;
+                height[i] += (t * t - 1.0) * depth * R * 0.44 + peak;
+              }
+              if (darkFloor > 0) albedo[i] -= darkFloor * (1 - smooth(0.55, 0.92, t));
+              if (fresh > 0) albedo[i] += fresh * 0.075 * smooth(0.1, 0.9, t);
+            } else {
+              const rt = (t - 1.0) / 0.62;
+              height[i] += Math.exp(-rt * 3.8) * depth * R * 0.19;
+              if (fresh > 0) albedo[i] += fresh * 0.22 * Math.exp(-rt * 2.5);
+            }
+          }
+        }
+      };
+
+      // ~2,100 spherical background craters (uniform 3D unit-sphere sampling; sparse in Maria)
+      let made = 0;
+      for (let n = 0; made < 2100 && n < 7500; n++) {
+        const z = hash3(n, 1, 13, 517) * 2 - 1;
+        const phi = hash3(n, 2, 17, 517) * 2 * Math.PI;
+        const rXY = Math.sqrt(Math.max(0, 1 - z * z));
+        const ux = rXY * Math.sin(phi), uy = z, uz = rXY * Math.cos(phi);
+        const py = Math.min(H - 1, Math.max(0, Math.floor((0.5 - Math.asin(uy) / Math.PI) * H)));
+        const px = Math.min(W - 1, Math.max(0, Math.floor((phi / (2 * Math.PI)) * W)));
+        const m = mare[py * W + px];
+        if (hash3(n, 3, 23, 517) < m * 0.85) continue;
+        const R = 0.006 + Math.pow(hash3(n, 4, 29, 517), 4.0) * 0.058;
+        const fresh = hash3(n, 5, 31, 517) > 0.93 ? 0.58 : 0;
+        stampCrater3D(ux, uy, uz, R, 0.52 + hash3(n, 6, 37, 517) * 0.44, fresh, 0, n * 0.37);
+        made++;
+      }
+
+      // Named NASA landmark craters + Rayed ejecta starbursts
+      const NAMED = [
+        [-11.4, -43.3, 0.026, 1.0, 1.05, 0],  // Tycho
+        [-20.1, 9.6, 0.028, 1.0, 0.92, 0],    // Copernicus
+        [-38, 8.1, 0.012, 0.9, 0.90, 0],      // Kepler
+        [-47.5, 23.7, 0.012, 0.9, 1.55, 0],   // Aristarchus
+        [-9.3, 51.6, 0.029, 0.35, 0, 0.11],   // Plato (dark floor)
+        [-14.1, -58.4, 0.065, 0.5, 0, 0],     // Clavius
+        [61, -8.9, 0.038, 0.8, 0.25, 0],      // Langrenus
+        [26.4, -11.4, 0.029, 0.9, 0.25, 0],   // Theophilus
+        [-1.9, -9.3, 0.044, 0.3, 0, 0.02],    // Ptolemaeus
+        [-3.1, -18.2, 0.022, 0.5, 0, 0],      // Arzachel
+        [-1.1, 29.4, 0.014, 0.85, 0.38, 0],   // Aristillus
+        [44.4, -16.9, 0.013, 0.8, 0.55, 0]    // Stevinus
+      ];
+      const RAYED = [];
+      NAMED.forEach(([lon, lat, R, depth, fresh, darkFloor], idx) => {
+        const p = proj(lon, lat);
+        stampCrater3D(p.x, p.y, p.z, R, depth, fresh, darkFloor, 100 + idx);
+        if (fresh >= 0.9) RAYED.push({ ...p, R, strength: fresh });
+      });
+
+      RAYED.forEach((rc, k) => {
+        const reach = rc.R * (k === 0 ? 44 : 18);
+        let ux = rc.z, uy = 0, uz = -rc.x;
+        const ul = Math.hypot(ux, uz) || 1;
+        ux /= ul; uz /= ul;
+        const vx = rc.y * uz - rc.z * uy;
+        const vy = rc.z * ux - rc.x * uz;
+        const vz = rc.x * uy - rc.y * ux;
+        const seed = 900 + k * 37;
+        const cLat = Math.asin(Math.max(-1, Math.min(1, rc.y)));
+        const cLon = Math.atan2(rc.x, rc.z);
+        const py0 = Math.max(0, Math.floor((0.5 - (cLat + reach) / Math.PI) * H));
+        const py1 = Math.min(H - 1, Math.ceil((0.5 - (cLat - reach) / Math.PI) * H));
+        const fullBand = Math.abs(cLat) + reach >= 1.38;
+        const dLon = fullBand ? Math.PI : reach / Math.max(0.15, Math.cos(cLat));
+        const kx0 = fullBand ? 0 : Math.floor(((cLon - dLon) / (2 * Math.PI) + 0.5) * W);
+        const kx1 = fullBand ? W - 1 : Math.ceil(((cLon + dLon) / (2 * Math.PI) + 0.5) * W);
+        for (let py = py0; py <= py1; py++) {
+          for (let kx = kx0; kx <= kx1; kx++) {
+            const px = ((kx % W) + W) % W;
+            const i = py * W + px;
+            const ex = sx[i] - rc.x, ey = sy[i] - rc.y, ez = sz[i] - rc.z;
+            const d = Math.sqrt(ex * ex + ey * ey + ez * ez);
+            if (d > reach || d < rc.R * 1.15) continue;
+            const a = Math.atan2(ex * vx + ey * vy + ez * vz, ex * ux + ey * uy + ez * uz);
+            const ca = Math.cos(a), sa = Math.sin(a);
+            const streak = Math.pow(fbm3d(ca * 4.2 + k * 7.3, sa * 4.2 + 3.1, 1.5, 4, seed), 2.15) * 2.5;
+            const broken = fbm3d(ca * 6 + d * 9, sa * 6 + d * 12, 2.3, 3, seed + 5);
+            const fall = Math.pow(1 - d / reach, 1.55);
+            const halo = Math.exp(-(d / rc.R - 1.2) * 0.9) * 0.30;
+            const near = smooth(rc.R * 1.4, rc.R * 6, d);
+            albedo[i] += (clamp01(streak * broken * 1.4 - 0.25) * near + halo) * fall * 0.30 * rc.strength;
+          }
+        }
+      });
+
+      const pixels = new Uint8Array(N * 4);
+      for (let i = 0; i < N; i++) {
+        const o = i * 4;
+        pixels[o] = Math.round(clamp01(0.5 + height[i] * 7.5) * 255);
+        pixels[o + 1] = Math.round(clamp01(albedo[i]) * 255);
+        pixels[o + 2] = Math.round(clamp01(mare[i]) * 255);
+        pixels[o + 3] = 255;
+      }
+
+      const tex = gl.createTexture();
+      gl.activeTexture(gl.TEXTURE0);
+      gl.bindTexture(gl.TEXTURE_2D, tex);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, W, H, 0, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
+      this.moonTex = tex;
     }
 
     /**
@@ -926,6 +1217,11 @@
         }
         const typeId = type === 'mars' ? 1 : (type === 'moon' ? 2 : 0);
         const gl = this.gl;
+        if (typeId === 2) {
+          this._ensureMoonTexture(gl);
+          gl.activeTexture(gl.TEXTURE0);
+          gl.bindTexture(gl.TEXTURE_2D, this.moonTex);
+        }
         gl.viewport(0, 0, targetSize, targetSize);
         gl.useProgram(this.program);
         gl.clearColor(0, 0, 0, 0);
@@ -937,6 +1233,7 @@
         gl.uniform1f(this.locs.uSpin, spin);
         gl.uniform1f(this.locs.uTilt, tilt);
         gl.uniform3f(this.locs.uSunDir, sunDir[0], sunDir[1], sunDir[2]);
+        if (this.locs.uMoonTex) gl.uniform1i(this.locs.uMoonTex, 0);
 
         gl.enableVertexAttribArray(this.posLoc);
 

@@ -1068,20 +1068,20 @@ class StillThereGame {
 
     const { cx, cy, r } = this._getMoonGeometry(w, h);
 
-    // Moon Halo & Procedural Globe
-    const moonHalo = ctx.createRadialGradient(cx, cy, r * 0.88, cx, cy, r * 1.48);
-    moonHalo.addColorStop(0, 'rgba(252, 211, 77, 0.24)');
-    moonHalo.addColorStop(0.5, 'rgba(56, 189, 248, 0.09)');
-    moonHalo.addColorStop(1, 'rgba(56, 189, 248, 0)');
+    // Airless vacuum optical scatter (ultra-subtle neutral bloom so the Moon stays crisp against deep black space)
+    const moonHalo = ctx.createRadialGradient(cx, cy, r * 0.94, cx, cy, r * 1.24);
+    moonHalo.addColorStop(0, 'rgba(226, 232, 240, 0.09)');
+    moonHalo.addColorStop(0.55, 'rgba(148, 163, 184, 0.025)');
+    moonHalo.addColorStop(1, 'rgba(0, 0, 0, 0)');
     ctx.fillStyle = moonHalo;
     ctx.beginPath();
-    ctx.arc(cx, cy, r * 1.48, 0, Math.PI * 2);
+    ctx.arc(cx, cy, r * 1.24, 0, Math.PI * 2);
     ctx.fill();
 
     if (!(window.vantaPlanetGL && window.vantaPlanetGL.drawPlanet(ctx, 'moon', cx, cy, r, {
-      spin: 0.42 + (this.moonSpin || 0) + this.moonYaw,
+      spin: -0.14 + (this.moonSpin || 0) * 0.55 + this.moonYaw,
       tilt: -this.moonPitch,
-      sunDir: [-0.55, 0.35, 0.75]
+      sunDir: [-0.48, 0.24, 0.84]
     }))) {
       ctx.save();
       ctx.translate(cx, cy);
