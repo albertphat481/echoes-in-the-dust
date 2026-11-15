@@ -2,9 +2,10 @@
  * VantaLumen — RTX-Grade Physically-Based Space & Planetary GLSL Shaders
  * Provides:
  * 1. Raw GLSL Vertex & Fragment Shaders (window.VANTALUMEN_NEBULA_GLSL)
- * 2. Live WebGL GPU Deep-Space Renderer (window.vantaNebulaGL) — crisp full-res, ACES Filmic
- * 3. Live WebGL GPU Ray-Traced Planet Renderer (window.vantaPlanetGL) — Earth, Mars, Moon
- *    with 3D spherical FBM, bump-mapped relief, GGX ocean specular, cloud shadows, and Rayleigh scattering
+ * 2. Live WebGL GPU Deep-Space Renderer (window.vantaNebulaGL) — crisp full-res, RTX volumetric rays, ACES Filmic
+ * 3. Live WebGL GPU High-Poly RTX Planet Renderer (window.vantaPlanetGL) — Earth, Mars, Moon
+ *    rendered on a 57,344-polygon displaced 3D mesh with ray-marched terrain self-shadowing,
+ *    Earthshine/regolith GI bounce, GGX specular, volumetric Rayleigh halo, and animated storm lightning
  * 4. Three.js ShaderMaterial factory (window.createVantaLumenThreeMaterial)
  */
 (function () {
@@ -140,6 +141,18 @@
       // Dark Bok globules / dust lanes absorb background nebula light
       col *= mix(0.22, 1.0, dustRift);
 
+      // RTX Diagonal volumetric crepuscular nebula shafts (no artificial pinwheel hub)
+      vec2 shaftUv = vec2(uv.x * 1.8 - uv.y * 1.15, uv.x * 0.4 + uv.y * 0.65);
+      float godRay = smoothstep(0.36, 0.78, fbm(shaftUv * 2.4 + r * 0.8 + vec2(uTime * 0.015, 0.0)));
+      godRay *= galacticBand * (0.45 + 0.55 * (1.0 - dustRift));
+      col += mix(vec3(0.04, 0.16, 0.34), vec3(0.26, 0.15, 0.05), f) * godRay * (0.26 + 0.30 * uLumenIntensity);
+
+      // Subtle deep-nebula electrostatic lightning flash inside dense clouds
+      float nebBoltPhase = fract(uTime * 0.27);
+      float nebBoltFlash = exp(-abs(nebBoltPhase - 0.14) * 58.0) + exp(-abs(nebBoltPhase - 0.21) * 72.0) * 0.7;
+      float nebArcCore = pow(max(0.0, 1.0 - abs(noise(p * 4.5 + vec2(uTime * 0.4, -uTime * 0.3)) * 2.0 - 1.0)), 10.0);
+      col += vec3(0.42, 0.76, 1.0) * nebArcCore * nebBoltFlash * smoothstep(0.58, 0.86, f) * galacticBand * 0.55;
+
       // Crisp 3-layer parallax starfield
       vec3 stars = vec3(0.0);
       stars += starLayer(uv + mouseOffset * 0.12 + vec2(t * 0.02, 0.0), 16.0, 13.7, uTime, 1.05);
@@ -157,19 +170,9 @@
   `;
 
   // =========================================================================
-  // RTX PHYSICALLY-BASED RAY-TRACED PLANET SHADER (Earth, Mars, Moon)
+  // RTX HIGH-POLY 3D MESH PLANET SHADERS (Earth, Mars, Moon)
   // =========================================================================
-  const PLANET_FRAGMENT_SHADER = `
-    precision highp float;
-
-    varying vec2 vUv;
-
-    uniform int uType;      // 0 = Earth, 1 = Mars, 2 = Moon
-    uniform float uTime;
-    uniform float uSpin;
-    uniform float uTilt;
-    uniform vec3 uSunDir;
-
+  const PLANET_NOISE_GLSL = `
     float hash31(vec3 p) {
       p = fract(p * 0.1031);
       p += dot(p, p.yzx + 33.33);
@@ -232,10 +235,6 @@
       return vec3(p.x, c * p.y - s * p.z, s * p.y + c * p.z);
     }
 
-    vec3 acesFilm(vec3 x) {
-      return clamp((x * (2.51 * x + 0.03)) / (x * (2.43 * x + 0.59) + 0.14), 0.0, 1.0);
-    }
-
     vec3 hash33(vec3 p) {
       p = vec3(
         dot(p, vec3(127.1, 311.7, 74.7)),
@@ -245,7 +244,7 @@
       return fract(sin(p) * 43758.5453123);
     }
 
-    // Fast 2x2x2 circular 3D Voronoi impact craters (3.4x faster, smooth circular rims)
+    // Fast 2x2x2 circular 3D Voronoi impact craters
     float craterLayer(vec3 p, float scale) {
       vec3 sp = p * scale;
       vec3 ip = floor(sp - 0.5);
@@ -270,21 +269,18 @@
       return best;
     }
 
-    // Terrain height function for smooth 3D normal mapping
+    // Terrain height function shared by 57,344-poly vertex displacement & RTX fragment shading
     float surfaceHeight(vec3 sp, int type) {
       if (type == 0) {
-        // Earth: continents + mountain chains
-        float cont = fbm3(sp * 2.15);
-        float ridge = ridged3(sp * 4.8) * smoothstep(0.50, 0.74, cont);
-        return cont + ridge * 0.22;
+        float cont = fbm3(sp * 2.25) + (noise3(sp * 9.5) - 0.5) * 0.14;
+        float ridge = ridged3(sp * 6.4) * smoothstep(0.46, 0.72, cont);
+        return cont + ridge * 0.28;
       } else if (type == 1) {
-        // Mars: canyons + volcanic plateaus + circular craters
         float base = fbm3(sp * 2.3);
         float canyon = ridged3(sp * 4.0) * 0.24;
         float craters = craterLayer(sp, 3.6) * 0.22;
         return base * 0.75 + canyon + craters;
       } else {
-        // Moon: Maria basins + 3-scale impact craters + highland ridges (fast 4-tap normal)
         float maria = fbm3(sp * 1.85);
         float cLarge = craterLayer(sp, 2.8) * 0.30;
         float cMed = craterLayer(sp + vec3(4.1, 2.3, 1.7), 7.2) * 0.16;
@@ -293,48 +289,141 @@
         return maria * 0.54 + cLarge + cMed + cMicro + ridges;
       }
     }
+  `;
+
+  const PLANET_VERTEX_SHADER = `
+    precision highp float;
+    precision highp int;
+
+    attribute vec3 aPos3d;
+
+    uniform int uPass;      // 0 = Atmospheric Halo Quad, 1 = 30,720-Poly Displaced Sphere
+    uniform int uType;
+    uniform float uSpin;
+    uniform float uTilt;
+
+    varying vec2 vQuadPos;
+    varying vec3 vSpherePos;
+    varying float vElev;
+
+    ${PLANET_NOISE_GLSL}
 
     void main() {
-      // Map [0..1] UV to [-1.32 .. +1.32] so planet radius = 1.0 and outer [1.0..1.32] holds atmosphere
-      vec2 p = (vUv - 0.5) * 2.64;
-      float r2 = dot(p, p);
-      float r = sqrt(r2);
+      if (uPass == 0) {
+        vQuadPos = aPos3d.xy;
+        vSpherePos = vec3(0.0, 0.0, 1.0);
+        vElev = 0.0;
+        gl_Position = vec4(aPos3d.xy, 0.99, 1.0);
+      } else {
+        vec3 nBase = normalize(aPos3d);
+        vec3 sp = rotY(rotX(nBase, uTilt), uSpin);
+        float h = surfaceHeight(sp, uType);
+        float dispAmp = (uType == 0) ? 0.010 : ((uType == 1) ? 0.024 : 0.032);
+        vec3 pos = nBase * (1.0 + (h - 0.45) * dispAmp);
+        vQuadPos = pos.xy / 1.32;
+        vSpherePos = nBase;
+        vElev = h;
+        gl_Position = vec4(pos.xy * 0.75757575, -pos.z * 0.5, 1.0);
+      }
+    }
+  `;
 
+  const PLANET_FRAGMENT_SHADER = `
+    precision highp float;
+    precision highp int;
+
+    varying vec2 vQuadPos;
+    varying vec3 vSpherePos;
+    varying float vElev;
+
+    uniform int uPass;      // 0 = Outer Atmospheric Halo + Corona, 1 = High-Poly RTX Surface
+    uniform int uType;      // 0 = Earth, 1 = Mars, 2 = Moon
+    uniform float uTime;
+    uniform float uSpin;
+    uniform float uTilt;
+    uniform vec3 uSunDir;
+
+    ${PLANET_NOISE_GLSL}
+
+    vec3 acesFilm(vec3 x) {
+      return clamp((x * (2.51 * x + 0.03)) / (x * (2.43 * x + 0.59) + 0.14), 0.0, 1.0);
+    }
+
+    // RTX 4-step terrain ray-marched self-shadowing across craters & ridges
+    float traceTerrainShadow(vec3 N, vec3 sunDir, float h0, int type, float spin, float tilt) {
+      float ndl = dot(N, sunDir);
+      if (ndl <= -0.02) return 0.0;
+      float scale = (type == 0) ? 0.015 : ((type == 1) ? 0.030 : 0.040);
+      float occ = 0.0;
+      float raySlope = max(0.022, ndl);
+      for (int i = 1; i <= 4; i++) {
+        float t = float(i) * 0.011;
+        vec3 sampleN = normalize(N + sunDir * t);
+        vec3 sampleSp = rotY(rotX(sampleN, tilt), spin);
+        float sh = surfaceHeight(sampleSp, type);
+        float rayH = h0 + (t * raySlope) / scale;
+        occ = max(occ, clamp((sh - rayH) * 5.4, 0.0, 1.0));
+      }
+      return 1.0 - occ * 0.90;
+    }
+
+    // Multi-stroke atmospheric storm lightning cell solver (bright return strokes + forked corona)
+    float stormBoltPulse(vec3 p, float speedScale, float threshold) {
+      vec3 cell = floor(p);
+      float seed = hash31(cell + vec3(17.3, 41.9, 83.1));
+      if (seed < threshold) return 0.0;
+      float tFrac = fract(uTime * (0.55 + seed * 0.65) * speedScale + seed * 31.7);
+      float s1 = exp(-abs(tFrac - 0.16) * 20.0);
+      float s2 = exp(-abs(tFrac - 0.29) * 26.0) * 0.90;
+      float s3 = exp(-abs(tFrac - 0.42) * 32.0) * 0.55;
+      float afterGlow = exp(-max(0.0, tFrac - 0.16) * 6.5) * 0.35;
+      vec3 cellDist = fract(p) - (0.22 + 0.56 * hash33(cell));
+      float coreSpot = exp(-dot(cellDist, cellDist) * 10.0);
+      float branch = pow(max(0.0, 1.0 - abs(noise3(p * 4.5 + vec3(uTime * 1.6)) * 2.0 - 1.0)), 4.5);
+      return (s1 + s2 + s3 + afterGlow) * coreSpot * (0.65 + 1.65 * branch);
+    }
+
+    void main() {
       vec3 sunDir = normalize(uSunDir);
       vec3 viewDir = vec3(0.0, 0.0, 1.0);
 
-      // Outer Rayleigh atmosphere glow outside the sphere limb
-      if (r > 1.0) {
-        float limbDist = r - 1.0;
+      // PASS 0: Outer Rayleigh Atmosphere + RTX Mie Solar Corona Rays
+      if (uPass == 0) {
+        vec2 p = vQuadPos * 1.32;
+        float r = length(p);
+        if (r < 0.96 || r > 1.32) {
+          gl_FragColor = vec4(0.0);
+          return;
+        }
+        float limbDist = max(0.0, r - 0.99);
         vec3 dir = normalize(vec3(p, 0.0));
-        float sunSide = clamp(dot(dir, sunDir) * 0.6 + 0.55, 0.0, 1.0);
+        float sunSide = clamp(dot(dir, sunDir) * 0.65 + 0.50, 0.0, 1.0);
+        float angle = atan(p.y, p.x);
+        float coronaRays = 0.72 + 0.28 * sin(angle * 7.0 + uTime * 0.35) * cos(angle * 11.0 - uTime * 0.22);
 
         vec3 haloCol = vec3(0.0);
         float haloAlpha = 0.0;
         if (uType == 0) {
-          haloCol = vec3(0.14, 0.48, 0.98);
-          haloAlpha = exp(-limbDist * 14.0) * 0.62 * sunSide;
+          haloCol = vec3(0.16, 0.54, 1.0) + vec3(0.25, 0.45, 0.70) * pow(sunSide, 3.0) * 0.4;
+          haloAlpha = exp(-limbDist * 13.5) * 0.70 * sunSide * (0.85 + 0.15 * coronaRays);
         } else if (uType == 1) {
-          haloCol = vec3(0.92, 0.45, 0.22);
-          haloAlpha = exp(-limbDist * 18.0) * 0.30 * sunSide;
+          haloCol = vec3(0.95, 0.48, 0.24);
+          haloAlpha = exp(-limbDist * 17.0) * 0.36 * sunSide * (0.88 + 0.12 * coronaRays);
         } else {
-          haloCol = vec3(0.75, 0.80, 0.90);
-          haloAlpha = exp(-limbDist * 26.0) * 0.08 * sunSide;
+          // Subtle lunar solar corona & rim scatter
+          haloCol = vec3(0.76, 0.84, 0.98);
+          haloAlpha = exp(-limbDist * 22.0) * 0.16 * pow(sunSide, 1.4) * coronaRays;
         }
         gl_FragColor = vec4(haloCol * haloAlpha, haloAlpha);
         return;
       }
 
-      // Ray-sphere hit point & geometric normal
-      float z = sqrt(max(0.0, 1.0 - r2));
-      vec3 N = normalize(vec3(p.x, p.y, z));
+      // PASS 1: 30,720-Polygon Displaced 3D Sphere Surface
+      vec3 N = normalize(vSpherePos);
       vec3 sp = rotY(rotX(N, uTilt), uSpin);
 
-      // Subpixel anti-aliased limb mask
-      float aaEdge = smoothstep(1.0, 0.992, r);
-
-      // High-precision finite-difference 3D bump mapping
-      float eps = (uType == 2) ? 0.0038 : 0.0085;
+      // Finite-difference 3D normal mapping synced with vertex elevation
+      float eps = (uType == 2) ? 0.0036 : 0.0080;
       float h0 = surfaceHeight(sp, uType);
       float hx = surfaceHeight(normalize(sp + vec3(eps, 0.0, 0.0)), uType);
       float hy = surfaceHeight(normalize(sp + vec3(0.0, eps, 0.0)), uType);
@@ -343,32 +432,31 @@
       grad -= sp * dot(grad, sp);
       vec3 worldGrad = rotX(rotY(grad, -uSpin), -uTilt);
 
-      float bumpStrength = (uType == 0) ? 0.07 : ((uType == 1) ? 0.11 : 0.12);
+      float bumpStrength = (uType == 0) ? 0.08 : ((uType == 1) ? 0.13 : 0.145);
       vec3 B = normalize(N - worldGrad * bumpStrength);
 
       float NdotL_geom = dot(N, sunDir);
+      float shadowRay = traceTerrainShadow(N, sunDir, h0, uType, uSpin, uTilt);
       float wrap = (uType == 2) ? 0.0 : 0.06;
       float diffuse = clamp((dot(B, sunDir) + wrap) / (1.0 + wrap), 0.0, 1.0);
-      diffuse *= smoothstep(-0.08, 0.14, NdotL_geom);
+      diffuse *= smoothstep(-0.08, 0.14, NdotL_geom) * mix(0.25, 1.0, shadowRay);
 
-      float fresnel = pow(1.0 - max(0.0, dot(N, viewDir)), 3.6);
+      float fresnel = pow(1.0 - max(0.0, dot(N, viewDir)), 3.4);
       vec3 col = vec3(0.0);
 
       if (uType == 0) {
-        // === EARTH ===
+        // === EARTH (RTX Blue Marble + Storm Lightning) ===
         float landMask = smoothstep(0.475, 0.508, h0);
         float lat = abs(sp.y);
         float polarIce = smoothstep(0.86, 0.97, lat + (h0 - 0.5) * 0.12);
 
-        // Deep rich Blue Marble ocean bathymetry
-        vec3 deepOcean = vec3(0.005, 0.028, 0.15);
-        vec3 shallowOcean = vec3(0.012, 0.11, 0.32);
+        vec3 deepOcean = vec3(0.005, 0.028, 0.155);
+        vec3 shallowOcean = vec3(0.012, 0.115, 0.34);
         vec3 oceanCol = mix(deepOcean, shallowOcean, smoothstep(0.30, 0.475, h0));
 
-        // Lush green continents + subtle arid/alpine zones
         float arid = fbm3(sp * 3.8 + vec3(9.2, 1.4, 3.7));
-        vec3 deepForest = vec3(0.025, 0.19, 0.048);
-        vec3 lushGreen = vec3(0.075, 0.32, 0.085);
+        vec3 deepForest = vec3(0.024, 0.195, 0.048);
+        vec3 lushGreen = vec3(0.078, 0.33, 0.088);
         vec3 desert = vec3(0.38, 0.31, 0.18);
         vec3 alpine = vec3(0.32, 0.33, 0.30);
         vec3 greenLand = mix(deepForest, lushGreen, smoothstep(0.48, 0.68, h0));
@@ -378,76 +466,110 @@
         vec3 albedo = mix(oceanCol, landCol, landMask);
         albedo = mix(albedo, vec3(0.90, 0.94, 0.98), polarIce);
 
-        // Ocean specular sun glint
+        // Dual-lobe RTX ocean specular sun glint
         vec3 H = normalize(sunDir + viewDir);
-        float spec = pow(max(0.0, dot(B, H)), 72.0) * (1.0 - landMask) * (1.0 - polarIce);
+        float specTight = pow(max(0.0, dot(B, H)), 110.0);
+        float specBroad = pow(max(0.0, dot(B, H)), 24.0) * 0.18;
+        float spec = (specTight + specBroad) * (1.0 - landMask) * (1.0 - polarIce) * shadowRay;
 
-        // Wispy 3D cloud deck (keeps deep blue oceans & green continents vivid)
-        vec3 cloudP = rotY(N, uSpin * 1.15 + uTime * 0.012);
-        float clouds = smoothstep(0.59, 0.86, fbm3(cloudP * 3.1 + vec2(fbm3(cloudP * 1.8), 0.0).xyy)) * 0.48;
-        float cloudShadow = smoothstep(0.60, 0.88, fbm3((cloudP - rotY(sunDir, uSpin) * 0.02) * 3.1)) * 0.48;
+        // Earth sharpness & cloud supercell storm LIGHTNING!
+        vec3 cloudP = rotY(N, uSpin * 1.15 + uTime * 0.014);
+        float cloudRaw = fbm3(cloudP * 3.4 + vec2(fbm3(cloudP * 2.0), 0.0).xyy);
+        float clouds = smoothstep(0.52, 0.82, cloudRaw) * 0.56;
+        float cloudShadow = smoothstep(0.53, 0.84, fbm3((cloudP - rotY(sunDir, uSpin) * 0.022) * 3.4)) * 0.56;
 
-        vec3 litSurface = albedo * (diffuse * (1.0 - cloudShadow * 0.35) * 1.24 + 0.02);
-        litSurface += vec3(1.0, 0.96, 0.88) * spec * 0.55 * (1.0 - clouds * 0.85);
-        litSurface = mix(litSurface, vec3(0.95, 0.97, 1.0) * (max(0.0, NdotL_geom) * 1.12 + 0.03), clouds);
+        // RTX Indirect Sky GI bounce into mountain shadows
+        vec3 rtxSkyGI = vec3(0.04, 0.15, 0.36) * (1.0 - shadowRay) * smoothstep(-0.08, 0.25, NdotL_geom) * 0.38;
+        vec3 litSurface = albedo * (diffuse * (1.0 - cloudShadow * 0.44) * 1.34 + 0.024) + rtxSkyGI;
+        litSurface += vec3(1.0, 0.96, 0.88) * spec * 0.82 * (1.0 - clouds * 0.82);
+
+        // Cloud subsurface scattering + storm supercell LIGHTNING!
+        float stormMask = smoothstep(0.46, 0.78, cloudRaw);
+        float bolt = stormBoltPulse(cloudP * 7.2, 1.4, 0.30) * stormMask;
+        float nightWeight = 0.48 + 1.05 * smoothstep(0.35, -0.32, NdotL_geom);
+        vec3 stormFlash = mix(vec3(0.38, 0.78, 1.0), vec3(0.95, 0.99, 1.0), clamp(bolt, 0.0, 1.0)) * bolt * nightWeight * 3.1;
+
+        vec3 cloudScatter = vec3(0.96, 0.98, 1.0) * (max(0.0, NdotL_geom) * 1.20 + 0.032) + stormFlash;
+        litSurface = mix(litSurface, cloudScatter, clouds);
+        litSurface += stormFlash * 0.65;
 
         // Night-side city lights on land
-        float nightMask = smoothstep(0.05, -0.22, NdotL_geom);
+        float nightMask = smoothstep(0.06, -0.22, NdotL_geom);
         float cityNoise = pow(noise3(sp * 28.0), 4.2) * smoothstep(0.48, 0.62, fbm3(sp * 7.5));
         float coastal = smoothstep(0.58, 0.48, h0) * landMask * (1.0 - polarIce);
-        litSurface += vec3(1.0, 0.72, 0.32) * cityNoise * coastal * nightMask * 0.95 * (1.0 - clouds * 0.7);
+        litSurface += vec3(1.0, 0.72, 0.32) * cityNoise * coastal * nightMask * 0.95 * (1.0 - clouds * 0.65);
 
-        // Deeper blue Rayleigh rim scattering + warm terminator band
-        float sunLimb = clamp(NdotL_geom * 0.7 + 0.45, 0.0, 1.0);
-        vec3 rayleigh = vec3(0.10, 0.40, 0.95) * fresnel * sunLimb * 0.62;
+        // RTX Rayleigh Fresnel rim + volumetric sunset scatter
+        float sunLimb = clamp(NdotL_geom * 0.75 + 0.45, 0.0, 1.0);
+        vec3 rayleigh = vec3(0.10, 0.44, 0.98) * fresnel * sunLimb * 0.72;
         float terminator = exp(-pow(NdotL_geom * 6.0, 2.0));
-        vec3 sunset = vec3(0.95, 0.38, 0.14) * terminator * fresnel * 0.32;
+        vec3 sunset = vec3(0.98, 0.40, 0.14) * terminator * fresnel * 0.38;
         col = litSurface + rayleigh + sunset;
 
       } else if (uType == 1) {
-        // === MARS ===
+        // === MARS (RTX Ray-Marched Canyons + Dust GI + Static Storm Lightning) ===
         float basalt = smoothstep(0.36, 0.58, fbm3(sp * 2.8 + vec3(2.1, 4.4, 1.7)));
         float polarCap = smoothstep(0.84, 0.93, abs(sp.y) + (h0 - 0.5) * 0.12);
 
         vec3 darkBasalt = vec3(0.22, 0.10, 0.065);
         vec3 rustDust = vec3(0.68, 0.27, 0.125);
-        vec3 brightOchre = vec3(0.82, 0.44, 0.22);
+        vec3 brightOchre = vec3(0.84, 0.45, 0.22);
 
         vec3 albedo = mix(darkBasalt, rustDust, basalt);
         albedo = mix(albedo, brightOchre, smoothstep(0.55, 0.82, h0));
         albedo = mix(albedo, vec3(0.94, 0.92, 0.90), polarCap);
 
-        // Oren-Nayar style dusty matte response (no plastic shine)
-        vec3 litSurface = albedo * (diffuse * 1.28 + 0.02);
-        // Subtle dusty Martian limb scattering
-        float sunLimb = clamp(NdotL_geom * 0.7 + 0.4, 0.0, 1.0);
-        litSurface += vec3(0.95, 0.52, 0.28) * fresnel * sunLimb * 0.38;
+        // Warm Martian dust GI bounce inside shadowed craters/canyons
+        vec3 dustGI = vec3(0.30, 0.11, 0.045) * (1.0 - shadowRay) * smoothstep(-0.06, 0.35, NdotL_geom) * 0.42;
+        vec3 litSurface = albedo * (diffuse * 1.34 + 0.022) + dustGI;
+
+        // Martian electrostatic dry-storm lightning in shadowed dust squalls
+        vec3 dustP = rotY(N, uSpin * 1.08 + uTime * 0.01);
+        float squall = smoothstep(0.46, 0.76, fbm3(dustP * 3.6));
+        float marsBolt = stormBoltPulse(dustP * 6.2, 1.15, 0.34) * squall;
+        float marsNight = 0.38 + 0.95 * smoothstep(0.32, -0.32, NdotL_geom);
+        litSurface += vec3(0.62, 0.84, 1.0) * marsBolt * marsNight * 1.85;
+
+        // Volumetric rusty atmospheric limb bloom
+        float sunLimb = clamp(NdotL_geom * 0.72 + 0.42, 0.0, 1.0);
+        litSurface += vec3(0.98, 0.54, 0.28) * fresnel * sunLimb * 0.46;
         col = litSurface;
 
       } else {
-        // === MOON ===
+        // === MOON (30,720-Poly Displaced Craters + RTX Earthshine GI + Crater Shadows) ===
         float mariaMask = smoothstep(0.39, 0.58, fbm3(sp * 1.9));
         float mareMottle = noise3(sp * 10.5);
         float regolithSpeck = noise3(sp * 42.0);
         float rays = pow(max(0.0, ridged3(sp * 4.5 + vec3(1.2, 3.4, 0.7))), 3.5) * 0.32;
         vec3 maria = vec3(0.085, 0.095, 0.115) * (0.85 + mareMottle * 0.35);
-        vec3 highlands = vec3(0.42, 0.43, 0.46);
-        vec3 ejecta = vec3(0.75, 0.76, 0.79);
+        vec3 highlands = vec3(0.43, 0.44, 0.47);
+        vec3 ejecta = vec3(0.78, 0.79, 0.82);
 
         vec3 albedo = mix(maria, highlands, mariaMask);
         albedo = mix(albedo, ejecta, clamp(smoothstep(0.62, 0.85, h0) + rays, 0.0, 1.0));
         albedo *= 0.82 + regolithSpeck * 0.34;
-        // Ambient occlusion darkening inside deep crater bowls
-        albedo *= 0.78 + 0.22 * smoothstep(0.28, 0.54, h0);
+        albedo *= 0.76 + 0.24 * smoothstep(0.28, 0.54, h0);
 
-        // Sharp lunar opposition surge / harsh shadow contrast
-        float lunarDiff = pow(max(0.0, dot(B, sunDir)), 0.95) * smoothstep(-0.02, 0.05, NdotL_geom);
-        col = albedo * (lunarDiff * 1.32 + 0.012);
+        // RTX ray-marched crater bowl shadows + sunlit rim inter-reflection bounce
+        float lunarDiff = pow(max(0.0, dot(B, sunDir)), 0.92) * smoothstep(-0.02, 0.05, NdotL_geom) * mix(0.14, 1.0, shadowRay);
+        vec3 craterGI = albedo * (1.0 - shadowRay) * smoothstep(0.0, 0.35, NdotL_geom) * 0.16;
+
+        // RTX Earthshine blue-sapphire GI illuminating Moon's night hemisphere
+        vec3 earthBounceDir = normalize(vec3(0.38, -0.24, 0.88));
+        float earthshine = max(0.0, dot(B, earthBounceDir)) * smoothstep(0.15, -0.35, NdotL_geom);
+        vec3 earthshineGI = vec3(0.045, 0.125, 0.30) * albedo * earthshine * 0.85;
+
+        // Subtle silicate regolith specular sparkle + electrostatic micrometeorite rim sheen
+        vec3 H = normalize(sunDir + viewDir);
+        float regGlint = pow(max(0.0, dot(B, H)), 38.0) * smoothstep(0.55, 0.85, regolithSpeck) * shadowRay * 0.18;
+        float rimSpark = fresnel * smoothstep(0.05, 0.55, NdotL_geom) * 0.14;
+
+        col = albedo * (lunarDiff * 1.38 + 0.012) + craterGI + earthshineGI + vec3(0.95, 0.97, 1.0) * (regGlint + rimSpark);
       }
 
       col = acesFilm(col);
       col = pow(col, vec3(1.0 / 2.2));
-      gl_FragColor = vec4(col * aaEdge, aaEdge);
+      gl_FragColor = vec4(col, 1.0);
     }
   `;
 
@@ -608,25 +730,78 @@
       this.canvas = document.createElement('canvas');
       this.canvas.width = 512;
       this.canvas.height = 512;
-      this.gl = this.canvas.getContext('webgl2', { alpha: true, premultipliedAlpha: true, antialias: true, depth: false }) ||
-                this.canvas.getContext('webgl', { alpha: true, premultipliedAlpha: true, antialias: true, depth: false });
+      this.gl = this.canvas.getContext('webgl2', { alpha: true, premultipliedAlpha: true, antialias: true, depth: true }) ||
+                this.canvas.getContext('webgl', { alpha: true, premultipliedAlpha: true, antialias: true, depth: true });
       this.ready = false;
       this._cache = {};
+      this.polyCount = 0;
+      this.vertexCount = 0;
 
       if (this.gl) {
         this._initGL();
       }
     }
 
+    _buildHighPolySphere(gl, stacks, slices) {
+      const verts = [];
+      const indices = [];
+      for (let i = 0; i <= stacks; i++) {
+        const phi = (i / stacks) * Math.PI;
+        const y = Math.cos(phi);
+        const rSin = Math.sin(phi);
+        for (let j = 0; j <= slices; j++) {
+          const theta = (j / slices) * Math.PI * 2.0;
+          const x = rSin * Math.sin(theta);
+          const z = rSin * Math.cos(theta);
+          verts.push(x, y, z);
+        }
+      }
+      const stride = slices + 1;
+      for (let i = 0; i < stacks; i++) {
+        for (let j = 0; j < slices; j++) {
+          const a = i * stride + j;
+          const b = (i + 1) * stride + j;
+          const c = (i + 1) * stride + (j + 1);
+          const d = i * stride + (j + 1);
+          // CCW outward-facing winding
+          indices.push(a, b, c, a, c, d);
+        }
+      }
+
+      this.vertexCount = (stacks + 1) * (slices + 1);
+      this.polyCount = stacks * slices * 2;
+      this.sphereIndexCount = indices.length;
+
+      this.sphereVbo = gl.createBuffer();
+      gl.bindBuffer(gl.ARRAY_BUFFER, this.sphereVbo);
+      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(verts), gl.STATIC_DRAW);
+
+      this.sphereIbo = gl.createBuffer();
+      gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.sphereIbo);
+      gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indices), gl.STATIC_DRAW);
+
+      // Fullscreen 3D quad for Pass 0 outer atmospheric halo + RTX corona
+      this.quadVbo = gl.createBuffer();
+      gl.bindBuffer(gl.ARRAY_BUFFER, this.quadVbo);
+      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
+        -1, -1, 0,   1, -1, 0,   1,  1, 0,
+        -1, -1, 0,   1,  1, 0,  -1,  1, 0
+      ]), gl.STATIC_DRAW);
+    }
+
     _initGL() {
       const gl = this.gl;
-      const prog = compileProgram(gl, VERTEX_SHADER, PLANET_FRAGMENT_SHADER);
+      const prog = compileProgram(gl, PLANET_VERTEX_SHADER, PLANET_FRAGMENT_SHADER);
       if (!prog) return;
       this.program = prog;
       gl.useProgram(prog);
-      setupFullscreenQuad(gl, prog);
+
+      this.posLoc = gl.getAttribLocation(prog, 'aPos3d');
+      // 128 stacks x 224 slices = 28,929 vertices & 57,344 triangle polygons (fits Uint16)
+      this._buildHighPolySphere(gl, 128, 224);
 
       this.locs = {
+        uPass: gl.getUniformLocation(prog, 'uPass'),
         uType: gl.getUniformLocation(prog, 'uType'),
         uTime: gl.getUniformLocation(prog, 'uTime'),
         uSpin: gl.getUniformLocation(prog, 'uSpin'),
@@ -639,7 +814,7 @@
     }
 
     /**
-     * Renders a ray-traced 3D planet onto a 2D canvas context.
+     * Renders a high-poly RTX 3D planet onto a 2D canvas context.
      * @param {CanvasRenderingContext2D} ctx
      * @param {'earth'|'mars'|'moon'} type
      * @param {number} cx
@@ -665,7 +840,11 @@
       const age = entry ? Math.abs(nowSec - entry.time) : 999;
       const angleThresh = type === 'moon' ? 0.008 : 0.015;
       const angleChanged = !entry || Math.abs(spin - entry.spin) > angleThresh || Math.abs(tilt - entry.tilt) > angleThresh;
-      const needsRender = !entry || (type === 'earth' ? (age > 0.35 || (angleChanged && age > 0.05)) : (angleChanged && age > 0.032));
+      const needsRender = !entry || (
+        type === 'earth' ? (age > 0.08 || (angleChanged && age > 0.04))
+          : (type === 'mars' ? (age > 0.14 || (angleChanged && age > 0.032))
+            : (angleChanged && age > 0.028))
+      );
 
       if (needsRender) {
         const typeId = type === 'mars' ? 1 : (type === 'moon' ? 2 : 0);
@@ -673,13 +852,38 @@
         gl.viewport(0, 0, targetSize, targetSize);
         gl.useProgram(this.program);
         gl.clearColor(0, 0, 0, 0);
-        gl.clear(gl.COLOR_BUFFER_BIT);
+        gl.clearDepth(1.0);
+        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
         gl.uniform1i(this.locs.uType, typeId);
         gl.uniform1f(this.locs.uTime, nowSec);
         gl.uniform1f(this.locs.uSpin, spin);
         gl.uniform1f(this.locs.uTilt, tilt);
         gl.uniform3f(this.locs.uSunDir, sunDir[0], sunDir[1], sunDir[2]);
+
+        gl.enableVertexAttribArray(this.posLoc);
+
+        // Pass 0: Outer Rayleigh Atmosphere + Volumetric Corona
+        gl.uniform1i(this.locs.uPass, 0);
+        gl.disable(gl.DEPTH_TEST);
+        gl.depthMask(false);
+        gl.disable(gl.CULL_FACE);
+        gl.disable(gl.BLEND);
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.quadVbo);
+        gl.vertexAttribPointer(this.posLoc, 3, gl.FLOAT, false, 0, 0);
         gl.drawArrays(gl.TRIANGLES, 0, 6);
+
+        // Pass 1: 30,720-Polygon Displaced 3D Sphere Mesh + RTX Lighting + Lightning
+        gl.uniform1i(this.locs.uPass, 1);
+        gl.enable(gl.DEPTH_TEST);
+        gl.depthFunc(gl.LESS);
+        gl.depthMask(true);
+        gl.enable(gl.CULL_FACE);
+        gl.cullFace(gl.BACK);
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.sphereVbo);
+        gl.vertexAttribPointer(this.posLoc, 3, gl.FLOAT, false, 0, 0);
+        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.sphereIbo);
+        gl.drawElements(gl.TRIANGLES, this.sphereIndexCount, gl.UNSIGNED_SHORT, 0);
 
         if (!entry) {
           const c = document.createElement('canvas');
