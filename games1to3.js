@@ -73,6 +73,48 @@ class UnderTheDustGame {
     this.isDown = false;
     this.pointer = { x: window.innerWidth * 0.5, y: window.innerHeight * 0.5, vx: 0, vy: 0 };
 
+    this.stars = window.VantaGfx ? window.VantaGfx.createStarfield(165, 0.31) : [];
+    this.constellations = [
+      {
+        color: 'rgba(252, 211, 77, 0.55)',
+        starColor: '#fef3c7',
+        nodes: [
+          { x: 0.08, y: 0.14, r: 2.3 },
+          { x: 0.13, y: 0.19, r: 1.9 },
+          { x: 0.19, y: 0.15, r: 2.6 },
+          { x: 0.24, y: 0.22, r: 2.1 },
+          { x: 0.30, y: 0.17, r: 2.4 },
+          { x: 0.21, y: 0.09, r: 1.7 }
+        ],
+        edges: [[0, 1], [1, 2], [2, 3], [3, 4], [2, 5]]
+      },
+      {
+        color: 'rgba(125, 211, 252, 0.55)',
+        starColor: '#e0f2fe',
+        nodes: [
+          { x: 0.70, y: 0.13, r: 2.5 },
+          { x: 0.76, y: 0.10, r: 2.0 },
+          { x: 0.83, y: 0.14, r: 2.2 },
+          { x: 0.79, y: 0.20, r: 2.6 },
+          { x: 0.74, y: 0.23, r: 1.9 },
+          { x: 0.87, y: 0.21, r: 2.3 },
+          { x: 0.92, y: 0.13, r: 2.0 }
+        ],
+        edges: [[0, 1], [1, 2], [2, 3], [3, 4], [4, 0], [3, 5], [5, 6], [2, 6]]
+      },
+      {
+        color: 'rgba(253, 186, 116, 0.45)',
+        starColor: '#fed7aa',
+        nodes: [
+          { x: 0.39, y: 0.23, r: 1.8 },
+          { x: 0.46, y: 0.25, r: 2.1 },
+          { x: 0.54, y: 0.24, r: 2.0 },
+          { x: 0.61, y: 0.22, r: 1.8 }
+        ],
+        edges: [[0, 1], [1, 2], [2, 3]]
+      }
+    ];
+
     this._initCanvases();
   }
 
@@ -85,33 +127,60 @@ class UnderTheDustGame {
     this.panelCanvas.height = h;
 
     const pctx = this.panelCtx;
+    const horizonY = Math.round(h * 0.27);
     const cx = w * 0.5;
-    const cy = h * 0.52;
-    const radius = Math.min(w, h) * (w < 640 ? 0.41 : 0.37);
-    this.panelGeometry = { cx, cy, radius };
+    const cy = h * 0.585;
+    const radius = Math.min(w, h) * (w < 640 ? 0.31 : 0.28);
+    this.panelGeometry = { cx, cy, radius, horizonY };
 
-    // 1. Elysium Planitia Twilight Ground with Regolith Micro-Grain
+    // 0. Martian Twilight Night Sky above Elysium Planitia
+    const skyGrad = pctx.createLinearGradient(0, 0, 0, horizonY + 18);
+    skyGrad.addColorStop(0, '#020510');
+    skyGrad.addColorStop(0.58, '#0b1428');
+    skyGrad.addColorStop(1, '#2d1613');
+    pctx.fillStyle = skyGrad;
+    pctx.fillRect(0, 0, w, h);
+
+    // Subtle dusty horizon glow band
+    const hGlow = pctx.createLinearGradient(0, horizonY - 28, 0, horizonY + 28);
+    hGlow.addColorStop(0, 'rgba(234, 88, 12, 0)');
+    hGlow.addColorStop(0.55, 'rgba(194, 65, 12, 0.26)');
+    hGlow.addColorStop(1, 'rgba(58, 31, 21, 0)');
+    pctx.fillStyle = hGlow;
+    pctx.fillRect(0, horizonY - 28, w, 56);
+
+    // 1. Elysium Planitia Twilight Ground with Regolith Micro-Grain (clipped below horizon)
+    pctx.save();
+    pctx.beginPath();
+    pctx.moveTo(0, horizonY);
+    pctx.quadraticCurveTo(w * 0.5, horizonY - 20, w, horizonY);
+    pctx.lineTo(w, h);
+    pctx.lineTo(0, h);
+    pctx.closePath();
+    pctx.clip();
+
     const bgGrad = pctx.createRadialGradient(cx, cy, radius * 0.2, cx, cy, Math.max(w, h) * 0.85);
     bgGrad.addColorStop(0, '#3a1f15');
     bgGrad.addColorStop(0.55, '#190f0e');
-    bgGrad.addColorStop(1, '#050812');
+    bgGrad.addColorStop(1, '#08070c');
     pctx.fillStyle = bgGrad;
-    pctx.fillRect(0, 0, w, h);
+    pctx.fillRect(0, horizonY - 24, w, h - horizonY + 24);
 
     if (window.VantaGfx) {
       const grain = window.VantaGfx.getGrainPattern(pctx, 0.08, true);
       if (grain) {
         pctx.fillStyle = grain;
-        pctx.fillRect(0, 0, w, h);
+        pctx.fillRect(0, horizonY - 24, w, h - horizonY + 24);
       }
     }
 
     // Weathered Martian basalt rocks & wind-eroded dust tails
-    for (let i = 0; i < 72; i++) {
+    for (let i = 0; i < 64; i++) {
       const ang = Math.random() * Math.PI * 2;
       const dist = radius * (1.07 + Math.random() * 0.85);
       const rx = cx + Math.cos(ang) * dist;
       const ry = cy + Math.sin(ang) * dist;
+      if (ry < horizonY + 12) continue;
       const rw = 4 + Math.random() * 14;
       const rh = rw * (0.52 + Math.random() * 0.35);
 
@@ -147,6 +216,7 @@ class UnderTheDustGame {
       pctx.stroke();
       pctx.restore();
     }
+    pctx.restore();
 
     // 2. Solar Wing Drop Shadow
     pctx.save();
@@ -283,15 +353,25 @@ class UnderTheDustGame {
     pctx.stroke();
     pctx.restore();
 
-    // 4. Sculpted Wind-Swept Martian Dust Mask (organic FBM drifts + fine matte silt)
+    // 4. Sculpted Wind-Swept Martian Dust Mask (clipped to terrain below twilight horizon)
     const mctx = this.maskCtx;
+    mctx.clearRect(0, 0, w, h);
+    mctx.save();
+    mctx.beginPath();
+    mctx.moveTo(0, horizonY);
+    mctx.quadraticCurveTo(w * 0.5, horizonY - 20, w, horizonY);
+    mctx.lineTo(w, h);
+    mctx.lineTo(0, h);
+    mctx.closePath();
+    mctx.clip();
+
     mctx.globalCompositeOperation = 'source-over';
-    const dustGrad = mctx.createLinearGradient(0, 0, w, h);
+    const dustGrad = mctx.createLinearGradient(0, horizonY - 12, w, h);
     dustGrad.addColorStop(0, 'rgba(92, 42, 20, 0.94)');
     dustGrad.addColorStop(0.5, 'rgba(68, 30, 14, 0.94)');
     dustGrad.addColorStop(1, 'rgba(32, 14, 8, 0.96)');
     mctx.fillStyle = dustGrad;
-    mctx.fillRect(0, 0, w, h);
+    mctx.fillRect(0, horizonY - 24, w, h - horizonY + 24);
 
     if (window.VantaGfx) {
       const dw = Math.max(64, Math.floor(w * 0.25));
@@ -318,9 +398,10 @@ class UnderTheDustGame {
       const dustGrain = window.VantaGfx.getGrainPattern(mctx, 0.08, true);
       if (dustGrain) {
         mctx.fillStyle = dustGrain;
-        mctx.fillRect(0, 0, w, h);
+        mctx.fillRect(0, horizonY - 24, w, h - horizonY + 24);
       }
     }
+    mctx.restore();
   }
 
   onResize() {
@@ -515,11 +596,96 @@ class UnderTheDustGame {
     }
   }
 
+  _drawConstellations(ctx, w, h, now, progress) {
+    if (!this.constellations) return;
+    const pulseBoost = 0.72 + progress * 0.28 + this.heartPulseVisual * 0.25;
+    ctx.save();
+    for (const c of this.constellations) {
+      // Delicate glowing astrometric constellation filaments
+      ctx.save();
+      ctx.strokeStyle = c.color;
+      ctx.globalAlpha = Math.min(1, 0.58 * pulseBoost);
+      ctx.lineWidth = 1.25;
+      ctx.shadowColor = c.starColor;
+      ctx.shadowBlur = 8;
+      ctx.beginPath();
+      for (const [a, b] of c.edges) {
+        const na = c.nodes[a];
+        const nb = c.nodes[b];
+        ctx.moveTo(na.x * w, na.y * h);
+        ctx.lineTo(nb.x * w, nb.y * h);
+      }
+      ctx.stroke();
+      ctx.restore();
+
+      // Luminous constellation guide stars with subtle 4-point glints
+      c.nodes.forEach((n, idx) => {
+        const sx = n.x * w;
+        const sy = n.y * h;
+        const tw = 0.72 + 0.28 * Math.sin(now * 2.1 + idx * 1.4);
+
+        ctx.save();
+        ctx.globalAlpha = Math.min(1, (0.78 + progress * 0.22) * tw);
+        const halo = ctx.createRadialGradient(sx, sy, 0, sx, sy, n.r * 5.2);
+        halo.addColorStop(0, c.starColor);
+        halo.addColorStop(0.4, c.color);
+        halo.addColorStop(1, 'rgba(0, 0, 0, 0)');
+        ctx.fillStyle = halo;
+        ctx.beginPath();
+        ctx.arc(sx, sy, n.r * 5.2, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Crisp diffraction crosshairs on main stars
+        ctx.strokeStyle = c.starColor;
+        ctx.lineWidth = 0.85;
+        ctx.beginPath();
+        ctx.moveTo(sx - n.r * 3.1, sy);
+        ctx.lineTo(sx + n.r * 3.1, sy);
+        ctx.moveTo(sx, sy - n.r * 3.1);
+        ctx.lineTo(sx, sy + n.r * 3.1);
+        ctx.stroke();
+
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath();
+        ctx.arc(sx, sy, n.r * 0.78, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      });
+    }
+    ctx.restore();
+  }
+
   render(ctx, w, h) {
     ctx.drawImage(this.panelCanvas, 0, 0);
 
-    const { cx, cy, radius } = this.panelGeometry;
+    const { cx, cy, radius, horizonY = Math.round(h * 0.27) } = this.panelGeometry;
     const progress = Math.min(1, this.cleanRatio / this.targetClean);
+    const now = performance.now() * 0.001;
+
+    // Starry Martian Twilight Sky + Constellations strictly above the horizon curve
+    ctx.save();
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.lineTo(w, 0);
+    ctx.lineTo(w, horizonY + 2);
+    ctx.quadraticCurveTo(w * 0.5, horizonY - 18, 0, horizonY + 2);
+    ctx.closePath();
+    ctx.clip();
+
+    if (window.vantaNebulaGL) {
+      window.vantaNebulaGL.drawBackdrop(ctx, w, horizonY + 24, {
+        alpha: 0.78,
+        lumen: 0.95 + progress * 0.35,
+        cyan: 0.55,
+        stars: 0.82,
+        composite: 'screen'
+      });
+    }
+    if (window.VantaGfx && this.stars) {
+      window.VantaGfx.drawStarfield(ctx, this.stars, w, h, now, 0.95);
+    }
+    this._drawConstellations(ctx, w, h, now, progress);
+    ctx.restore();
 
     // Warm Solar Activation Bloom underneath dust
     if (this.cleanRatio > 0.04 || this.goalReached) {
@@ -536,19 +702,8 @@ class UnderTheDustGame {
       ctx.restore();
     }
 
-    // Wind-rippled Martian dust blanket
+    // Wind-rippled Martian dust blanket (strictly over terrain & solar panel below horizon)
     ctx.drawImage(this.maskCanvas, 0, 0);
-
-    // GPU WebGL Atmospheric Martian Nebula & Lumen Shader Overlay
-    if (window.vantaNebulaGL) {
-      window.vantaNebulaGL.drawBackdrop(ctx, w, h, {
-        alpha: 0.52 + progress * 0.25,
-        lumen: 1.25,
-        cyan: 0.22,
-        stars: 0.28,
-        composite: 'screen'
-      });
-    }
 
     // Wordless Golden Orbital Power Arc around center hub (shows progress cleanly with ZERO text!)
     ctx.save();
