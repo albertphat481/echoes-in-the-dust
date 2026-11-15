@@ -39,7 +39,7 @@
     <div class="emblem-mark">
       <img src="assets/vantalumen_logo.png" alt="VantaLumen" />
     </div>
-    <span class="emblem-label">VANTALUMEN // NASA SPACE APPS</span>
+    <span class="emblem-label">VANTALUMEN // THE NEXT FRONTIER</span>
   </div>
 
   <!-- Two Circular Mascot Launchers (Bottom-Left: Rise & Spirit) -->
@@ -88,14 +88,23 @@
     </button>
   </div>
 
-  <!-- Wordless Constellation Navigation (6 Minigames) -->
+  <!-- Wordless Constellation Navigation (8 Storytelling Chapters) -->
   <nav id="constellation-nav" aria-label="Constellation Navigation"></nav>
+
+  <!-- Dual-State First-Person Storytelling Banner ("The Next Frontier" — Team VantaLumen) -->
+  <div id="story-prologue-hud" class="story-prologue-hud" aria-live="polite">
+    <button id="story-prologue-pill" type="button" class="story-prologue-pill" title="Nhấn để đọc / thu gọn lời tự sự chương">
+      <span id="story-act-tag" class="story-act-tag">HỒI I · DƯ ÂM TRONG BỤI</span>
+      <span id="story-chapter-title" class="story-chapter-title">01 · InSight</span>
+    </button>
+    <p id="story-quote-line" class="story-quote-line"></p>
+  </div>
 
   <!-- Ambient First-Contact Whisper (Self-dismisses on first interaction, zero barrier) -->
   <div id="intro-whisper">
-    <div class="whisper-pill">NASA SPACE APPS CHALLENGE • TEAM VANTALUMEN</div>
+    <div class="whisper-pill">NASA SPACE APPS • THE NEXT FRONTIER • TEAM VANTALUMEN</div>
     <div class="whisper-title">ECHOES IN THE DUST</div>
-    <div class="whisper-sub">Chạm, vuốt hoặc nhấn phím bất kỳ để bật Âm Thanh Vũ Trụ & đánh thức trạm NASA</div>
+    <div class="whisper-sub">Hành trình Kể chuyện Vũ trụ — Chạm, vuốt hoặc nhấn phím bất kỳ để đánh thức chương đầu tiên</div>
   </div>
 
   <!-- Minimalist Corner Icon Controls -->
@@ -248,14 +257,14 @@
         <div class="telemetry-metric">
           <div class="telemetry-top">
             <span class="telemetry-label">MẢNH VỠ KÝ ỨC ĐÃ ĐÁNH THỨC</span>
-            <span id="gal-shards-count" class="telemetry-val">0 / 9</span>
+            <span id="gal-shards-count" class="telemetry-val">0 / 8</span>
           </div>
           <div class="telemetry-bar"><div id="gal-shards-fill" class="telemetry-fill"></div></div>
         </div>
         <div class="telemetry-metric">
           <div class="telemetry-top">
             <span class="telemetry-label">TRI THỨC VŨ TRỤ VANTALUMEN</span>
-            <span id="gal-quiz-count" class="telemetry-val">0 / 9</span>
+            <span id="gal-quiz-count" class="telemetry-val">0 / 8</span>
           </div>
           <div class="telemetry-bar"><div id="gal-quiz-fill" class="telemetry-fill cyan"></div></div>
         </div>
@@ -302,7 +311,7 @@
       <div class="gallery-header" style="margin-bottom: 16px;">
         <div>
           <div class="vantalumen-pill">VANTALUMEN • HƯỚNG DẪN CÁCH CHƠI</div>
-          <h2 class="gallery-title" style="font-size: 26px;">Cẩm Nang 9 Trò Chơi Vũ Trụ</h2>
+          <h2 class="gallery-title" style="font-size: 26px;">Cẩm Nang 8 Trò Chơi Vũ Trụ</h2>
           <p class="gallery-subtitle">Tóm tắt mục tiêu &amp; thao tác cốt lõi của từng thiết bị NASA</p>
         </div>
         <button id="btn-close-guide" class="btn btn-ghost">Đóng ✕</button>
@@ -322,10 +331,10 @@
             <img src="assets/vantalumen_logo.png" alt="VantaLumen Logo" />
           </div>
           <div>
-            <div class="vantalumen-pill">NASA SPACE APPS CHALLENGE • OFFICIAL SUBMISSION</div>
+            <div class="vantalumen-pill">THE NEXT FRONTIER • HẠNG MỤC STORYTELLING • TEAM VANTALUMEN</div>
             <h2 class="gallery-title">VANTALUMEN — Echoes in the Dust</h2>
             <p class="gallery-subtitle">
-              Từ bóng tối bụi vũ trụ (<span class="hl-vanta">Vanta</span>) đến ánh sáng ký ức con người (<span class="hl-lumen">Lumen</span>)
+              Chủ đề The Next Frontier: Từ bóng tối bụi vũ trụ (<span class="hl-vanta">Vanta</span>) đến ánh sáng ký ức con người (<span class="hl-lumen">Lumen</span>)
             </p>
           </div>
         </div>
@@ -436,16 +445,32 @@
         </div>
       </div>
 
+      <!-- 3-Act Storytelling Arc ("The Next Frontier") -->
+      <div class="frontier-arc-strip">
+        <div class="frontier-act">
+          <span id="act-1-title" class="frontier-act-title">HỒI I · DƯ ÂM TRONG BỤI</span>
+          <p id="act-1-desc" class="frontier-act-desc">InSight, Apollo LRRR, Spirit &amp; Opportunity — những người lắng nghe thầm lặng gửi tín hiệu đầu tiên từ các thế giới xa.</p>
+        </div>
+        <div class="frontier-act">
+          <span id="act-2-title" class="frontier-act-title">HỒI II · CỘNG HƯỞNG HÀNH TINH</span>
+          <p id="act-2-desc">Apollo 12 PSE &amp; LRO Tranquility — giải mã âm vang địa chấn và gìn giữ dấu chân đầu tiên trên tro bụi không gió.</p>
+        </div>
+        <div class="frontier-act frontier-act-accent">
+          <span id="act-3-title" class="frontier-act-title">HỒI III · BIÊN GIỚI KẾ TIẾP</span>
+          <p id="act-3-desc">RISE (Artemis II, 2026) &amp; Spirit Rescue — đưa hơi ấm nhân loại vươn xa hơn và đón những nhà thám hiểm trở về.</p>
+        </div>
+      </div>
+
       <div class="judge-bar">
         <div class="judge-bar-text">
-          <h4>Chế độ Ban Giám Khảo &amp; Thuyết Trình (Judge / Pitch Mode)</h4>
-          <p>Phím <code>1–9</code> / <code>‹ ›</code> chuyển màn · <code>R</code> Rise 0-G · <code>H</code> Hướng dẫn · <code>I</code> Thẻ Ký Ức · <code>Q</code> 9 Câu Hỏi</p>
+          <h4>Chế độ Ban Giám Khảo &amp; Thuyết Trình (The Next Frontier)</h4>
+          <p>Phím <code>1–8</code> / <code>‹ ›</code> chuyển chương · <code>R</code> Rise 0-G · <code>S</code> Spirit Rescue · <code>H</code> Hướng dẫn · <code>I</code> Thẻ Ký Ức · <code>Q</code> 8 Câu Hỏi</p>
         </div>
         <div class="btn-group">
           <button id="btn-export-cert-dossier" class="btn btn-ghost">Chứng Nhận PNG ↓</button>
-          <button id="btn-open-guide-from-dossier" class="btn btn-ghost">Hướng Dẫn 9 Game</button>
-          <button id="btn-open-quiz-from-dossier" class="btn btn-ghost">Bộ 9 Câu Hỏi</button>
-          <button id="btn-unlock-all" class="btn btn-primary">Mở khóa toàn bộ 9 Ký Ức ★</button>
+          <button id="btn-open-guide-from-dossier" class="btn btn-ghost">Hướng Dẫn 8 Game</button>
+          <button id="btn-open-quiz-from-dossier" class="btn btn-ghost">Bộ 8 Câu Hỏi</button>
+          <button id="btn-unlock-all" class="btn btn-primary">Mở khóa toàn bộ 8 Ký Ức ★</button>
         </div>
       </div>
     </div>

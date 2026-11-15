@@ -10,7 +10,8 @@
   } catch {}
 
   const UI_EN = {
-    'whisper-sub': 'Tap, swipe, or press any key to enable Cosmic Audio & awaken the NASA station',
+    'whisper-pill': 'NASA SPACE APPS • THE NEXT FRONTIER • TEAM VANTALUMEN',
+    'whisper-sub': 'Storytelling Odyssey — Tap, swipe, or press any key to awaken Cosmic Audio & step onto the Next Frontier',
     'btn-guide-tip': 'Guides (H)',
     'btn-quiz-tip': 'Space Quiz (Q)',
     'btn-shard-tip': 'Memory Shard (I)',
@@ -40,18 +41,28 @@
     'guide-pill': 'VANTALUMEN • HOW TO PLAY',
     'guide-title': '8 Space Minigame Guides',
     'guide-sub': 'Core goals & controls for each NASA & SpaceX mission',
+    'dossier-pill': 'THE NEXT FRONTIER • STORYTELLING TRACK • TEAM VANTALUMEN',
     'dossier-title': 'VANTALUMEN — Echoes in the Dust',
-    'dossier-sub': 'From cosmic dust darkness (Vanta) to human memory light (Lumen)',
+    'dossier-sub': 'The Next Frontier Storytelling: From cosmic dust darkness (Vanta) to human memory light (Lumen)',
     'btn-close-dossier': 'Back to Experience ✕',
-    'kpi-missions': 'SPACE MISSIONS',
+    'btn-dossier-guide': '8 Minigame Guides',
+    'btn-dossier-quiz': '8 Space Quiz Cards',
+    'btn-unlock-all': 'Unlock All 8 Memories ★',
+    'kpi-missions': 'STORY CHAPTERS',
     'kpi-audio': 'WEB AUDIO FM SYNTH',
     'kpi-quiz': 'BILINGUAL QUIZ CARDS',
     'kpi-hud': 'CLUTTER DURING PLAY',
-    'judge-title': 'Judge & Presentation Mode',
-    'judge-desc': 'Keys 1–8 / ‹ › switch stations · R Rise 0-G · S Spirit Rescue · L Language · H Guides · I Shards · Q Quiz',
-    'cert-pill': '★ MISSION ACCOMPLISHED • 8 / 8 STATIONS COMPLETE',
-    'cert-title': 'VantaLumen Mission Completion Certificate',
-    'cert-sub': 'Congratulations on awakening all 8 NASA space exploration Memory Shards!',
+    'judge-title': 'Judge & Presentation Mode • The Next Frontier',
+    'judge-desc': 'Keys 1–8 / ‹ › switch chapters · R Rise 0-G · S Spirit Rescue · L Language · H Guides · I Shards · Q Quiz',
+    'act-1-title': 'ACT I · ECHOES IN THE DUST',
+    'act-1-desc': 'InSight, Apollo LRRR, Spirit & Opportunity — silent listeners sending humanity’s first whispers across worlds.',
+    'act-2-title': 'ACT II · PLANETARY RESONANCE',
+    'act-2-desc': 'Apollo 12 PSE & LRO Tranquility — decoding how worlds ring and preserving our footprints in windless ash.',
+    'act-3-title': 'ACT III · THE NEXT FRONTIER',
+    'act-3-desc': 'RISE (Artemis II, 2026) & Spirit Rescue — carrying human warmth forward and bringing lost explorers home.',
+    'cert-pill': '★ MISSION ACCOMPLISHED • THE NEXT FRONTIER (8 / 8)',
+    'cert-title': 'VantaLumen Storytelling Completion Certificate',
+    'cert-sub': 'Congratulations on completing all 8 chapters of Team VantaLumen’s The Next Frontier odyssey!',
     'btn-cert-view-shard': 'View Final Shard',
     'btn-cert-open-gallery': 'Memory Archive',
     'btn-download-cert-modal': 'Download Certificate PNG ↓'
@@ -308,6 +319,7 @@
       el.setAttribute('data-tooltip', en ? UI_EN[enKey] : el.dataset.viTip);
     };
 
+    setText('.whisper-pill', null, 'whisper-pill');
     setText('.whisper-sub', null, 'whisper-sub');
     setTip('#btn-guide', 'btn-guide-tip');
     setTip('#btn-quiz-deck', 'btn-quiz-tip');
@@ -357,9 +369,19 @@
     setText('#guide-modal .gallery-subtitle', null, 'guide-sub');
     setText('#btn-close-guide', null, 'btn-close');
 
+    setText('#dossier-modal .vantalumen-pill', null, 'dossier-pill');
     setText('#dossier-modal .gallery-title', null, 'dossier-title');
     setText('#dossier-modal .gallery-subtitle', null, 'dossier-sub');
     setText('#btn-close-dossier', null, 'btn-close-dossier');
+    setText('#btn-open-guide-from-dossier', null, 'btn-dossier-guide');
+    setText('#btn-open-quiz-from-dossier', null, 'btn-dossier-quiz');
+    setText('#btn-unlock-all', null, 'btn-unlock-all');
+    setText('#act-1-title', null, 'act-1-title');
+    setText('#act-1-desc', null, 'act-1-desc');
+    setText('#act-2-title', null, 'act-2-title');
+    setText('#act-2-desc', null, 'act-2-desc');
+    setText('#act-3-title', null, 'act-3-title');
+    setText('#act-3-desc', null, 'act-3-desc');
 
     setText('#certificate-modal .vantalumen-pill', null, 'cert-pill');
     setText('#cert-modal-title', null, 'cert-title');
@@ -382,6 +404,73 @@
     if (langBtn) langBtn.classList.toggle('active-lang-en', en);
   }
 
+  const CHAPTER_STORIES = [
+    {
+      actVi: 'HỒI I · DƯ ÂM TRONG BỤI',
+      actEn: 'ACT I · ECHOES IN THE DUST',
+      titleVi: '01 · InSight — Nhịp Đập Dưới Lớp Cát Đỏ',
+      titleEn: '01 · InSight — Heartbeat Beneath Red Sand',
+      quoteVi: '“Bốn năm phủ kín bụi sắt, tôi vẫn lắng nghe 1.319 nhịp đập thầm kín từ trái tim Sao Hỏa.”',
+      quoteEn: '“Beneath four years of iron dust, I kept listening to 1,319 quiet heartbeats deep inside Mars.”'
+    },
+    {
+      actVi: 'HỒI I · DƯ ÂM TRONG BỤI',
+      actEn: 'ACT I · ECHOES IN THE DUST',
+      titleVi: '02 · Apollo LRRR — Tia Sáng Vượt 384.400 km',
+      titleEn: '02 · Apollo LRRR — Light Across 384,400 km',
+      quoteVi: '“Tấm gương thạch anh nhỏ bé giữa Biển Tĩnh Lặng vẫn dội về Trái Đất lời khẳng định: chúng tôi đã ở đây.”',
+      quoteEn: '“A quiet quartz mirror on the Sea of Tranquility still bounces Earth’s laser home in 2.562 seconds.”'
+    },
+    {
+      actVi: 'HỒI I · DƯ ÂM TRONG BỤI',
+      actEn: 'ACT I · ECHOES IN THE DUST',
+      titleVi: '03 · Spirit Rover — Bước Lùi Mở Biên Giới',
+      titleEn: '03 · Spirit Rover — Stepping Backward Forward',
+      quoteVi: '“Khi bánh trước kẹt cứng giữa hố Gusev, tôi đi lùi—và vô tình cày lộ lớp silica tinh khiết của dòng suối cổ.”',
+      quoteEn: '“With my front wheel locked, I drove backwards—and uncovered pure silica from ancient Martian hot springs.”'
+    },
+    {
+      actVi: 'HỒI I · DƯ ÂM TRONG BỤI',
+      actEn: 'ACT I · ECHOES IN THE DUST',
+      titleVi: '04 · Opportunity — Tín Hiệu Cuối Về Nhà Xanh',
+      titleEn: '04 · Opportunity — Final Signal Home',
+      quoteVi: '“Pin đang cạn và bầu trời tối dần… nhưng tôi kịp gửi ba bức ảnh ký ức qua vệ tinh MRO về Trái Đất.”',
+      quoteEn: '“My battery is low and it’s getting dark… yet these three memories will still relay through MRO home to Earth.”'
+    },
+    {
+      actVi: 'HỒI II · CỘNG HƯỞNG HÀNH TINH',
+      actEn: 'ACT II · PLANETARY RESONANCE',
+      titleVi: '05 · Apollo 12 PSE — Mặt Trăng Ngân Như Chuông',
+      titleEn: '05 · Apollo 12 PSE — The Moon Rings Like a Bell',
+      quoteVi: '“Khi tầng đổ bộ chạm bề mặt năm 1969, cả Mặt Trăng rung lên hàng giờ như một chiếc chuông đồng ngân dài.”',
+      quoteEn: '“When the ascent stage struck in 1969, the Moon rang softly for nearly an hour like an ancient bronze bell.”'
+    },
+    {
+      actVi: 'HỒI II · CỘNG HƯỞNG HÀNH TINH',
+      actEn: 'ACT II · PLANETARY RESONANCE',
+      titleVi: '06 · LRO Tranquility — Dấu Chân Không Phai',
+      titleEn: '06 · LRO Tranquility — Windless Footprints',
+      quoteVi: '“Trên lớp tro bụi không một ngọn gió, từng bước chân đầu tiên năm 1969 vẫn nguyên vẹn chờ thế hệ kế tiếp.”',
+      quoteEn: '“Upon airless volcanic ash, our very first steps in 1969 wait untouched for the next generation of explorers.”'
+    },
+    {
+      actVi: 'HỒI III · BIÊN GIỚI KẾ TIẾP',
+      actEn: 'ACT III · THE NEXT FRONTIER',
+      titleVi: '07 · RISE · Artemis II — Nhịp Cầu Trở Lại Mặt Trăng',
+      titleEn: '07 · RISE · Artemis II — Beyond Earth’s Cradle',
+      quoteVi: '“Khi tôi nhẹ bẫng lơ lửng trong khoang tàu Orion năm 2026, nhân loại chính thức mở cánh cửa biên giới kế tiếp.”',
+      quoteEn: '“The moment I float free inside Orion in 2026, humanity steps back out toward the Next Frontier.”'
+    },
+    {
+      actVi: 'HỒI III · BIÊN GIỚI KẾ TIẾP',
+      actEn: 'ACT III · THE NEXT FRONTIER',
+      titleVi: '08 · Spirit Rescue — Đưa Người Tiên Phong Trở Về',
+      titleEn: '08 · Spirit Rescue — Bringing Pioneers Home',
+      quoteVi: '“Biên giới mới không bỏ lại ai phía sau: tàu Starship đáp xuống đón Spirit hồi sinh dưới bầu trời Trái Đất.”',
+      quoteEn: '“No pioneer is left behind on the Next Frontier: Starship descends to bring Spirit home to Earth.”'
+    }
+  ];
+
   window.VantaI18n = {
     get lang() {
       return saved;
@@ -391,6 +480,15 @@
     },
     t(vi, en) {
       return saved === 'en' ? en : vi;
+    },
+    getChapterStory(index) {
+      const s = CHAPTER_STORIES[index] || CHAPTER_STORIES[0];
+      const en = saved === 'en';
+      return {
+        act: en ? s.actEn : s.actVi,
+        title: en ? s.titleEn : s.titleVi,
+        quote: en ? s.quoteEn : s.quoteVi
+      };
     },
     setLang(next) {
       saved = next === 'en' ? 'en' : 'vi';

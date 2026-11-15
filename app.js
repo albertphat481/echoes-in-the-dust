@@ -457,6 +457,21 @@ class EchoesApp {
     }
     if (window.VantaI18n) window.VantaI18n.applyDOM();
 
+    // Dual-state Storytelling Prologue Pill toggle (The Next Frontier)
+    const storyPill = document.getElementById('story-prologue-pill');
+    const storyHud = document.getElementById('story-prologue-hud');
+    if (storyPill && storyHud) {
+      storyPill.addEventListener('click', () => {
+        storyPill.blur();
+        if (this._storyDockTimer) {
+          clearTimeout(this._storyDockTimer);
+          this._storyDockTimer = null;
+        }
+        storyHud.classList.toggle('docked');
+        window.soundEngine.playUITick();
+      });
+    }
+
     // Sound Mute Toggle (if audio was awaiting browser gesture, first click wakes audio cleanly)
     const btnAudio = document.getElementById('btn-audio');
     let audioWasLockedOnPress = false;
@@ -628,6 +643,7 @@ class EchoesApp {
     if (!window.VantaI18n) return;
     window.VantaI18n.toggle();
     this._syncAudioButton();
+    this._updateStoryPrologue(this.currentIndex, false);
     if (this.memoryModal.classList.contains('visible')) {
       this.showMemoryShard(this.currentIndex);
     } else if (this.galleryModal.classList.contains('visible')) {
@@ -655,6 +671,32 @@ class EchoesApp {
       btnAudio.setAttribute('data-tooltip', en ? 'Tap to Enable Sound' : 'Chạm để Bật Âm Thanh (Trình duyệt chặn tự phát)');
     } else {
       btnAudio.setAttribute('data-tooltip', en ? 'Sound (M)' : 'Âm Thanh (M)');
+    }
+  }
+
+  _updateStoryPrologue(index, expand = true) {
+    const hud = document.getElementById('story-prologue-hud');
+    const actEl = document.getElementById('story-act-tag');
+    const titleEl = document.getElementById('story-chapter-title');
+    const quoteEl = document.getElementById('story-quote-line');
+    if (!hud || !actEl || !titleEl || !quoteEl || !window.VantaI18n) return;
+
+    const story = window.VantaI18n.getChapterStory(index);
+    actEl.textContent = story.act;
+    titleEl.textContent = story.title;
+    quoteEl.textContent = story.quote;
+
+    if (this._storyDockTimer) {
+      clearTimeout(this._storyDockTimer);
+      this._storyDockTimer = null;
+    }
+
+    if (expand) {
+      hud.classList.remove('docked');
+      this._storyDockTimer = setTimeout(() => {
+        this._storyDockTimer = null;
+        hud.classList.add('docked');
+      }, 4400);
     }
   }
 
@@ -701,6 +743,7 @@ class EchoesApp {
       this.paused = false;
       this.idleTime = 0;
       this._refreshNavDots();
+      this._updateStoryPrologue(index, true);
     };
 
     if (!animate || !curtain || !this.currentGame) {
@@ -1556,7 +1599,7 @@ class EchoesApp {
 
     ctx.fillStyle = '#94a3b8';
     ctx.font = '500 13px "JetBrains Mono", monospace';
-    ctx.fillText('NASA SPACE APPS CHALLENGE  //  VANTALUMEN MISSION TELEMETRY DOSSIER', 88, 98);
+    ctx.fillText('NASA SPACE APPS CHALLENGE  //  THE NEXT FRONTIER (STORYTELLING)  •  TEAM VANTALUMEN', 88, 98);
 
     ctx.fillStyle = '#f8fafc';
     ctx.font = '700 48px "Space Grotesk", "Be Vietnam Pro", sans-serif';
