@@ -264,6 +264,32 @@
       return v;
     }
 
+    // Fast 8-tap 3D cellular micro-crater height for 4K lunar surface crispness
+    float craterCell(vec3 p) {
+      vec3 i = floor(p);
+      vec3 f = fract(p);
+      float best = 1.0;
+      for (int z = 0; z <= 1; z++) {
+        for (int y = 0; y <= 1; y++) {
+          for (int x = 0; x <= 1; x++) {
+            vec3 g = vec3(float(x), float(y), float(z));
+            vec3 cell = i + g;
+            vec3 rnd = vec3(
+              hash31(cell + vec3(1.7, 3.1, 5.3)),
+              hash31(cell + vec3(7.9, 2.3, 4.1)),
+              hash31(cell + vec3(3.7, 8.9, 1.3))
+            );
+            vec3 d = g + 0.15 + 0.70 * rnd - f;
+            best = min(best, dot(d, d));
+          }
+        }
+      }
+      float r = sqrt(best) * 1.45;
+      float bowl = smoothstep(0.0, 0.72, r) - 1.0;
+      float rim = exp(-pow((r - 0.76) / 0.14, 2.0)) * 0.28;
+      return bowl * 0.65 + rim;
+    }
+
     vec3 rotY(vec3 p, float a) {
       float c = cos(a);
       float s = sin(a);
@@ -500,27 +526,30 @@
       vec3 col = vec3(0.0);
 
       if (uType == 2) {
-        // === MOON (1024x512 NASA Selenographic Height/Albedo/Maria Map + Lommel-Seeliger BRDF) ===
+        // === MOON (2048x1024 NASA Selenographic Map + 4K Procedural Micro-Craters + Lommel-Seeliger BRDF) ===
         vec4 moonSample = texture2D(uMoonTex, sphereToUV(sp));
-        float h0 = moonSample.r;
+        float mc0 = craterCell(sp * 36.0) * 0.042 + craterCell(sp * 88.0) * 0.022;
+        float h0 = moonSample.r + mc0;
         float texAlbedo = moonSample.g;
         float mareMask = moonSample.b;
 
         vec3 upRef = abs(sp.y) < 0.96 ? vec3(0.0, 1.0, 0.0) : vec3(1.0, 0.0, 0.0);
         vec3 T = normalize(cross(upRef, sp));
         vec3 Bt = cross(sp, T);
-        float epsM = 0.0022;
-        float hT = texture2D(uMoonTex, sphereToUV(normalize(sp + T * epsM))).r;
-        float hB = texture2D(uMoonTex, sphereToUV(normalize(sp + Bt * epsM))).r;
+        float epsM = 0.0014;
+        vec3 spT = normalize(sp + T * epsM);
+        vec3 spB = normalize(sp + Bt * epsM);
+        float hT = texture2D(uMoonTex, sphereToUV(spT)).r + craterCell(spT * 36.0) * 0.042 + craterCell(spT * 88.0) * 0.022;
+        float hB = texture2D(uMoonTex, sphereToUV(spB)).r + craterCell(spB * 36.0) * 0.042 + craterCell(spB * 88.0) * 0.022;
         vec3 gradM = T * ((hT - h0) / epsM) + Bt * ((hB - h0) / epsM);
         vec3 worldGrad = rotX(rotY(gradM, -uSpin), -uTilt);
 
-        // Smooth micro-regolith normal grain + fine albedo dust grit
-        float regA = noise3(sp * 64.0);
-        float regB = noise3(sp * 145.0);
-        float microSlope = (regA - 0.5) * 0.032 + (regB - 0.5) * 0.016;
-        vec3 microGrad = T * microSlope + Bt * ((noise3(sp * 64.0 + vec3(3.1, 7.4, 2.2)) - 0.5) * 0.032);
-        vec3 B = normalize(N - worldGrad * 0.145 - rotX(rotY(microGrad, -uSpin), -uTilt) * (1.0 - mareMask * 0.5));
+        // 4K micro-regolith normal grain + fine albedo dust grit
+        float regA = noise3(sp * 110.0);
+        float regB = noise3(sp * 240.0);
+        float microSlope = (regA - 0.5) * 0.026 + (regB - 0.5) * 0.014;
+        vec3 microGrad = T * microSlope + Bt * ((noise3(sp * 110.0 + vec3(3.1, 7.4, 2.2)) - 0.5) * 0.026);
+        vec3 B = normalize(N - worldGrad * 0.165 - rotX(rotY(microGrad, -uSpin), -uTilt) * (1.0 - mareMask * 0.45));
 
         float lunarShadow = traceLunarShadow(N, sunDir, h0, uSpin, uTilt);
         float mu0 = max(0.0, dot(B, sunDir));
@@ -561,22 +590,23 @@
         vec3 upRef = abs(sp.y) < 0.96 ? vec3(0.0, 1.0, 0.0) : vec3(1.0, 0.0, 0.0);
         vec3 T = normalize(cross(upRef, sp));
         vec3 Bt = cross(sp, T);
-        float epsE = 0.0035;
+        float epsE = 0.0018;
         float hT = texture2D(uEarthTex, sphereToUV(normalize(sp + T * epsE))).r;
         float hB = texture2D(uEarthTex, sphereToUV(normalize(sp + Bt * epsE))).r;
         vec3 gradE = T * ((hT - h0) / epsE) + Bt * ((hB - h0) / epsE);
-        vec3 B = normalize(N - rotX(rotY(gradE, -uSpin), -uTilt) * 0.10);
+        float landMicro = (noise3(sp * 95.0) - 0.5) * 0.018 * smoothstep(0.495, 0.525, h0);
+        vec3 B = normalize(N - rotX(rotY(gradE + T * landMicro, -uSpin), -uTilt) * 0.12);
 
         float diffuse = clamp((dot(B, sunDir) + 0.05) / 1.05, 0.0, 1.0) * smoothstep(-0.08, 0.14, NdotL_geom);
         float landMask = smoothstep(0.495, 0.522, h0);
         float lat = abs(sp.y);
         float polarIce = smoothstep(0.87, 0.96, lat + (h0 - 0.5) * 0.10);
 
-        vec3 abyssOcean = vec3(0.002, 0.011, 0.068);
-        vec3 deepOcean = vec3(0.004, 0.028, 0.135);
-        vec3 coastalShelf = vec3(0.008, 0.115, 0.235);
+        vec3 abyssOcean = vec3(0.002, 0.010, 0.058);
+        vec3 deepOcean = vec3(0.004, 0.024, 0.122);
+        vec3 coastalShelf = vec3(0.006, 0.088, 0.195);
         vec3 oceanCol = mix(abyssOcean, deepOcean, smoothstep(0.28, 0.72, oceanDepth));
-        oceanCol = mix(oceanCol, coastalShelf, smoothstep(0.455, 0.496, h0) * 0.65);
+        oceanCol = mix(oceanCol, coastalShelf, smoothstep(0.46, 0.496, h0) * 0.42);
 
         vec3 deepForest = vec3(0.015, 0.115, 0.032);
         vec3 lushGreen = vec3(0.048, 0.225, 0.052);
@@ -599,7 +629,7 @@
         vec3 cloudShear = vec3(sin(cloudP.y * 5.8) * 0.22, cos(cloudP.x * 4.5) * 0.10, 0.0);
         float cWarp = noise3(cloudP * 2.6 + cloudShear);
         vec3 cw = cloudP * 3.1 + cloudShear + vec3(cWarp, cWarp * 0.7, -cWarp * 0.5) * 0.42;
-        float cloudRaw = fbm3(cw * 1.45) * 0.74 + noise3(cw * 12.0) * 0.18 + noise3(cw * 28.0) * 0.08;
+        float cloudRaw = fbm3(cw * 1.45) * 0.70 + noise3(cw * 12.0) * 0.18 + noise3(cw * 28.0) * 0.08 + noise3(cw * 64.0) * 0.04;
         float clouds = smoothstep(0.48, 0.74, cloudRaw) * 0.78;
         float cloudShadow = smoothstep(0.49, 0.76, fbm3((cw - rotY(sunDir, uSpin) * 0.032) * 1.45) * 0.74 + 0.14) * 0.66;
 
@@ -640,7 +670,7 @@
       grad -= sp * dot(grad, sp);
       vec3 worldGrad = rotX(rotY(grad, -uSpin), -uTilt);
 
-      vec3 B = normalize(N - worldGrad * 0.13);
+      vec3 B = normalize(N - worldGrad * 0.14 - rotX(rotY(vec3(noise3(sp * 95.0) - 0.5, 0.0, noise3(sp * 195.0) - 0.5) * 0.032, -uSpin), -uTilt));
 
       float shadowRay = traceTerrainShadow(N, sunDir, h0, uType, uSpin, uTilt);
       float wrap = 0.05;
@@ -794,9 +824,9 @@
 
     _resize() {
       if (!this.gl) return;
-      this.renderScale = 0.62;
-      const w = Math.min(1280, Math.max(512, Math.floor(window.innerWidth * this.renderScale)));
-      const h = Math.min(720, Math.max(384, Math.floor(window.innerHeight * this.renderScale)));
+      this.renderScale = 0.85;
+      const w = Math.min(1920, Math.max(640, Math.floor(window.innerWidth * this.renderScale)));
+      const h = Math.min(1080, Math.max(400, Math.floor(window.innerHeight * this.renderScale)));
       if (this.canvas.width !== w || this.canvas.height !== h) {
         this.canvas.width = w;
         this.canvas.height = h;
@@ -934,8 +964,11 @@
         uEarthTex: gl.getUniformLocation(prog, 'uEarthTex')
       };
 
-      const vpDims = gl.getParameter(gl.MAX_VIEWPORT_DIMS) || [2048, 2048];
-      this.maxTexSize = Math.min(2048, vpDims[0] || 2048, vpDims[1] || 2048);
+      const vpDims = gl.getParameter(gl.MAX_VIEWPORT_DIMS) || [4096, 4096];
+      this.maxTexSize = Math.min(4096, vpDims[0] || 4096, vpDims[1] || 4096);
+      this.anisoExt = gl.getExtension('EXT_texture_filter_anisotropic') ||
+                      gl.getExtension('WEBKIT_EXT_texture_filter_anisotropic');
+      this.maxAniso = this.anisoExt ? Math.min(8, gl.getParameter(this.anisoExt.MAX_TEXTURE_MAX_ANISOTROPY_EXT) || 4) : 1;
       this.moonTex = null;
       this.earthTex = null;
       gl.viewport(0, 0, this.canvas.width, this.canvas.height);
@@ -951,8 +984,8 @@
 
     _ensureEarthTexture(gl) {
       if (this.earthTex) return;
-      const W = 1024;
-      const H = 512;
+      const W = 2048;
+      const H = 1024;
       const N = W * H;
       const clamp01 = v => (v < 0 ? 0 : v > 1 ? 1 : v);
       const smooth = (a, b, x) => {
@@ -1037,16 +1070,20 @@
       gl.bindTexture(gl.TEXTURE_2D, tex);
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT);
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+      if (this.anisoExt && this.maxAniso > 1) {
+        gl.texParameterf(gl.TEXTURE_2D, this.anisoExt.TEXTURE_MAX_ANISOTROPY_EXT, this.maxAniso);
+      }
       gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, W, H, 0, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
+      gl.generateMipmap(gl.TEXTURE_2D);
       this.earthTex = tex;
     }
 
     _ensureMoonTexture(gl) {
       if (this.moonTex) return;
-      const W = 1024;
-      const H = 512;
+      const W = 2048;
+      const H = 1024;
       const N = W * H;
       const clamp01 = v => (v < 0 ? 0 : v > 1 ? 1 : v);
       const smooth = (a, b, x) => {
@@ -1285,9 +1322,13 @@
       gl.bindTexture(gl.TEXTURE_2D, tex);
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT);
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+      if (this.anisoExt && this.maxAniso > 1) {
+        gl.texParameterf(gl.TEXTURE_2D, this.anisoExt.TEXTURE_MAX_ANISOTROPY_EXT, this.maxAniso);
+      }
       gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, W, H, 0, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
+      gl.generateMipmap(gl.TEXTURE_2D);
       this.moonTex = tex;
     }
 
@@ -1310,10 +1351,11 @@
         alpha = 1.0
       } = opts;
 
-      const dpr = Math.min(1.5, window.devicePixelRatio || 1);
+      const dpr = Math.min(2.0, window.devicePixelRatio || 1);
       const isHorizonEarth = type === 'earth' && radius > 350;
-      const maxSize = isHorizonEarth ? Math.min(1024, this.maxTexSize || 1024) : (this.maxTexSize || 2048);
-      const targetSize = Math.min(maxSize, Math.max(192, Math.ceil((radius * 2.64 * dpr) / 64) * 64));
+      const maxSize = isHorizonEarth ? Math.min(2560, this.maxTexSize || 2560) : (this.maxTexSize || 4096);
+      const minSize = isHorizonEarth ? 1536 : 768;
+      const targetSize = Math.min(maxSize, Math.max(minSize, Math.ceil((radius * 2.64 * dpr) / 128) * 128));
       const cacheKey = `${type}_${targetSize}`;
       let entry = this._cache[cacheKey];
       const nowSec = performance.now() * 0.001;
