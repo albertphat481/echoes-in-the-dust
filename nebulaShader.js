@@ -369,7 +369,7 @@
         vec3 nBase = normalize(aPos3d);
         vec3 sp = rotY(rotX(nBase, uTilt), uSpin);
         float h = (uType == 1) ? surfaceHeight(sp, uType) : 0.45;
-        float dispAmp = (uType == 1) ? 0.024 : ((uType == 2) ? 0.002 : 0.0);
+        float dispAmp = (uType == 1) ? 0.012 : ((uType == 2) ? 0.002 : 0.0);
         vec3 pos = nBase * (1.0 + (h - 0.45) * dispAmp);
         vQuadPos = pos.xy / 1.32;
         vSpherePos = nBase;
@@ -509,38 +509,41 @@
         vec3 upRef = abs(sp.y) < 0.96 ? vec3(0.0, 1.0, 0.0) : vec3(1.0, 0.0, 0.0);
         vec3 T = normalize(cross(upRef, sp));
         vec3 Bt = cross(sp, T);
-        float epsM = 0.0028;
+        float epsM = 0.0022;
         float hT = texture2D(uMoonTex, sphereToUV(normalize(sp + T * epsM))).r;
         float hB = texture2D(uMoonTex, sphereToUV(normalize(sp + Bt * epsM))).r;
         vec3 gradM = T * ((hT - h0) / epsM) + Bt * ((hB - h0) / epsM);
         vec3 worldGrad = rotX(rotY(gradM, -uSpin), -uTilt);
 
-        // Micro-regolith normal grain + fine albedo dust grit
-        float regA = noise3(sp * 68.0);
-        float regB = noise3(sp * 155.0);
-        float microSlope = (regA - 0.5) * 0.042 + (regB - 0.5) * 0.022;
-        vec3 microGrad = T * microSlope + Bt * ((noise3(sp * 68.0 + vec3(3.1, 7.4, 2.2)) - 0.5) * 0.042);
-        vec3 B = normalize(N - worldGrad * 0.135 - rotX(rotY(microGrad, -uSpin), -uTilt) * (1.0 - mareMask * 0.5));
+        // Smooth micro-regolith normal grain + fine albedo dust grit
+        float regA = noise3(sp * 64.0);
+        float regB = noise3(sp * 145.0);
+        float microSlope = (regA - 0.5) * 0.032 + (regB - 0.5) * 0.016;
+        vec3 microGrad = T * microSlope + Bt * ((noise3(sp * 64.0 + vec3(3.1, 7.4, 2.2)) - 0.5) * 0.032);
+        vec3 B = normalize(N - worldGrad * 0.145 - rotX(rotY(microGrad, -uSpin), -uTilt) * (1.0 - mareMask * 0.5));
 
         float lunarShadow = traceLunarShadow(N, sunDir, h0, uSpin, uTilt);
         float mu0 = max(0.0, dot(B, sunDir));
         float mu = max(0.06, dot(N, viewDir));
         float lommel = mu0 / (mu0 + mu + 0.002);
         float termMask = smoothstep(-0.025, 0.055, NdotL_geom);
-        float refl = (lommel * 1.42 + mu0 * 0.20) * termMask * mix(0.24, 1.0, lunarShadow);
+        float oppSurge = pow(max(0.0, dot(sunDir, viewDir)), 4.0) * 0.16;
+        float refl = (lommel * (1.42 + oppSurge) + mu0 * 0.22) * termMask * mix(0.24, 1.0, lunarShadow);
 
         // Natural mineral palette: cool titanium basaltic maria vs warm feldspathic highlands
         vec3 rockTint = mix(vec3(1.02, 0.99, 0.95), vec3(0.88, 0.92, 0.98), mareMask);
-        float grainMod = 0.89 + regA * 0.14 + regB * 0.08;
+        float grainMod = 0.91 + regA * 0.11 + regB * 0.06;
         vec3 albedo = rockTint * (texAlbedo * grainMod);
 
-        // Subtle sunlit crater rim bounce inside crater shadows & muted Earthshine on night crescent
-        vec3 craterBounce = albedo * (1.0 - lunarShadow) * smoothstep(0.0, 0.35, NdotL_geom) * 0.075;
+        // Multi-bounce sunlit crater rim GI & muted Earthshine on night crescent
+        vec3 craterBounce = albedo * (1.0 - lunarShadow) * smoothstep(0.0, 0.35, NdotL_geom) * 0.095;
         vec3 earthBounceDir = normalize(vec3(0.38, -0.24, 0.88));
         float earthshine = max(0.0, dot(B, earthBounceDir)) * smoothstep(0.12, -0.35, NdotL_geom);
-        vec3 earthshineGI = vec3(0.022, 0.055, 0.14) * albedo * earthshine * 0.48;
+        vec3 earthshineGI = vec3(0.022, 0.055, 0.14) * albedo * earthshine * 0.50;
+        vec3 H_moon = normalize(sunDir + viewDir);
+        float regolithSpec = pow(max(0.0, dot(B, H_moon)), 14.0) * (1.0 - mareMask * 0.6) * termMask * 0.032;
 
-        col = albedo * (refl + 0.004) + craterBounce + earthshineGI;
+        col = albedo * (refl + 0.004) + craterBounce + earthshineGI + vec3(0.95, 0.94, 0.92) * regolithSpec;
 
         col = acesFilm(col);
         col = pow(col, vec3(1.0 / 2.2));
@@ -603,8 +606,10 @@
         vec3 litSurface = albedo * (diffuse * (1.0 - cloudShadow * 0.52) * 1.32 + 0.020);
         litSurface += vec3(1.0, 0.96, 0.88) * spec * 0.76 * (1.0 - clouds * 0.88);
 
-        float cloudTopShade = smoothstep(-0.06, 0.18, NdotL_geom) * (0.82 + 0.18 * noise3(cw * 18.0));
-        vec3 cloudScatter = vec3(0.95, 0.97, 1.0) * (cloudTopShade * 1.18 + 0.024);
+        float cloudTopShade = smoothstep(-0.06, 0.18, NdotL_geom) * (0.84 + 0.16 * noise3(cw * 18.0));
+        float viewN = max(0.0, dot(N, viewDir));
+        float fwdCloud = pow(max(0.0, dot(viewDir, -sunDir)), 3.2) * pow(1.0 - viewN, 2.0);
+        vec3 cloudScatter = vec3(0.95, 0.97, 1.0) * (cloudTopShade * 1.20 + 0.024) + vec3(1.0, 0.95, 0.86) * fwdCloud * 0.26;
         litSurface = mix(litSurface, cloudScatter, clouds);
 
         // Night-side city lights on coastal land
@@ -614,10 +619,9 @@
         litSurface += vec3(1.0, 0.72, 0.32) * cityNoise * coastal * nightMask * 0.95 * (1.0 - clouds * 0.65);
 
         float sunLimb = clamp(NdotL_geom * 0.75 + 0.45, 0.0, 1.0);
-        float viewN = max(0.0, dot(N, viewDir));
-        vec3 rayleigh = vec3(0.08, 0.42, 1.0) * pow(1.0 - viewN, 6.2) * sunLimb * 0.92
-          + vec3(0.022, 0.095, 0.30) * pow(1.0 - viewN, 2.8) * sunLimb * 0.24;
-        vec3 sunset = vec3(0.96, 0.36, 0.12) * exp(-pow(NdotL_geom * 6.5, 2.0)) * pow(1.0 - viewN, 3.6) * 0.44;
+        vec3 rayleigh = vec3(0.08, 0.44, 1.0) * pow(1.0 - viewN, 5.8) * sunLimb * 0.96
+          + vec3(0.022, 0.105, 0.32) * pow(1.0 - viewN, 2.6) * sunLimb * 0.26;
+        vec3 sunset = vec3(0.96, 0.36, 0.12) * exp(-pow(NdotL_geom * 6.5, 2.0)) * pow(1.0 - viewN, 3.6) * 0.46;
         col = litSurface + rayleigh + sunset;
 
         col = acesFilm(col);
@@ -667,9 +671,10 @@
         float squall = smoothstep(0.52, 0.84, fbm3(dustP * 3.4));
         litSurface += vec3(0.82, 0.40, 0.18) * squall * max(0.0, NdotL_geom) * 0.16;
 
-        // Volumetric rusty atmospheric limb bloom
+        // Volumetric rusty atmospheric limb bloom + Mie dust scatter
         float sunLimb = clamp(NdotL_geom * 0.72 + 0.42, 0.0, 1.0);
-        litSurface += vec3(0.98, 0.54, 0.28) * fresnel * sunLimb * 0.46;
+        float mieMars = pow(max(0.0, dot(viewDir, -sunDir)), 2.5) * fresnel * 0.24;
+        litSurface += vec3(0.98, 0.54, 0.28) * (fresnel * sunLimb * 0.48 + mieMars);
         col = litSurface;
       }
 
@@ -886,7 +891,8 @@
 
       this.sphereIbo = gl.createBuffer();
       gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.sphereIbo);
-      gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indices), gl.STATIC_DRAW);
+      const indexData = this.useUint32 ? new Uint32Array(indices) : new Uint16Array(indices);
+      gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indexData, gl.STATIC_DRAW);
 
       // Fullscreen 3D quad for Pass 0 outer atmospheric halo + RTX corona
       this.quadVbo = gl.createBuffer();
@@ -905,8 +911,17 @@
       gl.useProgram(prog);
 
       this.posLoc = gl.getAttribLocation(prog, 'aPos3d');
-      // 128 stacks x 224 slices = 28,929 vertices & 57,344 triangle polygons (fits Uint16)
-      this._buildHighPolySphere(gl, 128, 224);
+      const isWebGL2 = typeof WebGL2RenderingContext !== 'undefined' && gl instanceof WebGL2RenderingContext;
+      const uintExt = isWebGL2 ? true : !!gl.getExtension('OES_element_index_uint');
+      this.useUint32 = !!uintExt;
+      this.indexType = this.useUint32 ? gl.UNSIGNED_INT : gl.UNSIGNED_SHORT;
+      if (this.useUint32) {
+        // 384 stacks x 512 slices = 197,505 vertices & 393,216 triangle polygons (silky-round RTX silhouette)
+        this._buildHighPolySphere(gl, 384, 512);
+      } else {
+        // Fallback: 128 stacks x 224 slices = 28,929 vertices & 57,344 triangle polygons (Uint16)
+        this._buildHighPolySphere(gl, 128, 224);
+      }
 
       this.locs = {
         uPass: gl.getUniformLocation(prog, 'uPass'),
@@ -919,8 +934,8 @@
         uEarthTex: gl.getUniformLocation(prog, 'uEarthTex')
       };
 
-      const vpDims = gl.getParameter(gl.MAX_VIEWPORT_DIMS) || [1536, 1536];
-      this.maxTexSize = Math.min(1536, vpDims[0] || 1536, vpDims[1] || 1536);
+      const vpDims = gl.getParameter(gl.MAX_VIEWPORT_DIMS) || [2048, 2048];
+      this.maxTexSize = Math.min(2048, vpDims[0] || 2048, vpDims[1] || 2048);
       this.moonTex = null;
       this.earthTex = null;
       gl.viewport(0, 0, this.canvas.width, this.canvas.height);
@@ -936,8 +951,8 @@
 
     _ensureEarthTexture(gl) {
       if (this.earthTex) return;
-      const W = 768;
-      const H = 384;
+      const W = 1024;
+      const H = 512;
       const N = W * H;
       const clamp01 = v => (v < 0 ? 0 : v > 1 ? 1 : v);
       const smooth = (a, b, x) => {
@@ -1297,7 +1312,7 @@
 
       const dpr = Math.min(1.5, window.devicePixelRatio || 1);
       const isHorizonEarth = type === 'earth' && radius > 350;
-      const maxSize = isHorizonEarth ? Math.min(896, this.maxTexSize || 896) : (this.maxTexSize || 1536);
+      const maxSize = isHorizonEarth ? Math.min(1024, this.maxTexSize || 1024) : (this.maxTexSize || 2048);
       const targetSize = Math.min(maxSize, Math.max(192, Math.ceil((radius * 2.64 * dpr) / 64) * 64));
       const cacheKey = `${type}_${targetSize}`;
       let entry = this._cache[cacheKey];
@@ -1349,7 +1364,7 @@
         gl.vertexAttribPointer(this.posLoc, 3, gl.FLOAT, false, 0, 0);
         gl.drawArrays(gl.TRIANGLES, 0, 6);
 
-        // Pass 1: 57,344-Polygon Displaced 3D Sphere Mesh + RTX Lighting
+        // Pass 1: High-Poly Displaced 3D Sphere Mesh + RTX Lighting
         gl.uniform1i(this.locs.uPass, 1);
         gl.enable(gl.DEPTH_TEST);
         gl.depthFunc(gl.LESS);
@@ -1359,7 +1374,7 @@
         gl.bindBuffer(gl.ARRAY_BUFFER, this.sphereVbo);
         gl.vertexAttribPointer(this.posLoc, 3, gl.FLOAT, false, 0, 0);
         gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.sphereIbo);
-        gl.drawElements(gl.TRIANGLES, this.sphereIndexCount, gl.UNSIGNED_SHORT, 0);
+        gl.drawElements(gl.TRIANGLES, this.sphereIndexCount, this.indexType || gl.UNSIGNED_SHORT, 0);
 
         if (!entry) {
           entry = { spin, tilt, time: nowSec };
