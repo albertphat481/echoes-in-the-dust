@@ -841,16 +841,18 @@ class StillThereGame {
 
   _getSitePos(s, cx, cy, r) {
     const z0 = Math.sqrt(Math.max(0.04, 1 - s.u * s.u - s.v * s.v));
-    const totalYaw = (this.moonSpin || 0) + this.moonYaw;
-    const cy1 = Math.cos(-totalYaw);
-    const sy1 = Math.sin(-totalYaw);
+    // Gentle libration sway keeps the 3 Apollo beacons well inside the Moon's front disc
+    // while the 3D lunar sphere beneath rotates continuously.
+    const librationYaw = this.moonYaw + Math.sin((this.moonSpin || 0) * 0.7) * 0.12;
+    const cy1 = Math.cos(-librationYaw);
+    const sy1 = Math.sin(-librationYaw);
     const x1 = cy1 * s.u + sy1 * z0;
     const z1 = -sy1 * s.u + cy1 * z0;
     const cx2 = Math.cos(this.moonPitch);
     const sx2 = Math.sin(this.moonPitch);
     const y2 = cx2 * s.v - sx2 * z1;
     const z2 = sx2 * s.v + cx2 * z1;
-    return { sx: cx + x1 * r, sy: cy + y2 * r, visible: z2 > 0.06 };
+    return { sx: cx + x1 * r, sy: cy + y2 * r, visible: z2 > 0.2 };
   }
 
   _updateLock(x, y) {
@@ -929,12 +931,12 @@ class StillThereGame {
     const ty = targetPos ? targetPos.sy : this.aim.y;
 
     window.soundEngine.playLaserLaunch();
-    this.beams.push({ x0: w * 0.5, y0: h * 0.9, x1: tx, y1: ty, life: 1.0 });
+    this.beams.push({ x0: w * 0.5, y0: h * 0.885, x1: tx, y1: ty, life: 1.0 });
 
     // Launch fast, visually legible photon packet (Earth -> Moon 0.7s, Moon -> Earth 0.75s)
     this.photonOrbs.push({
       x0: w * 0.5,
-      y0: h * 0.9,
+      y0: h * 0.885,
       x1: tx,
       y1: ty,
       progress: 0,
@@ -1216,15 +1218,24 @@ class StillThereGame {
     ctx.restore();
 
 
+    // Laser Observatory Dome seated cleanly on Earth's horizon crest
     ctx.save();
-    ctx.translate(w * 0.5, h * 0.9);
-    ctx.fillStyle = '#0f172a';
-    ctx.strokeStyle = '#fcd34d';
-    ctx.lineWidth = 1.6;
+    ctx.translate(w * 0.5, h * 0.885);
+    ctx.fillStyle = '#0b1222';
+    ctx.strokeStyle = 'rgba(125, 211, 252, 0.75)';
+    ctx.lineWidth = 1.4;
     ctx.beginPath();
-    ctx.arc(0, 0, 15, Math.PI, 0);
+    ctx.arc(0, 0, 12, Math.PI, 0);
+    ctx.closePath();
     ctx.fill();
     ctx.stroke();
+
+    ctx.fillStyle = '#fcd34d';
+    ctx.shadowColor = '#f59e0b';
+    ctx.shadowBlur = 10;
+    ctx.beginPath();
+    ctx.arc(0, -6, 2.2, 0, Math.PI * 2);
+    ctx.fill();
     ctx.restore();
 
     if (this.ghostAlpha > 0.01) {
