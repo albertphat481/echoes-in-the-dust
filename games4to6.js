@@ -6,7 +6,7 @@
  */
 
 /* ============================================================================
- * 4. UNSENT — Những điều chưa kịp gửi (Opportunity Rover)
+ * 4. UNSENT — Những điều chưa kịp gửi (Opportunity Rover -> MRO Relay -> Earth DSN)
  * ==========================================================================*/
 class UnsentGame {
   constructor(host) {
@@ -16,7 +16,7 @@ class UnsentGame {
 
   reset() {
     this.elapsed = 0;
-    this.satelliteDuration = 18;
+    this.satelliteDuration = 22;
     this.goalReached = false;
     this.finaleTimer = 0;
     this.completed = false;
@@ -24,8 +24,14 @@ class UnsentGame {
     this.ghostAlpha = 0.9;
 
     this.sentCards = [];
-    this.packets = [];
-    this.radioRings = [];
+    this.packets = [];        // Active RF/X-Band packets: stage 'toSat' | 'toEarth'
+    this.radioRings = [];     // Directional UHF pulse rings from Opportunity's dish
+    this.mroRings = [];       // Lock/relay burst rings at MRO orbiter
+    this.earthRings = [];     // DSN receive ripples around 3D Earth
+    this.earthReceived = 0;
+    this.satFlash = 0;
+    this.earthFlash = 0;
+    this.oppTxFlash = 0;
     this.draggedCard = null;
     this.downPos = null;
     this.dreamNoteTimer = 0;
@@ -33,9 +39,15 @@ class UnsentGame {
 
     this.stars = Array.from({ length: 130 }, () => ({
       x: Math.random(),
-      y: Math.random() * 0.7,
+      y: Math.random() * 0.72,
       s: Math.random() * 1.5 + 0.3,
       p: Math.random() * Math.PI * 2
+    }));
+
+    this.pebbles = Array.from({ length: 28 }, (_, i) => ({
+      rx: ((i * 73) % 100) / 100,
+      ry: ((i * 37) % 100) / 100,
+      r: 1.4 + (i % 4) * 0.9
     }));
 
     this._initPolaroids();
@@ -57,12 +69,14 @@ class UnsentGame {
     ];
 
     const cols = 3;
-    const cardW = Math.min(116, w * (w < 640 ? 0.235 : 0.25));
+    const isNarrow = w < 640;
+    const cardW = Math.min(104, w * (isNarrow ? 0.22 : 0.17));
     const cardH = cardW * 1.24;
-    const gapX = cardW * (w < 640 ? 1.22 : 1.32);
-    const gapY = cardH * (w < 640 ? 1.08 : 1.15);
-    const startX = w * 0.5 - gapX;
-    const startY = h * 0.55 - gapY * 0.85;
+    const gapX = cardW * (isNarrow ? 1.22 : 1.30);
+    const gapY = cardH * (isNarrow ? 1.06 : 1.12);
+    const gridCenterX = isNarrow ? w * 0.52 : w * 0.63;
+    const startX = gridCenterX - gapX;
+    const startY = h * 0.52 - gapY * 0.82;
 
     this.cards = types.map((t, i) => {
       const col = i % cols;
@@ -90,8 +104,23 @@ class UnsentGame {
     this._initPolaroids();
   }
 
-  _getAntennaPos(w, h) {
-    return { x: w * 0.5, y: h * 0.18 };
+  _getOppyDishPos(w, h) {
+    const roverX = w < 640 ? w * 0.24 : w * 0.21;
+    const roverY = h * 0.915;
+    const scale = Math.min(0.95, Math.max(0.68, w / 1080));
+    return { roverX, x: roverX - 20 * scale, y: roverY - 56 * scale, roverY, scale };
+  }
+
+  _getSatellitePos(w, h) {
+    const satProgress = Math.min(1, this.elapsed / this.satelliteDuration);
+    const x = w * (0.14 + satProgress * 0.42);
+    const y = h * 0.14 - Math.sin(satProgress * Math.PI) * h * 0.035;
+    return { x, y, satProgress };
+  }
+
+  _getEarthPos(w, h) {
+    const r = Math.min(44, Math.max(26, Math.min(w, h) * 0.052));
+    return { x: w * 0.85, y: h * 0.165, r };
   }
 
   _sendCard(c) {
@@ -110,17 +139,24 @@ class UnsentGame {
 
     const w = window.innerWidth;
     const h = window.innerHeight;
-    const ant = this._getAntennaPos(w, h);
-    const satProgress = Math.min(1, this.elapsed / this.satelliteDuration);
-    const satX = w * (0.14 + satProgress * 0.72);
-    const satY = h * 0.1;
+    const dish = this._getOppyDishPos(w, h);
+    const sat = this._getSatellitePos(w, h);
+    const seq = this.sentCards.length;
 
-    this.packets.push({ x: ant.x, y: ant.y, tx: satX, ty: satY, progress: 0 });
-    this.radioRings.push({ x: ant.x, y: ant.y, r: 32, alpha: 0.95 });
-
-    if (this.sentCards.length >= 3 && !this.goalReached) {
-      this.goalReached = true;
-    }
+    // Stage 1: Opportunity's HGA/UHF Dish transmits packet up to Mars Reconnaissance Orbiter
+    this.oppTxFlash = 1.0;
+    this.packets.push({
+      stage: 'toSat',
+      x: dish.x,
+      y: dish.y,
+      tx: sat.x,
+      ty: sat.y,
+      progress: 0,
+      note: c.note,
+      seq
+    });
+    this.radioRings.push({ x: dish.x, y: dish.y, r: 10, alpha: 1.0, hue: 'amber' });
+    this.radioRings.push({ x: dish.x, y: dish.y, r: 22, alpha: 0.72, hue: 'amber' });
   }
 
   onPointerDown(x, y) {
@@ -157,8 +193,8 @@ class UnsentGame {
     const movedDist = this.downPos ? Math.hypot(px - this.downPos.x, py - this.downPos.y) : 0;
     const swipedUp = this.downPos ? (this.downPos.y - py) > 28 : false;
 
-    // Single tap/click OR dragging upward launches the memory cleanly into the beam!
-    if (movedDist < 38 || swipedUp || c.y < h * 0.48) {
+    // Single tap/click OR dragging toward Opportunity / Uplink Beam sends memory into Oppy's UHF dish
+    if (movedDist < 38 || swipedUp || c.y < h * 0.48 || c.y > h * 0.68) {
       this._sendCard(c);
     }
   }
@@ -171,16 +207,22 @@ class UnsentGame {
 
     const w = window.innerWidth;
     const h = window.innerHeight;
-    const ant = this._getAntennaPos(w, h);
+    const dish = this._getOppyDishPos(w, h);
+    const sat = this._getSatellitePos(w, h);
+    const earth = this._getEarthPos(w, h);
     const now = performance.now() * 0.0015;
+
+    this.oppTxFlash = Math.max(0, this.oppTxFlash - dt * 1.4);
+    this.satFlash = Math.max(0, this.satFlash - dt * 1.5);
+    this.earthFlash = Math.max(0, this.earthFlash - dt * 1.3);
 
     for (const c of this.cards) {
       if (c.launching) {
-        c.launchProgress += dt * 2.8;
+        c.launchProgress += dt * 3.1;
         const p = Math.min(1, c.launchProgress);
         const ease = 1 - Math.pow(1 - p, 3);
-        c.x = c.launchFrom.x + (ant.x - c.launchFrom.x) * ease;
-        c.y = c.launchFrom.y + (ant.y - c.launchFrom.y) * ease;
+        c.x = c.launchFrom.x + (dish.x - c.launchFrom.x) * ease;
+        c.y = c.launchFrom.y + (dish.y - c.launchFrom.y) * ease;
         if (p >= 1) this._finalizeCardLaunch(c);
       } else if (c !== this.draggedCard && !c.sent) {
         const targetX = c.homeX + Math.sin(now + c.floatPhase) * 4;
@@ -192,15 +234,56 @@ class UnsentGame {
 
     for (let i = this.packets.length - 1; i >= 0; i--) {
       const p = this.packets[i];
-      p.progress += dt * 1.9;
-      if (p.progress >= 1) this.packets.splice(i, 1);
+      if (p.stage === 'toSat') {
+        p.tx = sat.x;
+        p.ty = sat.y;
+        p.progress += dt * 1.25;
+        if (p.progress >= 1) {
+          // Stage 2: MRO Orbiter locks signal & relays via X-Band beam back to Earth!
+          p.stage = 'toEarth';
+          p.progress = 0;
+          p.x = sat.x;
+          p.y = sat.y;
+          p.tx = earth.x;
+          p.ty = earth.y;
+          this.satFlash = 1.0;
+          this.mroRings.push({ x: sat.x, y: sat.y, r: 8, alpha: 1.0 });
+          window.soundEngine.playPentatonicNote((p.note + 2) % 9, 0.14, 1.4, 0.03, 'sine');
+        }
+      } else {
+        p.progress += dt * 1.1;
+        if (p.progress >= 1) {
+          this.packets.splice(i, 1);
+          this.earthReceived = Math.min(3, this.earthReceived + 1);
+          this.earthFlash = 1.0;
+          this.earthRings.push({ x: earth.x, y: earth.y, r: earth.r * 0.9, alpha: 1.0 });
+          window.soundEngine.playPentatonicNote((p.note + 4) % 9, 0.17, 1.9, 0, 'triangle');
+          if (this.earthReceived >= 3 && !this.goalReached) {
+            this.goalReached = true;
+          }
+        }
+      }
     }
 
     for (let i = this.radioRings.length - 1; i >= 0; i--) {
       const r = this.radioRings[i];
-      r.r += dt * 150;
-      r.alpha -= dt * 0.85;
+      r.r += dt * 165;
+      r.alpha -= dt * 0.78;
       if (r.alpha <= 0) this.radioRings.splice(i, 1);
+    }
+
+    for (let i = this.mroRings.length - 1; i >= 0; i--) {
+      const r = this.mroRings[i];
+      r.r += dt * 95;
+      r.alpha -= dt * 1.1;
+      if (r.alpha <= 0) this.mroRings.splice(i, 1);
+    }
+
+    for (let i = this.earthRings.length - 1; i >= 0; i--) {
+      const r = this.earthRings[i];
+      r.r += dt * 78;
+      r.alpha -= dt * 0.9;
+      if (r.alpha <= 0) this.earthRings.splice(i, 1);
     }
 
     if (!this.goalReached && this.elapsed >= this.satelliteDuration) {
@@ -210,6 +293,7 @@ class UnsentGame {
         nextCard.sent = true;
         this.sentCards.push(nextCard);
       }
+      this.earthReceived = Math.max(this.earthReceived, 3);
       this.goalReached = true;
     }
 
@@ -363,155 +447,312 @@ class UnsentGame {
     ctx.restore();
   }
 
+  _drawRFWaveLink(ctx, x1, y1, x2, y2, now, opts = {}) {
+    const {
+      color = 'rgba(251, 191, 36, 0.35)',
+      coreColor = 'rgba(254, 243, 199, 0.7)',
+      amp = 4,
+      freq = 0.08,
+      speed = 6,
+      alpha = 1
+    } = opts;
+    const dx = x2 - x1;
+    const dy = y2 - y1;
+    const dist = Math.hypot(dx, dy);
+    if (dist < 4) return;
+    const ux = dx / dist;
+    const uy = dy / dist;
+    const nx = -uy;
+    const ny = ux;
+    const steps = Math.max(18, Math.min(48, Math.floor(dist / 10)));
+
+    ctx.save();
+    ctx.globalAlpha = alpha;
+
+    // Subtle carrier corridor line
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 1.4;
+    ctx.setLineDash([4, 6]);
+    ctx.lineDashOffset = -now * 28;
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x2, y2);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Modulated sinusoidal RF carrier waveform traveling from sender -> receiver
+    ctx.strokeStyle = coreColor;
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    for (let i = 0; i <= steps; i++) {
+      const t = i / steps;
+      const env = Math.sin(t * Math.PI);
+      const wave = Math.sin(t * dist * freq - now * speed) * amp * env;
+      const px = x1 + dx * t + nx * wave;
+      const py = y1 + dy * t + ny * wave;
+      if (i === 0) ctx.moveTo(px, py);
+      else ctx.lineTo(px, py);
+    }
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  _drawDetailedMRO(ctx, sat, earth, isDream, hasToSat, hasToEarth, now) {
+    ctx.save();
+    ctx.translate(sat.x, sat.y);
+    ctx.globalAlpha = isDream ? 0.52 : 1.0;
+
+    // Subtle warm telemetry aura when receiving from Oppy or relaying to Earth
+    if (this.satFlash > 0.02 || hasToEarth || hasToSat) {
+      const glowR = 44 + this.satFlash * 22;
+      const sg = ctx.createRadialGradient(0, 0, 4, 0, 0, glowR);
+      sg.addColorStop(0, hasToEarth ? 'rgba(56, 189, 248, 0.36)' : 'rgba(251, 191, 36, 0.32)');
+      sg.addColorStop(1, 'rgba(56, 189, 248, 0)');
+      ctx.fillStyle = sg;
+      ctx.beginPath();
+      ctx.arc(0, 0, glowR, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // Dual large cobalt-blue solar wings with cell grid & structural trusses
+    for (const side of [-1, 1]) {
+      const wx = side * 12;
+      const wLen = 24;
+      const wH = 10;
+      const rx = side < 0 ? wx - wLen : wx;
+
+      // Hinge strut
+      ctx.strokeStyle = '#94a3b8';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(side * 6, 0);
+      ctx.lineTo(wx, 0);
+      ctx.stroke();
+
+      const wingG = ctx.createLinearGradient(rx, -wH * 0.5, rx + wLen, wH * 0.5);
+      wingG.addColorStop(0, '#075985');
+      wingG.addColorStop(0.5, '#0ea5e9');
+      wingG.addColorStop(1, '#0369a1');
+      ctx.fillStyle = wingG;
+      ctx.fillRect(rx, -wH * 0.5, wLen, wH);
+      ctx.strokeStyle = 'rgba(186, 230, 253, 0.55)';
+      ctx.lineWidth = 0.8;
+      ctx.strokeRect(rx, -wH * 0.5, wLen, wH);
+
+      // Photovoltaic cell grid lines
+      ctx.strokeStyle = 'rgba(12, 74, 110, 0.7)';
+      ctx.beginPath();
+      ctx.moveTo(rx, 0);
+      ctx.lineTo(rx + wLen, 0);
+      for (let c = 1; c <= 3; c++) {
+        const cx = rx + (wLen * c) / 4;
+        ctx.moveTo(cx, -wH * 0.5);
+        ctx.lineTo(cx, wH * 0.5);
+      }
+      ctx.stroke();
+    }
+
+    // Spacecraft Bus (Gold Kapton MLI octagonal chassis + HiRISE nadir barrel)
+    ctx.fillStyle = '#0f172a';
+    ctx.fillRect(-3.5, 5, 7, 5); // HiRISE / UHF nadir sensor housing
+    ctx.fillStyle = hasToSat ? '#fcd34d' : '#94a3b8';
+    ctx.beginPath();
+    ctx.arc(0, 10.5, 2.1, 0, Math.PI * 2);
+    ctx.fill();
+
+    const busG = ctx.createLinearGradient(-7, -6, 7, 6);
+    busG.addColorStop(0, '#f59e0b');
+    busG.addColorStop(0.55, '#b45309');
+    busG.addColorStop(1, '#78350f');
+    ctx.fillStyle = busG;
+    ctx.fillRect(-7, -6, 14, 12);
+    ctx.strokeStyle = '#fde68a';
+    ctx.lineWidth = 0.9;
+    ctx.strokeRect(-7, -6, 14, 12);
+
+    // Gimballed 3m High-Gain Parabolic Dish aimed directly toward 3D Earth!
+    const aimAngle = Math.atan2(earth.y - sat.y, earth.x - sat.x);
+    ctx.save();
+    ctx.translate(0, -8);
+    ctx.rotate(aimAngle);
+    ctx.strokeStyle = '#e2e8f0';
+    ctx.lineWidth = 1.2;
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.lineTo(6, 0);
+    ctx.stroke();
+    ctx.fillStyle = '#f8fafc';
+    ctx.beginPath();
+    ctx.ellipse(2, 0, 3.2, 8.5, 0, -Math.PI * 0.5, Math.PI * 0.5, true);
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = (hasToEarth || this.satFlash > 0.1) ? '#38bdf8' : '#94a3b8';
+    ctx.stroke();
+    // Feed horn glow
+    ctx.fillStyle = (hasToEarth || this.satFlash > 0.1) ? '#7dd3fc' : '#cbd5e1';
+    ctx.beginPath();
+    ctx.arc(6.5, 0, hasToEarth ? 2.6 : 1.7, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+
+    // Compact MRO status label
+    ctx.font = '600 9.5px ui-monospace, SFMono-Regular, monospace';
+    ctx.textAlign = 'center';
+    ctx.fillStyle = (hasToEarth || this.satFlash > 0.1) ? 'rgba(125, 211, 252, 0.9)' : 'rgba(203, 213, 225, 0.72)';
+    ctx.fillText('MRO RELAY', 0, -21 + 0.3 * Math.sin(now * 2));
+    ctx.restore();
+  }
+
   render(ctx, w, h) {
     const isDream = this.goalReached;
+    const en = window.VantaI18n && window.VantaI18n.isEn();
 
+    // Deep Martian twilight gradient + RTX Nebula
     const bg = ctx.createLinearGradient(0, 0, 0, h);
     bg.addColorStop(0, '#040610');
-    bg.addColorStop(0.6, '#0c1228');
-    bg.addColorStop(1, '#18142c');
+    bg.addColorStop(0.55, '#0c1228');
+    bg.addColorStop(0.84, '#241422');
+    bg.addColorStop(1, '#3b180e');
     ctx.fillStyle = bg;
     ctx.fillRect(0, 0, w, h);
 
     if (window.vantaNebulaGL) {
       window.vantaNebulaGL.drawBackdrop(ctx, w, h, {
         alpha: 0.62,
-        lumen: 0.95,
-        cyan: 0.35,
-        stars: 0.55
+        lumen: 0.92,
+        cyan: 0.42,
+        stars: 0.62
       });
     }
 
     const now = performance.now() * 0.001;
     if (window.VantaGfx) {
-      if (!this._spectralStars) this._spectralStars = window.VantaGfx.createStarfield(110, 0.78);
-      window.VantaGfx.drawStarfield(ctx, this._spectralStars, w, h, now, 0.9);
+      if (!this._spectralStars) this._spectralStars = window.VantaGfx.createStarfield(115, 0.78);
+      window.VantaGfx.drawStarfield(ctx, this._spectralStars, w, h, now, 0.92);
     }
 
-    // Orbiting Relay Orbiter (MRO — Detailed Solar Wings + High-Gain Dish)
-    const satProgress = Math.min(1, this.elapsed / this.satelliteDuration);
-    const satX = w * (0.14 + satProgress * 0.72);
-    const satY = h * 0.1;
+    const dish = this._getOppyDishPos(w, h);
+    const sat = this._getSatellitePos(w, h);
+    const earth = this._getEarthPos(w, h);
+    const hasToSat = this.packets.some(p => p.stage === 'toSat');
+    const hasToEarth = this.packets.some(p => p.stage === 'toEarth');
 
-    if (!isDream) {
-      ctx.strokeStyle = 'rgba(148, 163, 184, 0.2)';
-      ctx.setLineDash([4, 6]);
-      ctx.beginPath();
-      ctx.moveTo(w * 0.14, satY);
-      ctx.lineTo(w * 0.86, satY);
-      ctx.stroke();
-      ctx.setLineDash([]);
-
-      ctx.save();
-      ctx.translate(satX, satY);
-      // Solar wings
-      const wingG = ctx.createLinearGradient(-28, -5, 28, 5);
-      wingG.addColorStop(0, '#0284c7');
-      wingG.addColorStop(0.5, '#38bdf8');
-      wingG.addColorStop(1, '#0369a1');
-      ctx.fillStyle = wingG;
-      ctx.fillRect(-26, -4.5, 17, 9);
-      ctx.fillRect(9, -4.5, 17, 9);
-      ctx.strokeStyle = 'rgba(254, 243, 199, 0.45)';
-      ctx.lineWidth = 0.8;
-      ctx.strokeRect(-26, -4.5, 17, 9);
-      ctx.strokeRect(9, -4.5, 17, 9);
-      // Gold Kapton spacecraft bus
-      ctx.fillStyle = '#d97706';
-      ctx.fillRect(-5, -5, 10, 10);
-      ctx.strokeStyle = '#fde68a';
-      ctx.strokeRect(-5, -5, 10, 10);
-      // Parabolic HGA dish
-      ctx.fillStyle = '#f1f5f9';
-      ctx.beginPath();
-      ctx.ellipse(0, -8, 7, 2.6, 0, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.restore();
-    }
-
-    // Parabolic Uplink Antenna Beam
-    const ant = this._getAntennaPos(w, h);
-    if (!isDream) {
-      ctx.save();
-      ctx.beginPath();
-      ctx.arc(ant.x, ant.y, 48, 0, Math.PI * 2);
-      ctx.strokeStyle = 'rgba(245, 158, 11, 0.3)';
-      ctx.lineWidth = 1.6;
-      ctx.stroke();
-
-      // Magnetic beam funnel lines
-      const cone = ctx.createRadialGradient(ant.x, ant.y, 10, ant.x, ant.y, 110);
-      cone.addColorStop(0, 'rgba(252, 211, 77, 0.22)');
-      cone.addColorStop(1, 'rgba(245, 158, 11, 0)');
-      ctx.fillStyle = cone;
-      ctx.beginPath();
-      ctx.arc(ant.x, ant.y, 110, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.restore();
-    }
-
-    for (const r of this.radioRings) {
-      ctx.strokeStyle = `rgba(252, 211, 77, ${r.alpha})`;
-      ctx.lineWidth = 2.2;
-      ctx.beginPath();
-      ctx.arc(r.x, r.y, r.r, 0, Math.PI * 2);
-      ctx.stroke();
-    }
-
-    // 3 Transmission Slot Orbs inside Antenna
+    // Distant Perseverance Valley ridge silhouettes & foreground Martian terrain
+    const horY = h * 0.855;
     ctx.save();
-    ctx.translate(ant.x, ant.y);
-    for (let i = 0; i < 3; i++) {
-      const filled = i < this.sentCards.length;
-      ctx.fillStyle = filled ? '#fcd34d' : 'rgba(148, 163, 184, 0.35)';
-      ctx.shadowColor = filled ? '#f59e0b' : 'transparent';
-      ctx.shadowBlur = filled ? 14 : 0;
-      ctx.beginPath();
-      ctx.arc((i - 1) * 18, 0, 6, 0, Math.PI * 2);
-      ctx.fill();
-    }
-    ctx.restore();
-
-    for (const p of this.packets) {
-      const px = p.x + (p.tx - p.x) * p.progress;
-      const py = p.y + (p.ty - p.y) * p.progress;
-      ctx.fillStyle = '#fef3c7';
-      ctx.shadowColor = '#f59e0b';
-      ctx.shadowBlur = 18;
-      ctx.beginPath();
-      ctx.arc(px, py, 6.5 * (1 - p.progress * 0.4), 0, Math.PI * 2);
-      ctx.fill();
-      ctx.shadowBlur = 0;
-    }
-
-    // Opportunity Rover silhouette (MER-B)
-    const roverY = h * 0.94;
-    ctx.save();
-    ctx.translate(w * 0.5, roverY);
-    if (window.VantaGfx) {
-      window.VantaGfx.drawMERRover(ctx, { silhouette: true, scale: 0.72 });
-    }
-    const lampPulse = 0.4 + 0.6 * Math.sin(performance.now() * 0.006);
-    ctx.fillStyle = `rgba(252, 211, 77, ${lampPulse})`;
-    ctx.shadowColor = '#f59e0b';
-    ctx.shadowBlur = 14;
+    ctx.fillStyle = '#180d14';
     ctx.beginPath();
-    ctx.arc(16, -55, 3.8, 0, Math.PI * 2);
+    ctx.moveTo(0, horY + 12);
+    ctx.lineTo(w * 0.16, horY - 22);
+    ctx.lineTo(w * 0.36, horY - 4);
+    ctx.lineTo(w * 0.56, horY - 28);
+    ctx.lineTo(w * 0.78, horY - 9);
+    ctx.lineTo(w, horY - 20);
+    ctx.lineTo(w, h);
+    ctx.lineTo(0, h);
+    ctx.closePath();
     ctx.fill();
+
+    const groundG = ctx.createLinearGradient(0, horY - 6, 0, h);
+    groundG.addColorStop(0, '#3a1a0e');
+    groundG.addColorStop(0.55, '#261009');
+    groundG.addColorStop(1, '#120806');
+    ctx.fillStyle = groundG;
+    ctx.beginPath();
+    ctx.moveTo(0, horY + 6);
+    ctx.quadraticCurveTo(w * 0.28, horY - 8, w * 0.54, horY + 4);
+    ctx.quadraticCurveTo(w * 0.8, horY + 14, w, horY);
+    ctx.lineTo(w, h);
+    ctx.lineTo(0, h);
+    ctx.closePath();
+    ctx.fill();
+
+    // Pebbles & faint Opportunity sunset horizon haze
+    ctx.fillStyle = 'rgba(251, 146, 60, 0.08)';
+    ctx.fillRect(0, horY - 2, w, 12);
+    ctx.fillStyle = 'rgba(18, 9, 8, 0.85)';
+    for (const pb of this.pebbles) {
+      const px = pb.rx * w;
+      const py = horY + 12 + pb.ry * (h - horY - 16);
+      ctx.beginPath();
+      ctx.ellipse(px, py, pb.r * 1.4, pb.r * 0.75, 0, 0, Math.PI * 2);
+      ctx.fill();
+    }
     ctx.restore();
 
-    // Vintage Polaroid Memory Cards
+    // 3D Earth (DSN Destination) rendered via 57,344-poly WebGL renderer
+    ctx.save();
+    const earthPulse = 0.25 + this.earthFlash * 0.65;
+    const eHalo = ctx.createRadialGradient(earth.x, earth.y, earth.r * 0.6, earth.x, earth.y, earth.r * 2.1);
+    eHalo.addColorStop(0, `rgba(56, 189, 248, ${earthPulse})`);
+    eHalo.addColorStop(1, 'rgba(56, 189, 248, 0)');
+    ctx.fillStyle = eHalo;
+    ctx.beginPath();
+    ctx.arc(earth.x, earth.y, earth.r * 2.1, 0, Math.PI * 2);
+    ctx.fill();
+
+    const drewGL = window.vantaPlanetGL && window.vantaPlanetGL.drawPlanet(
+      ctx, 'earth', earth.x, earth.y, earth.r,
+      { spin: 1.15 + now * 0.06, tilt: 0.22, sunDir: [-0.64, 0.36, 0.68], alpha: isDream ? 0.85 : 1.0 }
+    );
+    if (!drewGL) {
+      const eg = ctx.createRadialGradient(earth.x - earth.r * 0.3, earth.y - earth.r * 0.3, 2, earth.x, earth.y, earth.r);
+      eg.addColorStop(0, '#38bdf8');
+      eg.addColorStop(0.6, '#1d4ed8');
+      eg.addColorStop(1, '#082f49');
+      ctx.fillStyle = eg;
+      ctx.beginPath();
+      ctx.arc(earth.x, earth.y, earth.r, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // Earth DSN label & 3 received-memory indicator orbs below Earth
+    ctx.font = '600 9.5px ui-monospace, SFMono-Regular, monospace';
+    ctx.textAlign = 'center';
+    ctx.fillStyle = 'rgba(186, 230, 253, 0.88)';
+    ctx.fillText(en ? 'EARTH • DSN' : 'TRÁI ĐẤT • DSN', earth.x, earth.y + earth.r + 14);
+    for (let i = 0; i < 3; i++) {
+      const rx = earth.x + (i - 1) * 14;
+      const ry = earth.y + earth.r + 25;
+      const lit = i < this.earthReceived;
+      ctx.fillStyle = lit ? '#38bdf8' : 'rgba(148, 163, 184, 0.28)';
+      ctx.shadowColor = lit ? '#38bdf8' : 'transparent';
+      ctx.shadowBlur = lit ? 10 : 0;
+      ctx.beginPath();
+      ctx.arc(rx, ry, 4, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.shadowBlur = 0;
+    ctx.restore();
+
+    // MRO Orbit Track arc
+    ctx.save();
+    ctx.strokeStyle = 'rgba(148, 163, 184, 0.16)';
+    ctx.setLineDash([4, 7]);
+    ctx.beginPath();
+    for (let i = 0; i <= 24; i++) {
+      const t = i / 24;
+      const ox = w * (0.14 + t * 0.42);
+      const oy = h * 0.14 - Math.sin(t * Math.PI) * h * 0.035;
+      if (i === 0) ctx.moveTo(ox, oy);
+      else ctx.lineTo(ox, oy);
+    }
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.restore();
+
+    // Vintage Polaroid Memory Cards (drawn cleanly before RF signal beams so signals stay unobstructed)
     for (const c of this.cards) {
       if (c.sent) continue;
       ctx.save();
       ctx.translate(c.x, c.y);
-      const shrink = c.launching ? Math.max(0.2, 1 - c.launchProgress * 0.8) : 1;
+      const shrink = c.launching ? Math.max(0.18, 1 - c.launchProgress * 0.82) : 1;
       ctx.scale(shrink, shrink);
       ctx.rotate(c.tilt);
 
       if (!isDream) {
         ctx.fillStyle = '#f8fafc';
-        ctx.shadowColor = c.launching ? 'rgba(252, 211, 77, 0.8)' : 'rgba(0, 0, 0, 0.55)';
+        ctx.shadowColor = c.launching ? 'rgba(252, 211, 77, 0.85)' : 'rgba(0, 0, 0, 0.55)';
         ctx.shadowBlur = c.launching ? 22 : 16;
         ctx.beginPath();
         ctx.roundRect(-c.w * 0.5, -c.h * 0.5, c.w, c.h, 6);
@@ -526,13 +767,179 @@ class UnsentGame {
       ctx.restore();
     }
 
+    // Mars Rover wheel tracks trailing behind Opportunity
+    ctx.save();
+    ctx.strokeStyle = 'rgba(120, 53, 15, 0.45)';
+    ctx.lineWidth = 2.4;
+    ctx.setLineDash([4, 3]);
+    ctx.beginPath();
+    ctx.moveTo(0, dish.roverY + 2);
+    ctx.lineTo(dish.roverX - 32 * dish.scale, dish.roverY - 1);
+    ctx.moveTo(0, dish.roverY + 8);
+    ctx.lineTo(dish.roverX - 24 * dish.scale, dish.roverY + 4);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.restore();
+
+    // Stage 1 Link: Opportunity Dish -> MRO Orbiter (UHF Amber RF Carrier)
+    this._drawRFWaveLink(ctx, dish.x, dish.y, sat.x, sat.y, now, {
+      color: hasToSat ? 'rgba(251, 191, 36, 0.65)' : 'rgba(245, 158, 11, 0.24)',
+      coreColor: hasToSat ? 'rgba(254, 243, 199, 0.94)' : 'rgba(252, 211, 77, 0.42)',
+      amp: hasToSat ? 6.5 : 3.0,
+      freq: 0.07,
+      speed: hasToSat ? 11 : 4.5,
+      alpha: isDream ? 0.38 : 1.0
+    });
+
+    // Stage 2 Link: MRO Orbiter -> 3D Earth (X-Band Cyan-Emerald Deep Space Downlink)
+    this._drawRFWaveLink(ctx, sat.x, sat.y, earth.x, earth.y, now, {
+      color: hasToEarth ? 'rgba(56, 189, 248, 0.75)' : 'rgba(56, 189, 248, 0.26)',
+      coreColor: hasToEarth ? 'rgba(186, 230, 253, 0.96)' : 'rgba(125, 211, 252, 0.42)',
+      amp: hasToEarth ? 5.5 : 2.2,
+      freq: 0.11,
+      speed: hasToEarth ? 14 : 6,
+      alpha: isDream ? 0.50 : 1.0
+    });
+
+    // Technical band tags right next to each link
+    if (!isDream) {
+      ctx.save();
+      ctx.font = '600 9.5px ui-monospace, SFMono-Regular, monospace';
+      ctx.textAlign = 'center';
+      if (hasToSat || this.oppTxFlash > 0.05) {
+        const mx1 = (dish.x + sat.x) * 0.5;
+        const my1 = (dish.y + sat.y) * 0.5;
+        ctx.fillStyle = 'rgba(253, 230, 138, 0.92)';
+        ctx.fillText('UHF 401 MHz ↗', mx1 - 54, my1);
+      }
+      if (hasToEarth || this.satFlash > 0.05) {
+        const mx2 = (sat.x + earth.x) * 0.5;
+        const my2 = (sat.y + earth.y) * 0.5 - 14;
+        ctx.fillStyle = 'rgba(125, 211, 252, 0.95)';
+        ctx.fillText('X-BAND 8.4 GHz ➔', mx2, my2);
+      }
+      ctx.restore();
+    }
+
+    // Draw MRO Orbiter over link endpoint
+    this._drawDetailedMRO(ctx, sat, earth, isDream, hasToSat, hasToEarth, now);
+
+    // Expanding Signal Ripples: Oppy UHF Rings, MRO Relay Lock Rings, Earth DSN Rings
+    for (const r of this.radioRings) {
+      ctx.strokeStyle = `rgba(252, 211, 77, ${r.alpha * 0.85})`;
+      ctx.lineWidth = 2.0;
+      ctx.beginPath();
+      const angleToSat = Math.atan2(sat.y - r.y, sat.x - r.x);
+      ctx.arc(r.x, r.y, r.r, angleToSat - 0.55, angleToSat + 0.55);
+      ctx.stroke();
+    }
+    for (const r of this.mroRings) {
+      ctx.strokeStyle = `rgba(103, 232, 249, ${r.alpha})`;
+      ctx.lineWidth = 2.0;
+      ctx.beginPath();
+      ctx.arc(r.x, r.y, r.r, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+    for (const r of this.earthRings) {
+      ctx.strokeStyle = `rgba(56, 189, 248, ${r.alpha})`;
+      ctx.lineWidth = 2.4;
+      ctx.beginPath();
+      ctx.arc(r.x, r.y, r.r, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+
+    // Animated Data Packets (Stage 1: Amber Oppy->MRO, Stage 2: Cyan MRO->Earth)
+    for (const p of this.packets) {
+      const px = p.x + (p.tx - p.x) * p.progress;
+      const py = p.y + (p.ty - p.y) * p.progress;
+      const tailT = Math.max(0, p.progress - 0.14);
+      const tx = p.x + (p.tx - p.x) * tailT;
+      const ty = p.y + (p.ty - p.y) * tailT;
+      const isStage2 = p.stage === 'toEarth';
+
+      ctx.save();
+      const trailG = ctx.createLinearGradient(tx, ty, px, py);
+      trailG.addColorStop(0, isStage2 ? 'rgba(56, 189, 248, 0)' : 'rgba(245, 158, 11, 0)');
+      trailG.addColorStop(1, isStage2 ? 'rgba(186, 230, 253, 0.95)' : 'rgba(254, 243, 199, 0.95)');
+      ctx.strokeStyle = trailG;
+      ctx.lineWidth = isStage2 ? 3.5 : 4.0;
+      ctx.lineCap = 'round';
+      ctx.beginPath();
+      ctx.moveTo(tx, ty);
+      ctx.lineTo(px, py);
+      ctx.stroke();
+
+      for (let b = 1; b <= 3; b++) {
+        const bt = Math.max(0, p.progress - b * 0.045);
+        const bx = p.x + (p.tx - p.x) * bt;
+        const by = p.y + (p.ty - p.y) * bt;
+        ctx.fillStyle = isStage2 ? `rgba(125, 211, 252, ${0.85 - b * 0.2})` : `rgba(252, 211, 77, ${0.85 - b * 0.2})`;
+        ctx.beginPath();
+        ctx.arc(bx, by, 3.0 - b * 0.5, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      ctx.fillStyle = isStage2 ? '#e0f2fe' : '#fef3c7';
+      ctx.shadowColor = isStage2 ? '#38bdf8' : '#f59e0b';
+      ctx.shadowBlur = 18;
+      ctx.beginPath();
+      ctx.arc(px, py, 6.2, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+
+    // Drag Tether connecting held Polaroid -> Opportunity's HGA/UHF Dish
+    if (this.draggedCard && !isDream) {
+      this._drawRFWaveLink(ctx, this.draggedCard.x, this.draggedCard.y, dish.x, dish.y, now, {
+        color: 'rgba(251, 191, 36, 0.5)',
+        coreColor: 'rgba(254, 243, 199, 0.85)',
+        amp: 3.5,
+        freq: 0.08,
+        speed: 9
+      });
+    }
+
+    // Opportunity Rover (MER-B) with glowing High-Gain Dish Beacon
+    ctx.save();
+    ctx.translate(dish.roverX, dish.roverY);
+    if (window.VantaGfx) {
+      window.VantaGfx.drawMERRover(ctx, { silhouette: isDream, scale: dish.scale });
+    }
+    ctx.restore();
+
+    // Glowing Uplink Transmitter Ring + 3 Rover Memory Buffer Orbs at Opportunity's Dish
+    ctx.save();
+    const txGlow = (0.35 + 0.25 * Math.sin(now * 3.5) + this.oppTxFlash * 0.6) * (isDream ? 0.35 : 1.0);
+    const dg = ctx.createRadialGradient(dish.x, dish.y, 2, dish.x, dish.y, 34);
+    dg.addColorStop(0, `rgba(254, 243, 199, ${txGlow})`);
+    dg.addColorStop(0.45, `rgba(245, 158, 11, ${txGlow * 0.55})`);
+    dg.addColorStop(1, 'rgba(245, 158, 11, 0)');
+    ctx.fillStyle = dg;
+    ctx.beginPath();
+    ctx.arc(dish.x, dish.y, 34, 0, Math.PI * 2);
+    ctx.fill();
+
+    for (let i = 0; i < 3; i++) {
+      const filled = i < this.sentCards.length;
+      const sx = dish.x + (i - 1) * 12;
+      const sy = dish.y - 16;
+      ctx.fillStyle = filled ? '#fcd34d' : 'rgba(148, 163, 184, 0.3)';
+      ctx.beginPath();
+      ctx.arc(sx, sy, 3.2, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.restore();
+
     if (this.ghostAlpha > 0.01 && this.cards[4]) {
       drawGhostHand(ctx, this.cards[4].homeX, this.cards[4].homeY, this.ghostAlpha, 1, false);
     }
   }
 
   getSessionMetric() {
-    return `${this.sentCards.length}/3 Ảnh Đã Gửi • 6 Ảnh Ký Ức Ở Lại`;
+    const en = window.VantaI18n && window.VantaI18n.isEn();
+    return en
+      ? `${this.earthReceived}/3 Relayed via MRO to Earth • 6 Stays on Mars`
+      : `${this.earthReceived}/3 Ảnh Qua Vệ Tinh Về Trái Đất • 6 Ảnh Ở Lại`;
   }
 }
 
