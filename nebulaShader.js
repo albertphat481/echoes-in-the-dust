@@ -877,12 +877,12 @@
       let entry = this._cache[cacheKey];
       const nowSec = performance.now() * 0.001;
       const age = entry ? Math.abs(nowSec - entry.time) : 999;
-      const angleThresh = type === 'moon' ? 0.008 : 0.015;
+      const angleThresh = type === 'moon' ? 0.0025 : 0.012;
       const angleChanged = !entry || Math.abs(spin - entry.spin) > angleThresh || Math.abs(tilt - entry.tilt) > angleThresh;
       const needsRender = !entry || (
         type === 'earth' ? (age > 0.08 || (angleChanged && age > 0.04))
           : (type === 'mars' ? (age > 0.14 || (angleChanged && age > 0.032))
-            : (angleChanged && age > 0.028))
+            : (angleChanged && age > 0.018))
       );
 
       if (needsRender) {

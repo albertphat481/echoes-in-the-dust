@@ -653,6 +653,7 @@ class StillThereGame {
     ];
 
     this.aim = { x: window.innerWidth * 0.5, y: window.innerHeight * 0.42 };
+    this.moonSpin = 0;
     this.moonYaw = 0;
     this.moonPitch = 0;
     this.targetYaw = 0;
@@ -685,14 +686,16 @@ class StillThereGame {
 
   _getSitePos(s, cx, cy, r) {
     const z0 = Math.sqrt(Math.max(0.04, 1 - s.u * s.u - s.v * s.v));
-    const cy1 = Math.cos(this.moonYaw);
-    const sy1 = Math.sin(this.moonYaw);
-    const x1 = cy1 * s.u - sy1 * z0;
-    const z1 = sy1 * s.u + cy1 * z0;
+    const totalYaw = (this.moonSpin || 0) + this.moonYaw;
+    const cy1 = Math.cos(-totalYaw);
+    const sy1 = Math.sin(-totalYaw);
+    const x1 = cy1 * s.u + sy1 * z0;
+    const z1 = -sy1 * s.u + cy1 * z0;
     const cx2 = Math.cos(this.moonPitch);
     const sx2 = Math.sin(this.moonPitch);
-    const y2 = cx2 * s.v + sx2 * z1;
-    return { sx: cx + x1 * r, sy: cy + y2 * r };
+    const y2 = cx2 * s.v - sx2 * z1;
+    const z2 = sx2 * s.v + cx2 * z1;
+    return { sx: cx + x1 * r, sy: cy + y2 * r, visible: z2 > 0.06 };
   }
 
   _updateLock(x, y) {
@@ -700,7 +703,8 @@ class StillThereGame {
     let nearest = null;
     let minDist = Infinity;
     for (const s of this.sites) {
-      const { sx, sy } = this._getSitePos(s, cx, cy, r);
+      const { sx, sy, visible } = this._getSitePos(s, cx, cy, r);
+      if (!visible) continue;
       const d = Math.hypot(x - sx, y - sy);
       if (d < minDist) {
         minDist = d;
@@ -751,7 +755,8 @@ class StillThereGame {
       let bestUnlit = null;
       let bestDist = Infinity;
       for (const s of this.sites) {
-        const { sx, sy } = this._getSitePos(s, cx, cy, r);
+        const { sx, sy, visible } = this._getSitePos(s, cx, cy, r);
+        if (!visible) continue;
         const d = Math.hypot(this.aim.x - sx, this.aim.y - sy);
         const weight = s.lit ? d * 1.6 : d;
         if (weight < bestDist) {
@@ -784,6 +789,7 @@ class StillThereGame {
   }
 
   update(dt) {
+    this.moonSpin = (this.moonSpin || 0) + dt * 0.14;
     this.moonYaw += (this.targetYaw - this.moonYaw) * Math.min(1, dt * 6);
     this.moonPitch += (this.targetPitch - this.moonPitch) * Math.min(1, dt * 6);
 
@@ -893,15 +899,19 @@ class StillThereGame {
     ctx.fill();
 
     if (!(window.vantaPlanetGL && window.vantaPlanetGL.drawPlanet(ctx, 'moon', cx, cy, r, {
-      spin: 0.42 + this.moonYaw,
+      spin: 0.42 + (this.moonSpin || 0) + this.moonYaw,
       tilt: -this.moonPitch,
       sunDir: [-0.55, 0.35, 0.75]
     }))) {
-      ctx.drawImage(this.moonCanvas, cx - r * 1.087, cy - r * 1.087, r * 2.174, r * 2.174);
+      ctx.save();
+      ctx.translate(cx, cy);
+      ctx.rotate(((this.moonSpin || 0) + this.moonYaw) * 0.25);
+      ctx.drawImage(this.moonCanvas, -r * 1.087, -r * 1.087, r * 2.174, r * 2.174);
+      ctx.restore();
     }
 
-    // Constellation Triangle Lines connecting lit retroreflectors
-    const litSites = this.sites.filter(s => s.lit);
+    // Constellation Triangle Lines connecting visible lit retroreflectors
+    const litSites = this.sites.filter(s => s.lit && this._getSitePos(s, cx, cy, r).visible);
     if (litSites.length >= 2) {
       ctx.save();
       ctx.strokeStyle = 'rgba(252, 211, 77, 0.7)';
@@ -921,7 +931,8 @@ class StillThereGame {
 
     // Visible Beacon Glints on 3 Retroreflector Sites (Wordless clarity!)
     for (const s of this.sites) {
-      const { sx, sy } = this._getSitePos(s, cx, cy, r);
+      const { sx, sy, visible } = this._getSitePos(s, cx, cy, r);
+      if (!visible) continue;
       const pulse = 0.55 + 0.45 * Math.sin(now * 2 + s.id * 1.8);
 
       // Faint orbital beacon ring even before lit so players clearly see targets!
@@ -1027,7 +1038,7 @@ class StillThereGame {
     ctx.clip();
 
     const usedRTXEarthHorizon = window.vantaPlanetGL && window.vantaPlanetGL.drawPlanet(ctx, 'earth', earthCx, earthCy, earthR, {
-      spin: this.elapsed * 0.02 + 1.15,
+      spin: (this.elapsed + (this.moonSpin || 0) * 1.4) * 0.02 + 1.15,
       tilt: 1.18,
       sunDir: [-0.42, 0.48, 0.76]
     });
