@@ -374,16 +374,24 @@
 
     attribute vec3 aPos3d;
 
-    uniform int uPass;      // 0 = Atmospheric Halo Quad, 1 = 30,720-Poly Displaced Sphere
+    uniform int uPass;      // 0 = Atmospheric Halo Quad, 1 = 524,288-Poly Displaced Sphere
     uniform int uType;
     uniform float uSpin;
     uniform float uTilt;
+    uniform float uHasVertexTex;
+    uniform sampler2D uMoonTex;
 
     varying vec2 vQuadPos;
     varying vec3 vSpherePos;
     varying float vElev;
 
     ${PLANET_NOISE_GLSL}
+
+    vec2 sphereToUV_v(vec3 p) {
+      float u = atan(p.x, p.z) / 6.283185307 + 0.5;
+      float v = 0.5 - asin(clamp(p.y, -1.0, 1.0)) / 3.141592654;
+      return vec2(u, v);
+    }
 
     void main() {
       if (uPass == 0) {
@@ -394,9 +402,14 @@
       } else {
         vec3 nBase = normalize(aPos3d);
         vec3 sp = rotY(rotX(nBase, uTilt), uSpin);
-        float h = (uType == 1) ? surfaceHeight(sp, uType) : 0.45;
-        float dispAmp = (uType == 1) ? 0.012 : ((uType == 2) ? 0.002 : 0.0);
-        vec3 pos = nBase * (1.0 + (h - 0.45) * dispAmp);
+        float h = 0.45;
+        if (uType == 1) {
+          h = surfaceHeight(sp, uType);
+        } else if (uType == 2 && uHasVertexTex > 0.5) {
+          h = texture2D(uMoonTex, sphereToUV_v(sp)).r;
+        }
+        float dispAmp = (uType == 1) ? 0.012 : ((uType == 2) ? 0.015 : 0.0);
+        vec3 pos = nBase * (1.0 + (h - 0.5) * dispAmp);
         vQuadPos = pos.xy / 1.32;
         vSpherePos = nBase;
         vElev = h;
@@ -526,9 +539,9 @@
       vec3 col = vec3(0.0);
 
       if (uType == 2) {
-        // === MOON (2048x1024 NASA Selenographic Map + 4K Procedural Micro-Craters + Lommel-Seeliger BRDF) ===
+        // === MOON (2048x1024 NASA Selenographic Map + Fast 4K Micro-Craters + Lommel-Seeliger BRDF) ===
         vec4 moonSample = texture2D(uMoonTex, sphereToUV(sp));
-        float mc0 = craterCell(sp * 36.0) * 0.042 + craterCell(sp * 88.0) * 0.022;
+        float mc0 = craterCell(sp * 42.0) * 0.048;
         float h0 = moonSample.r + mc0;
         float texAlbedo = moonSample.g;
         float mareMask = moonSample.b;
@@ -536,11 +549,11 @@
         vec3 upRef = abs(sp.y) < 0.96 ? vec3(0.0, 1.0, 0.0) : vec3(1.0, 0.0, 0.0);
         vec3 T = normalize(cross(upRef, sp));
         vec3 Bt = cross(sp, T);
-        float epsM = 0.0014;
+        float epsM = 0.0016;
         vec3 spT = normalize(sp + T * epsM);
         vec3 spB = normalize(sp + Bt * epsM);
-        float hT = texture2D(uMoonTex, sphereToUV(spT)).r + craterCell(spT * 36.0) * 0.042 + craterCell(spT * 88.0) * 0.022;
-        float hB = texture2D(uMoonTex, sphereToUV(spB)).r + craterCell(spB * 36.0) * 0.042 + craterCell(spB * 88.0) * 0.022;
+        float hT = texture2D(uMoonTex, sphereToUV(spT)).r + craterCell(spT * 42.0) * 0.048;
+        float hB = texture2D(uMoonTex, sphereToUV(spB)).r + craterCell(spB * 42.0) * 0.048;
         vec3 gradM = T * ((hT - h0) / epsM) + Bt * ((hB - h0) / epsM);
         vec3 worldGrad = rotX(rotY(gradM, -uSpin), -uTilt);
 
@@ -824,9 +837,9 @@
 
     _resize() {
       if (!this.gl) return;
-      this.renderScale = 0.85;
-      const w = Math.min(1920, Math.max(640, Math.floor(window.innerWidth * this.renderScale)));
-      const h = Math.min(1080, Math.max(400, Math.floor(window.innerHeight * this.renderScale)));
+      this.renderScale = 0.65;
+      const w = Math.min(1280, Math.max(512, Math.floor(window.innerWidth * this.renderScale)));
+      const h = Math.min(720, Math.max(384, Math.floor(window.innerHeight * this.renderScale)));
       if (this.canvas.width !== w || this.canvas.height !== h) {
         this.canvas.width = w;
         this.canvas.height = h;
@@ -946,12 +959,14 @@
       this.useUint32 = !!uintExt;
       this.indexType = this.useUint32 ? gl.UNSIGNED_INT : gl.UNSIGNED_SHORT;
       if (this.useUint32) {
-        // 384 stacks x 512 slices = 197,505 vertices & 393,216 triangle polygons (silky-round RTX silhouette)
-        this._buildHighPolySphere(gl, 384, 512);
+        // 512 stacks x 512 slices = 263,169 vertices & 524,288 triangle polygons (ultra-round 3D relief)
+        this._buildHighPolySphere(gl, 512, 512);
       } else {
         // Fallback: 128 stacks x 224 slices = 28,929 vertices & 57,344 triangle polygons (Uint16)
         this._buildHighPolySphere(gl, 128, 224);
       }
+
+      this.hasVertexTex = (gl.getParameter(gl.MAX_VERTEX_TEXTURE_IMAGE_UNITS) || 0) > 0;
 
       this.locs = {
         uPass: gl.getUniformLocation(prog, 'uPass'),
@@ -960,6 +975,7 @@
         uSpin: gl.getUniformLocation(prog, 'uSpin'),
         uTilt: gl.getUniformLocation(prog, 'uTilt'),
         uSunDir: gl.getUniformLocation(prog, 'uSunDir'),
+        uHasVertexTex: gl.getUniformLocation(prog, 'uHasVertexTex'),
         uMoonTex: gl.getUniformLocation(prog, 'uMoonTex'),
         uEarthTex: gl.getUniformLocation(prog, 'uEarthTex')
       };
@@ -1351,20 +1367,21 @@
         alpha = 1.0
       } = opts;
 
-      const dpr = Math.min(2.0, window.devicePixelRatio || 1);
+      const dpr = Math.min(1.5, window.devicePixelRatio || 1);
       const isHorizonEarth = type === 'earth' && radius > 350;
-      const maxSize = isHorizonEarth ? Math.min(2560, this.maxTexSize || 2560) : (this.maxTexSize || 4096);
-      const minSize = isHorizonEarth ? 1536 : 768;
-      const targetSize = Math.min(maxSize, Math.max(minSize, Math.ceil((radius * 2.64 * dpr) / 128) * 128));
+      const maxSize = isHorizonEarth ? Math.min(1536, this.maxTexSize || 1536) : Math.min(1280, this.maxTexSize || 1280);
+      const minSize = isHorizonEarth ? 768 : 384;
+      const targetSize = Math.min(maxSize, Math.max(minSize, Math.ceil((radius * 2.4 * dpr) / 64) * 64));
       const cacheKey = `${type}_${targetSize}`;
       let entry = this._cache[cacheKey];
       const nowSec = performance.now() * 0.001;
-      const angleThresh = 0.0002;
+      const angleThresh = 0.0012;
       const angleChanged = !entry || Math.abs(spin - entry.spin) > angleThresh || Math.abs(tilt - entry.tilt) > angleThresh;
-      const canReuseDirect = this._lastDrawnKey === cacheKey && entry && !angleChanged && Math.abs(nowSec - entry.time) <= 0.015;
+      const cloudDirty = type === 'earth' && (!entry || Math.abs(nowSec - entry.time) > 0.045);
+      const canReuseCache = !!(entry && entry.canvas && !angleChanged && !cloudDirty);
       const drawSpan = radius * 2.64;
 
-      if (!canReuseDirect) {
+      if (!canReuseCache) {
         if (targetSize > this.canvas.width || targetSize > this.canvas.height) {
           this.canvas.width = targetSize;
           this.canvas.height = targetSize;
@@ -1391,6 +1408,7 @@
         gl.uniform1f(this.locs.uSpin, spin);
         gl.uniform1f(this.locs.uTilt, tilt);
         gl.uniform3f(this.locs.uSunDir, sunDir[0], sunDir[1], sunDir[2]);
+        if (this.locs.uHasVertexTex) gl.uniform1f(this.locs.uHasVertexTex, this.hasVertexTex ? 1.0 : 0.0);
         if (this.locs.uMoonTex) gl.uniform1i(this.locs.uMoonTex, 0);
         if (this.locs.uEarthTex) gl.uniform1i(this.locs.uEarthTex, 1);
 
@@ -1406,7 +1424,7 @@
         gl.vertexAttribPointer(this.posLoc, 3, gl.FLOAT, false, 0, 0);
         gl.drawArrays(gl.TRIANGLES, 0, 6);
 
-        // Pass 1: High-Poly Displaced 3D Sphere Mesh + RTX Lighting
+        // Pass 1: 524,288-Polygon Displaced 3D Sphere Mesh + RTX Lighting
         gl.uniform1i(this.locs.uPass, 1);
         gl.enable(gl.DEPTH_TEST);
         gl.depthFunc(gl.LESS);
@@ -1419,14 +1437,28 @@
         gl.drawElements(gl.TRIANGLES, this.sphereIndexCount, this.indexType || gl.UNSIGNED_SHORT, 0);
 
         if (!entry) {
-          entry = { spin, tilt, time: nowSec };
+          const c = document.createElement('canvas');
+          c.width = targetSize;
+          c.height = targetSize;
+          entry = { canvas: c, ctx: c.getContext('2d'), spin, tilt, time: nowSec };
           this._cache[cacheKey] = entry;
         } else {
           entry.spin = spin;
           entry.tilt = tilt;
           entry.time = nowSec;
         }
-        this._lastDrawnKey = cacheKey;
+        entry.ctx.clearRect(0, 0, targetSize, targetSize);
+        entry.ctx.drawImage(
+          this.canvas,
+          0,
+          this.canvas.height - targetSize,
+          targetSize,
+          targetSize,
+          0,
+          0,
+          targetSize,
+          targetSize
+        );
       }
 
       ctx.save();
@@ -1434,9 +1466,9 @@
       ctx.imageSmoothingEnabled = true;
       ctx.imageSmoothingQuality = 'high';
       ctx.drawImage(
-        this.canvas,
+        entry.canvas,
         0,
-        this.canvas.height - targetSize,
+        0,
         targetSize,
         targetSize,
         cx - drawSpan * 0.5,
