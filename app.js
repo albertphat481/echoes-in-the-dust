@@ -6,7 +6,7 @@
 class EchoesApp {
   constructor() {
     this.canvas = document.getElementById('game-canvas');
-    this.ctx = this.canvas.getContext('2d');
+    this.ctx = this.canvas.getContext('2d', { alpha: false, desynchronized: true }) || this.canvas.getContext('2d');
 
     this.gameClasses = [
       window.UnderTheDustGame,
@@ -124,9 +124,11 @@ class EchoesApp {
 
   _setupCanvas() {
     const resize = () => {
-      const dpr = Math.min(2, window.devicePixelRatio || 1);
-      this.canvas.width = window.innerWidth * dpr;
-      this.canvas.height = window.innerHeight * dpr;
+      const dpr = Math.min(1.5, window.devicePixelRatio || 1);
+      this.viewW = window.innerWidth;
+      this.viewH = window.innerHeight;
+      this.canvas.width = Math.floor(this.viewW * dpr);
+      this.canvas.height = Math.floor(this.viewH * dpr);
       this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       if (this.currentGame && this.currentGame.onResize) {
         this.currentGame.onResize();
@@ -1742,6 +1744,11 @@ class EchoesApp {
   }
 
   _loop(now) {
+    if (document.hidden) {
+      this.lastFrameTime = now;
+      requestAnimationFrame(t => this._loop(t));
+      return;
+    }
     const dt = Math.min(0.05, (now - this.lastFrameTime) / 1000);
     this.lastFrameTime = now;
 
@@ -1751,8 +1758,8 @@ class EchoesApp {
         this.currentGame.ghostAlpha = Math.min(0.75, this.currentGame.ghostAlpha + dt * 0.85);
       }
       this.currentGame.update(dt);
-      const w = window.innerWidth;
-      const h = window.innerHeight;
+      const w = this.viewW || window.innerWidth;
+      const h = this.viewH || window.innerHeight;
       this.currentGame.render(this.ctx, w, h);
 
       // Subtle cinematic floating cosmic dust motes across all 6 scenes

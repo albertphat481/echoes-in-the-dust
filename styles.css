@@ -174,6 +174,7 @@ html, body {
   display: block;
   cursor: pointer;
   touch-action: none;
+  will-change: transform;
   z-index: 1;
 }
 
@@ -311,11 +312,13 @@ html, body {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(8, 13, 26, 0.88);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
+  background: rgba(8, 13, 26, 0.86);
+  backdrop-filter: blur(14px) saturate(130%);
+  -webkit-backdrop-filter: blur(14px) saturate(130%);
   border: 1.5px solid rgba(244, 114, 182, 0.42);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.55);
+  box-shadow:
+    0 10px 26px rgba(0, 0, 0, 0.55),
+    inset 0 1px 0 rgba(255, 255, 255, 0.14);
   color: var(--ivory);
   cursor: pointer;
   transition: all 0.28s cubic-bezier(0.16, 1, 0.3, 1);
@@ -393,11 +396,13 @@ html, body {
   gap: 14px;
   padding: 7px 14px;
   border-radius: 999px;
-  background: rgba(7, 11, 22, 0.84);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  background: rgba(7, 11, 22, 0.82);
+  backdrop-filter: blur(16px) saturate(130%);
+  -webkit-backdrop-filter: blur(16px) saturate(130%);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow:
+    0 10px 30px rgba(0, 0, 0, 0.54),
+    inset 0 1px 0 rgba(255, 255, 255, 0.14);
   transition: opacity 0.6s ease;
   touch-action: manipulation;
 }
