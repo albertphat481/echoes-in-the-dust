@@ -636,6 +636,8 @@ class EchoesApp {
       this.renderGuide(this.currentIndex);
     } else if (this.quizDeckModal.classList.contains('visible')) {
       this.renderQuizDeckSlide(this.currentDeckQuizIndex);
+    } else if (document.getElementById('certificate-modal')?.classList.contains('visible')) {
+      this.showCertificateModal();
     }
   }
 
@@ -796,7 +798,7 @@ class EchoesApp {
       if (photoWrap) photoWrap.style.display = 'block';
       if (window.NASA_TELEMETRY) {
         if (nasaBadge) nasaBadge.textContent = 'NASA API';
-        if (nasaTitle) nasaTitle.textContent = 'Đang tải tư liệu NASA...';
+        if (nasaTitle) nasaTitle.textContent = en ? 'Loading NASA archive...' : 'Đang tải tư liệu NASA...';
         const data = await window.NASA_TELEMETRY.fetchMissionPhoto(shard.id);
         if (nasaImg) nasaImg.src = data.imageUrl;
         if (nasaBadge) nasaBadge.textContent = data.nasaId;
@@ -840,12 +842,12 @@ class EchoesApp {
     const liveMetric =
       this.lastSessionMetric && this.lastSessionMetric.index === index
         ? this.lastSessionMetric.value
-        : (shard.specs && shard.specs[2] ? shard.specs[2].value : 'Đã đồng bộ');
+        : (shard.specs && shard.specs[2] ? shard.specs[2].value : (en ? 'Synced' : 'Đã đồng bộ'));
 
     const liveDiv = document.createElement('div');
     liveDiv.className = 'spec-box live-stat';
     liveDiv.innerHTML = `
-      <div class="spec-label">${shard.defaultStatLabel || 'Dữ liệu lượt chơi'}</div>
+      <div class="spec-label">${shard.defaultStatLabel || (en ? 'Session Telemetry' : 'Dữ liệu lượt chơi')}</div>
       <div class="spec-value">${liveMetric}</div>
     `;
     specsContainer.appendChild(liveDiv);
@@ -1116,6 +1118,7 @@ class EchoesApp {
   }
 
   renderGuide(index) {
+    const en = window.VantaI18n && window.VantaI18n.isEn();
     const guides = window.GAME_GUIDES || [];
     const safeIdx = ((index % guides.length) + guides.length) % guides.length;
     const guide = window.VantaI18n ? window.VantaI18n.getGuide(guides[safeIdx]) : guides[safeIdx];
@@ -1124,9 +1127,10 @@ class EchoesApp {
     const tabsEl = document.getElementById('guide-tabs');
     tabsEl.innerHTML = '';
     guides.forEach((g, idx) => {
+      const trG = window.VantaI18n ? window.VantaI18n.getGuide(g) : g;
       const btn = document.createElement('button');
       btn.className = `guide-tab-btn ${idx === safeIdx ? 'active' : ''}`;
-      const shortName = g.title.split('—')[0].trim();
+      const shortName = trG.title.split('—')[0].trim();
       btn.textContent = `0${idx + 1}. ${shortName}`;
       btn.addEventListener('click', () => {
         window.soundEngine.playUITick();
@@ -1163,20 +1167,20 @@ class EchoesApp {
 
     contentEl.innerHTML = `
       <div class="shard-header" style="margin-bottom: 8px;">
-        <span class="shard-badge">TRÒ CHƠI ${guide.number}</span>
+        <span class="shard-badge">${en ? 'MISSION' : 'TRÒ CHƠI'} ${guide.number}</span>
         <span class="shard-mission">${guide.hardware}</span>
       </div>
       <h3 class="shard-title" style="font-size: 24px;">${guide.title}</h3>
-      <div class="guide-goal-box"><strong>Mục tiêu:</strong> ${guide.goal}</div>
+      <div class="guide-goal-box"><strong>${en ? 'Goal:' : 'Mục tiêu:'}</strong> ${guide.goal}</div>
       <div class="guide-controls-grid">${controlsHtml}</div>
       <ul class="guide-steps-list">${stepsHtml}</ul>
-      <div class="guide-tip-box">💡 <strong>Mẹo VantaLumen:</strong> ${guide.tip}</div>
+      <div class="guide-tip-box">💡 <strong>${en ? 'VantaLumen Tip:' : 'Mẹo VantaLumen:'}</strong> ${guide.tip}</div>
       <div class="shard-actions">
-        <div class="shard-team-tag"><strong>TEAM VANTALUMEN</strong> • KHÔNG CÓ GAME OVER</div>
+        <div class="shard-team-tag"><strong>TEAM VANTALUMEN</strong> • ${en ? 'NO GAME OVER' : 'KHÔNG CÓ GAME OVER'}</div>
         <div class="btn-group">
-          <button id="btn-guide-prev" class="btn btn-ghost">← Game trước</button>
-          <button id="btn-guide-next" class="btn btn-ghost">Game sau →</button>
-          <button id="btn-guide-play" class="btn btn-primary">Chơi màn 0${safeIdx + 1} ngay ▶</button>
+          <button id="btn-guide-prev" class="btn btn-ghost">${en ? '← Previous' : '← Game trước'}</button>
+          <button id="btn-guide-next" class="btn btn-ghost">${en ? 'Next →' : 'Game sau →'}</button>
+          <button id="btn-guide-play" class="btn btn-primary">${en ? `Play Mission 0${safeIdx + 1} ▶` : `Chơi màn 0${safeIdx + 1} ngay ▶`}</button>
         </div>
       </div>
     `;
@@ -1558,9 +1562,16 @@ class EchoesApp {
     ctx.font = '700 48px "Space Grotesk", "Be Vietnam Pro", sans-serif';
     ctx.fillText('ECHOES IN THE DUST', 88, 156);
 
+    const en = window.VantaI18n && window.VantaI18n.isEn();
     ctx.fillStyle = '#cbd5e1';
     ctx.font = '400 19px "Be Vietnam Pro", sans-serif';
-    ctx.fillText('Hồ sơ Chứng nhận Hoàn thành Tương tác Phần cứng & Lưu trữ Tri thức Vũ trụ NASA', 88, 192);
+    ctx.fillText(
+      en
+        ? 'Certificate of Interactive Hardware Restoration & NASA Space Knowledge Mastery'
+        : 'Hồ sơ Chứng nhận Hoàn thành Tương tác Phần cứng & Lưu trữ Tri thức Vũ trụ NASA',
+      88,
+      192
+    );
 
     ctx.save();
     ctx.textAlign = 'right';
@@ -1609,9 +1620,9 @@ class EchoesApp {
 
     ctx.fillStyle = '#64748b';
     ctx.font = '500 12px "JetBrains Mono", monospace';
-    ctx.fillText('DANH HIỆU SỨ MỆNH', 118, stripY + 38);
-    ctx.fillText('MẢNH VỠ KÝ ỨC ĐÃ ĐÁNH THỨC', 792, stripY + 38);
-    ctx.fillText('TRI THỨC VŨ TRỤ VANTALUMEN', 1172, stripY + 38);
+    ctx.fillText(en ? 'MISSION RANK' : 'DANH HIỆU SỨ MỆNH', 118, stripY + 38);
+    ctx.fillText(en ? 'AWAKENED MEMORY SHARDS' : 'MẢNH VỠ KÝ ỨC ĐÃ ĐÁNH THỨC', 792, stripY + 38);
+    ctx.fillText(en ? 'VANTALUMEN COSMIC KNOWLEDGE' : 'TRI THỨC VŨ TRỤ VANTALUMEN', 1172, stripY + 38);
 
     ctx.fillStyle = '#f8fafc';
     ctx.font = '600 28px "Be Vietnam Pro", sans-serif';

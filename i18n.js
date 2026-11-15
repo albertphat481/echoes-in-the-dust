@@ -48,7 +48,13 @@
     'kpi-quiz': 'BILINGUAL QUIZ CARDS',
     'kpi-hud': 'CLUTTER DURING PLAY',
     'judge-title': 'Judge & Presentation Mode',
-    'judge-desc': 'Keys 1–8 / ‹ › switch stations · R Rise 0-G · S Spirit Rescue · L Language · H Guides · I Shards · Q Quiz'
+    'judge-desc': 'Keys 1–8 / ‹ › switch stations · R Rise 0-G · S Spirit Rescue · L Language · H Guides · I Shards · Q Quiz',
+    'cert-pill': '★ MISSION ACCOMPLISHED • 8 / 8 STATIONS COMPLETE',
+    'cert-title': 'VantaLumen Mission Completion Certificate',
+    'cert-sub': 'Congratulations on awakening all 8 NASA space exploration Memory Shards!',
+    'btn-cert-view-shard': 'View Final Shard',
+    'btn-cert-open-gallery': 'Memory Archive',
+    'btn-download-cert-modal': 'Download Certificate PNG ↓'
   };
 
   const SHARDS_EN = {
@@ -352,7 +358,16 @@
     setText('#btn-close-guide', null, 'btn-close');
 
     setText('#dossier-modal .gallery-title', null, 'dossier-title');
+    setText('#dossier-modal .gallery-subtitle', null, 'dossier-sub');
     setText('#btn-close-dossier', null, 'btn-close-dossier');
+
+    setText('#certificate-modal .vantalumen-pill', null, 'cert-pill');
+    setText('#cert-modal-title', null, 'cert-title');
+    setText('#cert-modal-subtitle', null, 'cert-sub');
+    setText('#btn-close-cert-modal', null, 'btn-close');
+    setText('#btn-cert-view-shard', null, 'btn-cert-view-shard');
+    setText('#btn-cert-open-gallery', null, 'btn-cert-open-gallery');
+    setText('#btn-download-cert-modal', null, 'btn-download-cert-modal');
     const kpis = document.querySelectorAll('#dossier-modal .kpi-lbl');
     ['kpi-missions', 'kpi-audio', 'kpi-quiz', 'kpi-hud'].forEach((k, idx) => {
       if (kpis[idx]) {
