@@ -158,6 +158,19 @@ class EchoesApp {
     });
     window.addEventListener('focus', unlockAudio, { passive: true });
 
+    // Global subtle jelly bounce + soft glow on any button, nav dot, or quiz option tap
+    document.addEventListener('pointerdown', e => {
+      const target = e.target && e.target.closest
+        ? e.target.closest('button, .btn, .quiz-opt-btn, .quiz-option, .hud-icon-btn, .nav-arrow-btn, .nav-star, .mascot-circle-btn, .gallery-card, .visual-tab-btn, #brand-emblem')
+        : null;
+      if (!target) return;
+      target.classList.remove('vanta-jelly-hit');
+      void target.offsetWidth;
+      target.classList.add('vanta-jelly-hit');
+      clearTimeout(target._jellyTimer);
+      target._jellyTimer = setTimeout(() => target.classList.remove('vanta-jelly-hit'), 440);
+    }, { capture: true, passive: true });
+
     const getXY = e => ({
       x: Number.isFinite(e.clientX) ? e.clientX : (this.lastPointer ? this.lastPointer.x : window.innerWidth * 0.5),
       y: Number.isFinite(e.clientY) ? e.clientY : (this.lastPointer ? this.lastPointer.y : window.innerHeight * 0.5)

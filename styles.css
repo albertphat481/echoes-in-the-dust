@@ -2306,4 +2306,43 @@ html, body {
   max-width: 88vw;
 }
 
+/* Tactile Jelly Bounce + Soft Glow on Button & Quiz Option Click */
+@keyframes vantaJellyPop {
+  0% {
+    transform: scale(1, 1);
+  }
+  28% {
+    transform: scale(0.94, 1.05);
+    filter: brightness(1.18);
+    box-shadow:
+      0 0 18px rgba(252, 211, 77, 0.45),
+      0 0 32px rgba(56, 189, 248, 0.28);
+  }
+  58% {
+    transform: scale(1.045, 0.96);
+    filter: brightness(1.1);
+    box-shadow: 0 0 14px rgba(56, 189, 248, 0.28);
+  }
+  82% {
+    transform: scale(0.985, 1.015);
+  }
+  100% {
+    transform: scale(1, 1);
+    filter: brightness(1);
+  }
+}
+
+.vanta-jelly-hit {
+  animation: vantaJellyPop 0.42s cubic-bezier(0.22, 1, 0.36, 1) !important;
+}
+
+button:active,
+.btn:active,
+.quiz-opt-btn:active,
+.quiz-option:active,
+.gallery-card:active {
+  transform: scale(0.95, 1.03);
+}
+
+
 
