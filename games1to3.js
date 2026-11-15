@@ -1197,19 +1197,19 @@ class StillThereGame {
     }
     ctx.restore();
 
-    // 3D RTX Earth Horizon + Laser Observatory Dome (tilted to show blue ocean/continents, with crisp native-res limb)
-    const earthR = Math.max(w * 0.62, h * 0.56);
+    // 3D RTX Earth Horizon + Laser Observatory Dome (crisp orbital sapphire ocean, swirled clouds, and sunlit continents)
+    const earthR = Math.max(w * 0.46, h * 0.48);
     const earthCx = w * 0.5;
     const earthCy = h * 0.885 + earthR;
     ctx.save();
-    // Outer blue atmospheric scatter halo
-    const atmoRim = ctx.createRadialGradient(earthCx, earthCy, earthR * 0.96, earthCx, earthCy, earthR * 1.07);
-    atmoRim.addColorStop(0, 'rgba(56, 189, 248, 0.55)');
-    atmoRim.addColorStop(0.35, 'rgba(14, 165, 233, 0.25)');
-    atmoRim.addColorStop(1, 'rgba(14, 165, 233, 0)');
+    // Outer orbital Rayleigh atmospheric glow
+    const atmoRim = ctx.createRadialGradient(earthCx, earthCy, earthR * 0.975, earthCx, earthCy, earthR * 1.055);
+    atmoRim.addColorStop(0, 'rgba(59, 130, 246, 0.44)');
+    atmoRim.addColorStop(0.38, 'rgba(37, 99, 235, 0.16)');
+    atmoRim.addColorStop(1, 'rgba(15, 23, 42, 0)');
     ctx.fillStyle = atmoRim;
     ctx.beginPath();
-    ctx.arc(earthCx, earthCy, earthR * 1.07, 0, Math.PI * 2);
+    ctx.arc(earthCx, earthCy, earthR * 1.055, 0, Math.PI * 2);
     ctx.fill();
 
     // Native vector clip keeps the curved Earth horizon razor-sharp at any resolution
@@ -1218,25 +1218,25 @@ class StillThereGame {
     ctx.clip();
 
     const usedRTXEarthHorizon = window.vantaPlanetGL && window.vantaPlanetGL.drawPlanet(ctx, 'earth', earthCx, earthCy, earthR, {
-      spin: (this.elapsed + (this.moonSpin || 0) * 1.4) * 0.02 + 1.15,
-      tilt: 1.18,
-      sunDir: [-0.42, 0.48, 0.76]
+      spin: (this.elapsed + (this.moonSpin || 0) * 1.4) * 0.02 + 2.35,
+      tilt: 0.45,
+      sunDir: [-0.66, 0.30, 0.69]
     });
 
     if (!usedRTXEarthHorizon) {
-      const earthGrad = ctx.createRadialGradient(earthCx, earthCy - earthR * 0.75, earthR * 0.05, earthCx, earthCy, earthR);
-      earthGrad.addColorStop(0, '#0ea5e9');
-      earthGrad.addColorStop(0.55, '#0369a1');
-      earthGrad.addColorStop(1, '#082f49');
+      const earthGrad = ctx.createRadialGradient(earthCx - earthR * 0.25, earthCy - earthR * 0.72, earthR * 0.08, earthCx, earthCy, earthR);
+      earthGrad.addColorStop(0, '#1d4ed8');
+      earthGrad.addColorStop(0.55, '#0f2966');
+      earthGrad.addColorStop(1, '#040b24');
       ctx.fillStyle = earthGrad;
       ctx.fillRect(0, h * 0.85, w, h * 0.2);
     }
 
-    // Subtle crisp inner atmospheric rim highlight
-    ctx.strokeStyle = 'rgba(125, 211, 252, 0.52)';
-    ctx.lineWidth = 3;
+    // Subtle thin orbital atmospheric scatter whisper right on the limb
+    ctx.strokeStyle = 'rgba(147, 197, 253, 0.28)';
+    ctx.lineWidth = 1.5;
     ctx.beginPath();
-    ctx.arc(earthCx, earthCy, earthR - 1, 0, Math.PI * 2);
+    ctx.arc(earthCx, earthCy, earthR - 0.5, 0, Math.PI * 2);
     ctx.stroke();
     ctx.restore();
 
