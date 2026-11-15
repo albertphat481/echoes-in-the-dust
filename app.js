@@ -128,7 +128,7 @@ class EchoesApp {
 
   _setupCanvas() {
     const resize = () => {
-      const dpr = Math.min(1.5, window.devicePixelRatio || 1);
+      const dpr = Math.min(1.25, window.devicePixelRatio || 1);
       this.viewW = window.innerWidth;
       this.viewH = window.innerHeight;
       this.canvas.width = Math.floor(this.viewW * dpr);

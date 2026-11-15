@@ -539,21 +539,20 @@
       vec3 col = vec3(0.0);
 
       if (uType == 2) {
-        // === MOON (2048x1024 NASA Selenographic Map + Fast 4K Micro-Craters + Lommel-Seeliger BRDF) ===
+        // === MOON (1024x512 NASA Selenographic Map + Fast Regolith Micro-Normal + Lommel-Seeliger BRDF) ===
         vec4 moonSample = texture2D(uMoonTex, sphereToUV(sp));
-        float mc0 = craterCell(sp * 42.0) * 0.048;
-        float h0 = moonSample.r + mc0;
+        float h0 = moonSample.r;
         float texAlbedo = moonSample.g;
         float mareMask = moonSample.b;
 
         vec3 upRef = abs(sp.y) < 0.96 ? vec3(0.0, 1.0, 0.0) : vec3(1.0, 0.0, 0.0);
         vec3 T = normalize(cross(upRef, sp));
         vec3 Bt = cross(sp, T);
-        float epsM = 0.0016;
+        float epsM = 0.0020;
         vec3 spT = normalize(sp + T * epsM);
         vec3 spB = normalize(sp + Bt * epsM);
-        float hT = texture2D(uMoonTex, sphereToUV(spT)).r + craterCell(spT * 42.0) * 0.048;
-        float hB = texture2D(uMoonTex, sphereToUV(spB)).r + craterCell(spB * 42.0) * 0.048;
+        float hT = texture2D(uMoonTex, sphereToUV(spT)).r;
+        float hB = texture2D(uMoonTex, sphereToUV(spB)).r;
         vec3 gradM = T * ((hT - h0) / epsM) + Bt * ((hB - h0) / epsM);
         vec3 worldGrad = rotX(rotY(gradM, -uSpin), -uTilt);
 
@@ -837,13 +836,14 @@
 
     _resize() {
       if (!this.gl) return;
-      this.renderScale = 0.65;
-      const w = Math.min(1280, Math.max(512, Math.floor(window.innerWidth * this.renderScale)));
-      const h = Math.min(720, Math.max(384, Math.floor(window.innerHeight * this.renderScale)));
+      this.renderScale = 0.45;
+      const w = Math.min(768, Math.max(384, Math.floor(window.innerWidth * this.renderScale)));
+      const h = Math.min(432, Math.max(256, Math.floor(window.innerHeight * this.renderScale)));
       if (this.canvas.width !== w || this.canvas.height !== h) {
         this.canvas.width = w;
         this.canvas.height = h;
         this.gl.viewport(0, 0, w, h);
+        this._lastNebulaDraw = 0;
       }
     }
 
@@ -860,16 +860,20 @@
       this.mouse.x += (this.mouse.tx - this.mouse.x) * 0.08;
       this.mouse.y += (this.mouse.ty - this.mouse.y) * 0.08;
 
-      const gl = this.gl;
-      gl.useProgram(this.program);
-      gl.uniform1f(this.locs.uTime, performance.now() * 0.001);
-      gl.uniform2f(this.locs.uResolution, this.canvas.width, this.canvas.height);
-      gl.uniform2f(this.locs.uMouse, this.mouse.x, this.mouse.y);
-      gl.uniform1f(this.locs.uLumenIntensity, lumen);
-      gl.uniform1f(this.locs.uCyanMix, cyan);
-      gl.uniform1f(this.locs.uStarDensity, stars);
+      const nowMs = performance.now();
+      if (!this._lastNebulaDraw || nowMs - this._lastNebulaDraw >= 50) {
+        this._lastNebulaDraw = nowMs;
+        const gl = this.gl;
+        gl.useProgram(this.program);
+        gl.uniform1f(this.locs.uTime, nowMs * 0.001);
+        gl.uniform2f(this.locs.uResolution, this.canvas.width, this.canvas.height);
+        gl.uniform2f(this.locs.uMouse, this.mouse.x, this.mouse.y);
+        gl.uniform1f(this.locs.uLumenIntensity, lumen);
+        gl.uniform1f(this.locs.uCyanMix, cyan);
+        gl.uniform1f(this.locs.uStarDensity, stars);
 
-      gl.drawArrays(gl.TRIANGLES, 0, 6);
+        gl.drawArrays(gl.TRIANGLES, 0, 6);
+      }
 
       ctx.save();
       ctx.globalAlpha = alpha;
@@ -954,17 +958,10 @@
       gl.useProgram(prog);
 
       this.posLoc = gl.getAttribLocation(prog, 'aPos3d');
-      const isWebGL2 = typeof WebGL2RenderingContext !== 'undefined' && gl instanceof WebGL2RenderingContext;
-      const uintExt = isWebGL2 ? true : !!gl.getExtension('OES_element_index_uint');
-      this.useUint32 = !!uintExt;
-      this.indexType = this.useUint32 ? gl.UNSIGNED_INT : gl.UNSIGNED_SHORT;
-      if (this.useUint32) {
-        // 512 stacks x 512 slices = 263,169 vertices & 524,288 triangle polygons (ultra-round 3D relief)
-        this._buildHighPolySphere(gl, 512, 512);
-      } else {
-        // Fallback: 128 stacks x 224 slices = 28,929 vertices & 57,344 triangle polygons (Uint16)
-        this._buildHighPolySphere(gl, 128, 224);
-      }
+      this.useUint32 = false;
+      this.indexType = gl.UNSIGNED_SHORT;
+      // 160 stacks x 256 slices = 41,377 vertices & 81,920 triangle polygons (silky-round & fast)
+      this._buildHighPolySphere(gl, 160, 256);
 
       this.hasVertexTex = (gl.getParameter(gl.MAX_VERTEX_TEXTURE_IMAGE_UNITS) || 0) > 0;
 
@@ -1000,8 +997,8 @@
 
     _ensureEarthTexture(gl) {
       if (this.earthTex) return;
-      const W = 2048;
-      const H = 1024;
+      const W = 1024;
+      const H = 512;
       const N = W * H;
       const clamp01 = v => (v < 0 ? 0 : v > 1 ? 1 : v);
       const smooth = (a, b, x) => {
@@ -1098,8 +1095,8 @@
 
     _ensureMoonTexture(gl) {
       if (this.moonTex) return;
-      const W = 2048;
-      const H = 1024;
+      const W = 1024;
+      const H = 512;
       const N = W * H;
       const clamp01 = v => (v < 0 ? 0 : v > 1 ? 1 : v);
       const smooth = (a, b, x) => {
@@ -1367,17 +1364,17 @@
         alpha = 1.0
       } = opts;
 
-      const dpr = Math.min(1.5, window.devicePixelRatio || 1);
+      const dpr = Math.min(1.25, window.devicePixelRatio || 1);
       const isHorizonEarth = type === 'earth' && radius > 350;
-      const maxSize = isHorizonEarth ? Math.min(1536, this.maxTexSize || 1536) : Math.min(1280, this.maxTexSize || 1280);
-      const minSize = isHorizonEarth ? 768 : 384;
-      const targetSize = Math.min(maxSize, Math.max(minSize, Math.ceil((radius * 2.4 * dpr) / 64) * 64));
+      const maxSize = isHorizonEarth ? Math.min(1024, this.maxTexSize || 1024) : Math.min(768, this.maxTexSize || 768);
+      const minSize = isHorizonEarth ? 512 : 256;
+      const targetSize = Math.min(maxSize, Math.max(minSize, Math.ceil((radius * 2.2 * dpr) / 64) * 64));
       const cacheKey = `${type}_${targetSize}`;
       let entry = this._cache[cacheKey];
       const nowSec = performance.now() * 0.001;
-      const angleThresh = 0.0012;
+      const angleThresh = 0.0025;
       const angleChanged = !entry || Math.abs(spin - entry.spin) > angleThresh || Math.abs(tilt - entry.tilt) > angleThresh;
-      const cloudDirty = type === 'earth' && (!entry || Math.abs(nowSec - entry.time) > 0.045);
+      const cloudDirty = type === 'earth' && (!entry || Math.abs(nowSec - entry.time) > 0.08);
       const canReuseCache = !!(entry && entry.canvas && !angleChanged && !cloudDirty);
       const drawSpan = radius * 2.64;
 
